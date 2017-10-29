@@ -1,6 +1,6 @@
 # commAI
 
-## TODOS 4 Elia:
+### TODOS 4 Elia:
 
 1) polish data.py
 2) implement data saving function
