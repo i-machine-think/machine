@@ -1,26 +1,47 @@
+import argparse
 import random
 import re
-import socket
 import unicodedata
 
-hostname = socket.gethostname()
-
-from seq2seq.masked_cross_entropy import *
+import torch
+from torch.autograd import Variable
 
 import Constants
 
 USE_CUDA = True
 
-# main function
-def make_data():
-    input_lang, output_lang, pairs = prepare_data('eng', 'fra', True)
-    MIN_COUNT = 5
-    input_lang.trim(MIN_COUNT)
-    output_lang.trim(MIN_COUNT)
-    pairs = filter_pairs(input_lang, output_lang, pairs)
+parser = argparse.ArgumentParser(description='preprocess.py')
+
+# **Preprocess Options**
+parser.add_argument('-dataname', type=str, default='SCAN',
+                    help="Path to the training data")
+parser.add_argument('-trainfile', required=True, type=str,
+                    help="Path to the training data")
+parser.add_argument('-testfile', required=True, type=str,
+                    help="Path to the training data")
+parser.add_argument('-savedata', required=True, type=str,
+                    help="Output file for the prepared data")
+
+opt = parser.parse_args()
+
+def main():
+    print('Preparing training ...')
+    vocab, train_pairs = prepare_data(opt.trainfile)
+    vocab.trim(Constants.MIN_COUNT)
+    train_pairs = filter_pairs(vocab, train_pairs)
+
+    print('Preparing test ...')
+    vocab, test_pairs = prepare_data(opt.testfile, vocab)
+    vocab.trim(Constants.MIN_COUNT)
+    test_pairs = filter_pairs(vocab, test_pairs)
+
+    # TODO: here I need to save the data
+    torch.save(vocab, open(opt.savedata + '.vocab.pt', 'wb'))
+    torch.save(train_pairs, open(opt.savedata + '.train.pt', 'wb'))
+    torch.save(test_pairs, open(opt.savedata + '.test.pt', 'wb'))
 
 
-def prepare_data(lang1_name, lang2_name, reverse=False):
+def prepare_data(filename, vocab=None):
     '''
     The full process for preparing the data is:
     1. Read text file and split into lines
@@ -29,21 +50,23 @@ def prepare_data(lang1_name, lang2_name, reverse=False):
     4. Make word lists from sentences in pairs
     '''
 
-    input_lang, output_lang, pairs = read_langs(lang1_name, lang2_name, reverse)
+    pairs = read_langs(filename)
     print("Read %d sentence pairs" % len(pairs))
 
     pairs = filter_pairs(pairs)
     print("Filtered to %d pairs" % len(pairs))
 
     print("Indexing words...")
+    if not vocab:
+        vocab = Vocab()
     for pair in pairs:
-        input_lang.index_words(pair[0])
-        output_lang.index_words(pair[1])
+        vocab.index_words(pair[0])
+        vocab.index_words(pair[1])
 
-    print('Indexed %d words in input language, %d words in output' % (input_lang.n_words, output_lang.n_words))
-    return input_lang, output_lang, pairs
+    print('Indexed %d words in vocab' % (vocab.n_words))
+    return vocab, pairs
 
-def filter_pairs(input_lang, output_lang, pairs):
+def filter_pairs(vocab, pairs):
     '''
     Now we will go back to the set of all sentence
     pairs and remove those with unknown words.
@@ -57,12 +80,12 @@ def filter_pairs(input_lang, output_lang, pairs):
         keep_output = True
 
         for word in input_sentence.split(' '):
-            if word not in input_lang.word2index:
+            if word not in vocab.word2index:
                 keep_input = False
                 break
 
         for word in output_sentence.split(' '):
-            if word not in output_lang.word2index:
+            if word not in vocab.word2index:
                 keep_output = False
                 break
 
@@ -73,21 +96,20 @@ def filter_pairs(input_lang, output_lang, pairs):
     print("Trimmed from %d pairs to %d, %.4f of total" % (len(pairs), len(keep_pairs), len(keep_pairs) / len(pairs)))
     return keep_pairs
 
-class Lang:
+class Vocab:
     '''
     We'll need a unique index per word to use as the inputs and targets
     of the networks later. To keep track of all this we will use a helper
-    class called Lang which has word → index (word2index) and index → word
+    class called Lang which has word => index (word2index) and index => word
     (index2word) dictionaries, as well as a count of each word (word2count).
     This class includes a function trim(min_count) to remove rare words once
     they are all counted.
     '''
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
         self.trimmed = False
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {0: "PAD", 1: "SOS", 2: "EOS"}
+        self.index2word = {Constants.PAD_token: "PAD", Constants.SOS_token: "SOS", Constants.EOS_token: "EOS"}
         self.n_words = 3  # Count default tokens
 
     def index_words(self, sentence):
@@ -141,41 +163,33 @@ def unicode_to_ascii(s):
 
 # Lowercase, trim, and remove non-letter characters
 def normalize_string(s):
+    print(s)
     s = unicode_to_ascii(s.lower().strip())
     s = re.sub(r"([,.!?])", r" \1 ", s)
     s = re.sub(r"[^a-zA-Z,.!?]+", r" ", s)
     s = re.sub(r"\s+", r" ", s).strip()
     return s
 
-def read_langs(lang1, lang2, reverse=False):
+def read_langs(filename):
     '''
     To read the data file we will split the file into lines,
     and then split lines into pairs. The files are all
-    source_language → target_language, so if we want to translate
-    from target_language → source_language I added the reverse
+    source_language => target_language, so if we want to translate
+    from target_language => source_language I added the reverse
     flag to reverse the pairs.
     '''
 
     print("Reading lines...")
 
-    # Read the file and split into lines
-#     filename = '../data/%s-%s.txt' % (lang1, lang2)
-    filename = '../%s-%s.txt' % (lang1, lang2)
     lines = open(filename).read().strip().split('\n')
+    separator = '\t'
+    if opt.dataname == 'SCAN':
+        separator = 'OUT:'
 
     # Split every line into pairs and normalize
-    pairs = [[normalize_string(s) for s in l.split('\t')] for l in lines]
+    pairs = [[normalize_string(s) for s in l.split(separator)] for l in lines]
 
-    # Reverse pairs, make Lang instances
-    if reverse:
-        pairs = [list(reversed(p)) for p in pairs]
-        input_lang = Lang(lang2)
-        output_lang = Lang(lang1)
-    else:
-        input_lang = Lang(lang1)
-        output_lang = Lang(lang2)
-
-    return input_lang, output_lang, pairs
+    return Vocab(), pairs
 
 def filter_pairs(pairs):
     filtered_pairs = []
@@ -225,3 +239,6 @@ def random_batch(batch_size, input_lang, output_lang, pairs):
         target_var = target_var.cuda()
 
     return input_var, input_lengths, target_var, target_lengths
+
+if __name__ == "__main__":
+    main()
