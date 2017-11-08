@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import argparse
 import random
 import time
@@ -5,7 +6,7 @@ import math
 import socket
 # hostname = socket.gethostname()
 hostname = "http://localhost:8888"
-import matplotlib.pyplot as plt
+
 import matplotlib.ticker as ticker
 import numpy as np
 
