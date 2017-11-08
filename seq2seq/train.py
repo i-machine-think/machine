@@ -1,8 +1,10 @@
+import argparse
 import random
 import time
 import math
 import socket
-hostname = socket.gethostname()
+# hostname = socket.gethostname()
+hostname = "http://localhost:8888"
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
@@ -16,22 +18,33 @@ import visdom
 vis = visdom.Visdom()
 
 from models import *
-import data
+from data import *
 import Constants
 
 USE_CUDA = False
 
+parser = argparse.ArgumentParser(description='debug.py')
+# **Preprocess Options**
+parser.add_argument('-savedata', required=True, type=str,
+                    help="Output file for the prepared data")
+opt = parser.parse_args()
+
+# load data
+savedata = torch.load(opt.savedata + '.pt')
+vocab = savedata['vocab']
+train_pairs = savedata['train_pairs']
+# TODO: put into options:
+clip = 50.0
+batch_size = 1
 def train_model():
     # Configure models
     attn_model = 'dot'
-    hidden_size = 500
+    hidden_size = 5
     n_layers = 2
     dropout = 0.1
-    batch_size = 100
-    batch_size = 50
 
     # Configure training/optimization
-    clip = 50.0
+
     teacher_forcing_ratio = 0.5
     learning_rate = 0.0001
     decoder_learning_ratio = 5.0
@@ -42,8 +55,10 @@ def train_model():
     evaluate_every = 1000
 
     # Initialize models
-    encoder = EncoderRNN(input_lang.n_words, hidden_size, n_layers, dropout=dropout)
-    decoder = LuongAttnDecoderRNN(attn_model, hidden_size, output_lang.n_words, n_layers, dropout=dropout)
+    # encoder = EncoderRNN(input_lang.n_words, hidden_size, n_layers, dropout=dropout)
+    encoder = EncoderRNN(vocab.n_words, hidden_size, n_layers, dropout=dropout)
+    decoder = LuongAttnDecoderRNN(attn_model, hidden_size, vocab.n_words, n_layers, dropout=dropout)
+    # decoder = LuongAttnDecoderRNN(attn_model, hidden_size, output_lang.n_words, n_layers, dropout=dropout)
 
     # Initialize optimizers and criterion
     encoder_optimizer = optim.Adam(encoder.parameters(), lr=learning_rate)
@@ -80,12 +95,11 @@ def train_model():
     dcs = []
     eca = 0
     dca = 0
-
     while epoch < n_epochs:
         epoch += 1
 
         # Get training data for this cycle
-        input_batches, input_lengths, target_batches, target_lengths = data.random_batch(batch_size)
+        input_batches, input_lengths, target_batches, target_lengths = random_batch(batch_size, vocab, train_pairs)
 
         # Run the train function
         loss, ec, dc = train(
@@ -106,11 +120,11 @@ def train_model():
             print_loss_avg = print_loss_total / print_every
             print_loss_total = 0
             print_summary = '%s (%d %d%%) %.4f' % (
-            time_since(start, epoch / n_epochs), epoch, epoch / n_epochs * 100, print_loss_avg)
+            time_since(start, max(1, epoch / n_epochs)), epoch, epoch / n_epochs * 100, print_loss_avg)
             print(print_summary)
 
         if epoch % evaluate_every == 0:
-            evaluate_randomly(encoder, decoder)
+            evaluate_randomly(encoder, decoder, train_pairs)
 
         if epoch % plot_every == 0:
             plot_loss_avg = plot_loss_total / plot_every
@@ -178,7 +192,8 @@ def train(input_batches, input_lengths, target_batches, target_lengths, encoder,
 
 def evaluate(encoder, decoder, input_seq, max_length=Constants.MAX_LENGTH):
     input_lengths = [len(input_seq)]
-    input_seqs = [data.indexes_from_sentence(input_lang, input_seq)]
+    input_seqs = [indexes_from_sentence(vocab, input_seq)]
+    # input_seqs = [data.indexes_from_sentence(input_lang, input_seq)]
     input_batches = Variable(torch.LongTensor(input_seqs), volatile=True).transpose(0, 1)
 
     if USE_CUDA:
@@ -216,7 +231,8 @@ def evaluate(encoder, decoder, input_seq, max_length=Constants.MAX_LENGTH):
             decoded_words.append('<EOS>')
             break
         else:
-            decoded_words.append(output_lang.index2word[ni])
+            decoded_words.append(vocab.index2word[ni])
+            # decoded_words.append(output_lang.index2word[ni])
 
         # Next input is chosen word
         decoder_input = Variable(torch.LongTensor([ni]))
@@ -228,8 +244,8 @@ def evaluate(encoder, decoder, input_seq, max_length=Constants.MAX_LENGTH):
 
     return decoded_words, decoder_attentions[:di + 1, :len(encoder_outputs)]
 
-def evaluate_randomly(encoder, decoder,):
-    [input_sentence, target_sentence] = random.choice(pairs)
+def evaluate_randomly(encoder, decoder, train_pairs):
+    [input_sentence, target_sentence] = random.choice(train_pairs)
     evaluate_and_show_attention(encoder, decoder, input_sentence, target_sentence)
 
 def as_minutes(s):
@@ -284,3 +300,6 @@ def evaluate_and_show_attention(encoder, decoder, input_sentence, target_sentenc
     win = 'evaluted (%s)' % hostname
     text = '<p>&gt; %s</p><p>= %s</p><p>&lt; %s</p>' % (input_sentence, target_sentence, output_sentence)
     vis.text(text, win=win, opts={'title': win})
+
+if __name__ == "__main__":
+    train_model()

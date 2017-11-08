@@ -63,7 +63,7 @@ class Attn(nn.Module):
     def score(self, hidden, encoder_output):
 
         if self.method == 'dot':
-            energy = hidden.dot(encoder_output)
+            energy = hidden.squeeze().dot(encoder_output.squeeze())
             return energy
 
         elif self.method == 'general':

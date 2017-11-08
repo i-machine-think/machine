@@ -13,9 +13,7 @@ parser.add_argument('-savedata', required=True, type=str,
                     help="Output file for the prepared data")
 opt = parser.parse_args()
 
-
 # load data
-print('opt.savedata: ' + str(opt.savedata))
 savedata = torch.load(opt.savedata + '.pt')
 vocab = savedata['vocab']
 train_pairs = savedata['train_pairs']
