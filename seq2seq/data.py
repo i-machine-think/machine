@@ -2,6 +2,7 @@ import argparse
 import random
 import re
 import unicodedata
+import io
 
 import torch
 from torch.autograd import Variable
@@ -28,12 +29,12 @@ def main():
     print('Preparing training ...')
     vocab, train_pairs = prepare_data(opt.trainfile)
     vocab.trim(Constants.MIN_COUNT)
-    train_pairs = filter_pairs(vocab, train_pairs)
+    train_pairs = clean_pairs(vocab, train_pairs)
 
     print('Preparing test ...')
     vocab, test_pairs = prepare_data(opt.testfile, vocab)
     vocab.trim(Constants.MIN_COUNT)
-    test_pairs = filter_pairs(vocab, test_pairs)
+    test_pairs = clean_pairs(vocab, test_pairs)
 
     # TODO: here I need to save the data
     torch.save(vocab, open(opt.savedata + '.vocab.pt', 'wb'))
@@ -50,7 +51,7 @@ def prepare_data(filename, vocab=None):
     4. Make word lists from sentences in pairs
     '''
 
-    pairs = read_langs(filename)
+    vocab, pairs = read_langs(filename)
     print("Read %d sentence pairs" % len(pairs))
 
     pairs = filter_pairs(pairs)
@@ -66,7 +67,7 @@ def prepare_data(filename, vocab=None):
     print('Indexed %d words in vocab' % (vocab.n_words))
     return vocab, pairs
 
-def filter_pairs(vocab, pairs):
+def clean_pairs(vocab, pairs):
     '''
     Now we will go back to the set of all sentence
     pairs and remove those with unknown words.
@@ -163,7 +164,6 @@ def unicode_to_ascii(s):
 
 # Lowercase, trim, and remove non-letter characters
 def normalize_string(s):
-    print(s)
     s = unicode_to_ascii(s.lower().strip())
     s = re.sub(r"([,.!?])", r" \1 ", s)
     s = re.sub(r"[^a-zA-Z,.!?]+", r" ", s)
@@ -181,10 +181,12 @@ def read_langs(filename):
 
     print("Reading lines...")
 
-    lines = open(filename).read().strip().split('\n')
+    lines = io.open(filename).read().strip().split('\n')
     separator = '\t'
     if opt.dataname == 'SCAN':
         separator = 'OUT:'
+        # remove 'IN: ' prefix
+        lines = [l[3:] for l in lines]
 
     # Split every line into pairs and normalize
     pairs = [[normalize_string(s) for s in l.split(separator)] for l in lines]
