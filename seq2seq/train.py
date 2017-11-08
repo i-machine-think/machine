@@ -19,7 +19,7 @@ from models import *
 import data
 import Constants
 
-USE_CUDA = True
+USE_CUDA = False
 
 def train_model():
     # Configure models

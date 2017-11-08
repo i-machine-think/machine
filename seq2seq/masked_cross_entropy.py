@@ -2,6 +2,9 @@ import torch
 from torch.nn import functional
 from torch.autograd import Variable
 
+
+USE_CUDA = False
+
 def sequence_mask(sequence_length, max_len=None):
     if max_len is None:
         max_len = sequence_length.data.max()
@@ -17,7 +20,9 @@ def sequence_mask(sequence_length, max_len=None):
 
 
 def masked_cross_entropy(logits, target, length):
-    length = Variable(torch.LongTensor(length)).cuda()
+    length = Variable(torch.LongTensor(length))
+    if USE_CUDA:
+        length = length.cuda()
 
     """
     Args:

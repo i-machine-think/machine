@@ -9,18 +9,18 @@ from torch.autograd import Variable
 
 import Constants
 
-USE_CUDA = True
+USE_CUDA = False
 
-parser = argparse.ArgumentParser(description='preprocess.py')
+parser = argparse.ArgumentParser(description='data.py')
 
 # **Preprocess Options**
 parser.add_argument('-dataname', type=str, default='SCAN',
                     help="Path to the training data")
-parser.add_argument('-trainfile', required=True, type=str,
+parser.add_argument('-trainfile',  type=str,
                     help="Path to the training data")
-parser.add_argument('-testfile', required=True, type=str,
+parser.add_argument('-testfile',  type=str,
                     help="Path to the training data")
-parser.add_argument('-savedata', required=True, type=str,
+parser.add_argument('-savedata',  type=str,
                     help="Output file for the prepared data")
 
 opt = parser.parse_args()
@@ -37,9 +37,14 @@ def main():
     test_pairs = clean_pairs(vocab, test_pairs)
 
     # TODO: here I need to save the data
-    torch.save(vocab, open(opt.savedata + '.vocab.pt', 'wb'))
-    torch.save(train_pairs, open(opt.savedata + '.train.pt', 'wb'))
-    torch.save(test_pairs, open(opt.savedata + '.test.pt', 'wb'))
+    savedata = {'vocab': vocab,
+                 'train_pairs': train_pairs,
+                 'test_pairs': test_pairs}
+    torch.save(savedata, opt.savedata + '.pt')
+
+    # torch.save(vocab, open(opt.savedata + '.vocab.pt', 'wb'))
+    # torch.save(train_pairs, open(opt.savedata + '.train.pt', 'wb'))
+    # torch.save(test_pairs, open(opt.savedata + '.test.pt', 'wb'))
 
 
 def prepare_data(filename, vocab=None):
@@ -212,15 +217,15 @@ def pad_seq(seq, max_length):
     return seq
 
 
-def random_batch(batch_size, input_lang, output_lang, pairs):
+def random_batch(batch_size, vocab, pairs):
     input_seqs = []
     target_seqs = []
 
     # Choose random pairs
     for i in range(batch_size):
         pair = random.choice(pairs)
-        input_seqs.append(indexes_from_sentence(input_lang, pair[0]))
-        target_seqs.append(indexes_from_sentence(output_lang, pair[1]))
+        input_seqs.append(indexes_from_sentence(vocab, pair[0]))
+        target_seqs.append(indexes_from_sentence(vocab, pair[1]))
 
     # Zip into pairs, sort by length (descending), unzip
     seq_pairs = sorted(zip(input_seqs, target_seqs), key=lambda p: len(p[0]), reverse=True)

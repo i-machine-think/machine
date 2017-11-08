@@ -1,11 +1,27 @@
+import argparse
 from models import *
-import data
+from data import *
 import Constants
 
-USE_CUDA = True
+USE_CUDA = False
+
+
+parser = argparse.ArgumentParser(description='debug.py')
+
+# **Preprocess Options**
+parser.add_argument('-savedata', required=True, type=str,
+                    help="Output file for the prepared data")
+opt = parser.parse_args()
+
+
+# load data
+print('opt.savedata: ' + str(opt.savedata))
+savedata = torch.load(opt.savedata + '.pt')
+vocab = savedata['vocab']
+train_pairs = savedata['train_pairs']
 
 small_batch_size = 3
-input_batches, input_lengths, target_batches, target_lengths = data.random_batch(small_batch_size)
+input_batches, input_lengths, target_batches, target_lengths = random_batch(small_batch_size, vocab, train_pairs)
 
 print('input_batches', input_batches.size()) # (max_len x batch_size)
 print('target_batches', target_batches.size()) # (max_len x batch_size)
@@ -15,8 +31,8 @@ print('target_batches', target_batches.size()) # (max_len x batch_size)
 small_hidden_size = 8
 small_n_layers = 2
 
-encoder_test = EncoderRNN(input_lang.n_words, small_hidden_size, small_n_layers)
-decoder_test = LuongAttnDecoderRNN('general', small_hidden_size, output_lang.n_words, small_n_layers)
+encoder_test = EncoderRNN(vocab.n_words, small_hidden_size, small_n_layers)
+decoder_test = LuongAttnDecoderRNN('general', small_hidden_size, vocab.n_words, small_n_layers)
 
 if USE_CUDA:
     encoder_test.cuda()

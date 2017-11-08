@@ -4,7 +4,7 @@ from masked_cross_entropy import *
 
 import Constants
 
-USE_CUDA = True
+USE_CUDA = False
 
 class EncoderRNN(nn.Module):
     def __init__(self, input_size, hidden_size, n_layers=1, dropout=0.1):
@@ -68,7 +68,10 @@ class Attn(nn.Module):
 
         elif self.method == 'general':
             energy = self.attn(encoder_output)
-            energy = hidden.dot(energy)
+            print('logging:')
+            print(energy.size())
+            print(hidden.size())
+            energy = hidden.squeeze().dot(energy.squeeze())
             return energy
 
         elif self.method == 'concat':
