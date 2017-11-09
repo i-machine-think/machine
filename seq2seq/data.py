@@ -7,7 +7,7 @@ import io
 import torch
 from torch.autograd import Variable
 
-import Constants
+from Vocab import Vocab
 
 parser = argparse.ArgumentParser(description='data.py')
 
@@ -76,7 +76,7 @@ def prepare_data(filename, vocab=None):
 
     print("Indexing words...")
     if not vocab:
-        vocab = Vocab()
+        vocab = Vocab(pad_token=opt.pad_token, sos_token=opt.sos_token, eos_token=opt.eos_token)
     for pair in pairs:
         vocab.index_words(pair[0])
         vocab.index_words(pair[1])
@@ -114,58 +114,6 @@ def clean_pairs(vocab, pairs):
     print("Trimmed from %d pairs to %d, %.4f of total" % (len(pairs), len(keep_pairs), len(keep_pairs) / len(pairs)))
     return keep_pairs
 
-class Vocab:
-    '''
-    We'll need a unique index per word to use as the inputs and targets
-    of the networks later. To keep track of all this we will use a helper
-    class called Lang which has word => index (word2index) and index => word
-    (index2word) dictionaries, as well as a count of each word (word2count).
-    This class includes a function trim(min_count) to remove rare words once
-    they are all counted.
-    '''
-    def __init__(self):
-        self.trimmed = False
-        self.word2index = {}
-        self.word2count = {}
-        self.index2word = {opt.pad_token: "PAD", opt.sos_token: "SOS", opt.eos_token: "EOS"}
-        self.n_words = 3  # Count default tokens
-
-    def index_words(self, sentence):
-        for word in sentence.split(' '):
-            self.index_word(word)
-
-    def index_word(self, word):
-        if word not in self.word2index:
-            self.word2index[word] = self.n_words
-            self.word2count[word] = 1
-            self.index2word[self.n_words] = word
-            self.n_words += 1
-        else:
-            self.word2count[word] += 1
-
-    # Remove words below a certain count threshold
-    def trim(self, min_count):
-        if self.trimmed: return
-        self.trimmed = True
-
-        keep_words = []
-
-        for k, v in self.word2count.items():
-            if v >= min_count:
-                keep_words.append(k)
-
-        print('keep_words %s / %s = %.4f' % (
-            len(keep_words), len(self.word2index), len(keep_words) / len(self.word2index)
-        ))
-
-        # Reinitialize dictionaries
-        self.word2index = {}
-        self.word2count = {}
-        self.index2word = {0: "PAD", 1: "SOS", 2: "EOS"}
-        self.n_words = 3  # Count default tokens
-
-        for word in keep_words:
-            self.index_word(word)
 
 # Turn a Unicode string to plain ASCII, thanks to http://stackoverflow.com/a/518232/2809427
 def unicode_to_ascii(s):
@@ -208,7 +156,7 @@ def read_langs(filename):
     # Split every line into pairs and normalize
     pairs = [[normalize_string(s) for s in l.split(separator)] for l in lines]
 
-    return Vocab(), pairs
+    return Vocab(pad_token=opt.pad_token, sos_token=opt.sos_token, eos_token=opt.eos_token), pairs
 
 def filter_pairs(pairs):
     filtered_pairs = []
