@@ -7,11 +7,11 @@ class Vocab:
     This class includes a function trim(min_count) to remove rare words once
     they are all counted.
     '''
-    def __init__(self, pad_token=0, sos_token=1, eos_token=2):
+    def __init__(self, pad=0, sos=1, eos=2):
         self.trimmed = False
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {pad_token: "PAD", sos_token: "SOS", eos_token: "EOS"}
+        self.index2word = {pad: "PAD", sos: "SOS", eos: "EOS"}
         self.n_words = 3  # Count default tokens
 
     def index_words(self, sentence):

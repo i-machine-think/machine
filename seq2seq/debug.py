@@ -15,11 +15,12 @@ opt = parser.parse_args()
 
 # load data
 savedata = torch.load(opt.savedata + '.pt')
-vocab = savedata['vocab']
+vocab_source = savedata['vocab_source']
+vocab_target = savedata['vocab_target']
 train_pairs = savedata['train_pairs']
 
 small_batch_size = 3
-input_batches, input_lengths, target_batches, target_lengths = random_batch(small_batch_size, vocab, train_pairs)
+input_batches, input_lengths, target_batches, target_lengths = random_batch(small_batch_size, vocab_source, vocab_target, train_pairs)
 
 print('input_batches', input_batches.size()) # (max_len x batch_size)
 print('target_batches', target_batches.size()) # (max_len x batch_size)
@@ -29,8 +30,8 @@ print('target_batches', target_batches.size()) # (max_len x batch_size)
 small_hidden_size = 8
 small_n_layers = 2
 
-encoder_test = EncoderRNN(vocab.n_words, small_hidden_size, small_n_layers)
-decoder_test = LuongAttnDecoderRNN('general', small_hidden_size, vocab.n_words, small_n_layers)
+encoder_test = EncoderRNN(vocab_source.n_words, small_hidden_size, small_n_layers)
+decoder_test = LuongAttnDecoderRNN('general', small_hidden_size, vocab_target.n_words, small_n_layers)
 
 if USE_CUDA:
     encoder_test.cuda()

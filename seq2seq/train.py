@@ -32,7 +32,8 @@ opt = parser.parse_args()
 
 # load data
 savedata = torch.load(opt.savedata + '.pt')
-vocab = savedata['vocab']
+vocab_source = savedata['vocab_source']
+vocab_target = savedata['vocab_target']
 train_pairs = savedata['train_pairs']
 # TODO: put into options:
 clip = 50.0
@@ -40,7 +41,7 @@ batch_size = 1
 def train_model():
     # Configure models
     attn_model = 'dot'
-    hidden_size = 5
+    hidden_size = 50
     n_layers = 2
     dropout = 0.1
 
@@ -53,12 +54,12 @@ def train_model():
     epoch = 0
     plot_every = 20
     print_every = 100
-    evaluate_every = 1000
+    evaluate_every = 200
 
     # Initialize models
     # encoder = EncoderRNN(input_lang.n_words, hidden_size, n_layers, dropout=dropout)
-    encoder = EncoderRNN(vocab.n_words, hidden_size, n_layers, dropout=dropout)
-    decoder = LuongAttnDecoderRNN(attn_model, hidden_size, vocab.n_words, n_layers, dropout=dropout)
+    encoder = EncoderRNN(vocab_source.n_words, hidden_size, n_layers, dropout=dropout)
+    decoder = LuongAttnDecoderRNN(attn_model, hidden_size, vocab_target.n_words, n_layers, dropout=dropout)
     # decoder = LuongAttnDecoderRNN(attn_model, hidden_size, output_lang.n_words, n_layers, dropout=dropout)
 
     # Initialize optimizers and criterion
@@ -100,7 +101,7 @@ def train_model():
         epoch += 1
 
         # Get training data for this cycle
-        input_batches, input_lengths, target_batches, target_lengths = random_batch(batch_size, vocab, train_pairs)
+        input_batches, input_lengths, target_batches, target_lengths = random_batch(batch_size, vocab_source, vocab_target, train_pairs)
 
         # Run the train function
         loss, ec, dc = train(
@@ -193,7 +194,7 @@ def train(input_batches, input_lengths, target_batches, target_lengths, encoder,
 
 def evaluate(encoder, decoder, input_seq, max_length=Constants.MAX_LENGTH):
     input_lengths = [len(input_seq)]
-    input_seqs = [indexes_from_sentence(vocab, input_seq)]
+    input_seqs = [indexes_from_sentence(vocab_source, input_seq)]
     # input_seqs = [data.indexes_from_sentence(input_lang, input_seq)]
     input_batches = Variable(torch.LongTensor(input_seqs), volatile=True).transpose(0, 1)
 
@@ -232,7 +233,7 @@ def evaluate(encoder, decoder, input_seq, max_length=Constants.MAX_LENGTH):
             decoded_words.append('<EOS>')
             break
         else:
-            decoded_words.append(vocab.index2word[ni])
+            decoded_words.append(vocab_target.index2word[ni])
             # decoded_words.append(output_lang.index2word[ni])
 
         # Next input is chosen word
@@ -295,7 +296,7 @@ def evaluate_and_show_attention(encoder, decoder, input_sentence, target_sentenc
         print('=', target_sentence)
     print('<', output_sentence)
 
-    show_attention(input_sentence, output_words, attentions)
+    # show_attention(input_sentence, output_words, attentions)
 
     # Show input, target, output text in visdom
     win = 'evaluted (%s)' % hostname

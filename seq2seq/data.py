@@ -39,17 +39,18 @@ opt = parser.parse_args()
 
 def main():
     print('Preparing training ...')
-    vocab, train_pairs = prepare_data(opt.trainfile)
-    vocab.trim(opt.min_count)
-    train_pairs = clean_pairs(vocab, train_pairs)
+    vocab_source, vocab_target, train_pairs = prepare_data(opt.trainfile)
+    # vocab.trim(opt.min_count)
+    # train_pairs = clean_pairs(vocab, train_pairs)
 
     print('Preparing test ...')
-    vocab, test_pairs = prepare_data(opt.testfile, vocab)
-    vocab.trim(opt.min_count)
-    test_pairs = clean_pairs(vocab, test_pairs)
+    _, _, test_pairs = prepare_data(opt.testfile, vocab_source, vocab_target)
+    # vocab.trim(opt.min_count)
+    # test_pairs = clean_pairs(vocab, test_pairs)
 
-    # TODO: here I need to save the data
-    savedata = {'vocab': vocab,
+    # save data
+    savedata = {'vocab_source': vocab_source,
+                'vocab_target': vocab_target,
                  'train_pairs': train_pairs,
                  'test_pairs': test_pairs}
     torch.save(savedata, opt.savedata + '.pt')
@@ -59,7 +60,7 @@ def main():
     # torch.save(test_pairs, open(opt.savedata + '.test.pt', 'wb'))
 
 
-def prepare_data(filename, vocab=None):
+def prepare_data(filename, vocab_source=None, vocab_target=None):
     '''
     The full process for preparing the data is:
     1. Read text file and split into lines
@@ -68,51 +69,56 @@ def prepare_data(filename, vocab=None):
     4. Make word lists from sentences in pairs
     '''
 
-    vocab, pairs = read_langs(filename)
+    vocab_source, vocab_target, pairs = read_langs(filename)
     print("Read %d sentence pairs" % len(pairs))
 
     pairs = filter_pairs(pairs)
     print("Filtered to %d pairs" % len(pairs))
 
     print("Indexing words...")
-    if not vocab:
-        vocab = Vocab(pad_token=opt.pad_token, sos_token=opt.sos_token, eos_token=opt.eos_token)
+    if not vocab_source:
+        vocab_source = Vocab(pad=opt.pad_token, sos=opt.sos_token, eos=opt.eos_token)
+    if not vocab_target:
+        vocab_target = Vocab(pad=opt.pad_token, sos=opt.sos_token, eos=opt.eos_token)
     for pair in pairs:
-        vocab.index_words(pair[0])
-        vocab.index_words(pair[1])
+        vocab_source.index_words(pair[0])
+        vocab_target.index_words(pair[1])
 
-    print('Indexed %d words in vocab' % (vocab.n_words))
-    return vocab, pairs
+    print('Indexed %d words in source vocab' % (vocab_source.n_words))
+    print('Indexed %d words in target vocab' % (vocab_target.n_words))
+    return vocab_source, vocab_target, pairs
 
-def clean_pairs(vocab, pairs):
-    '''
-    Now we will go back to the set of all sentence
-    pairs and remove those with unknown words.
-    '''
-    keep_pairs = []
-
-    for pair in pairs:
-        input_sentence = pair[0]
-        output_sentence = pair[1]
-        keep_input = True
-        keep_output = True
-
-        for word in input_sentence.split(' '):
-            if word not in vocab.word2index:
-                keep_input = False
-                break
-
-        for word in output_sentence.split(' '):
-            if word not in vocab.word2index:
-                keep_output = False
-                break
-
-        # Remove if pair doesn't match input and output conditions
-        if keep_input and keep_output:
-            keep_pairs.append(pair)
-
-    print("Trimmed from %d pairs to %d, %.4f of total" % (len(pairs), len(keep_pairs), len(keep_pairs) / len(pairs)))
-    return keep_pairs
+# TODO update this function, removed for now as we 
+# are not using it in our experiment
+# def clean_pairs(vocab, pairs):
+#     '''
+#     Now we will go back to the set of all sentence
+#     pairs and remove those with unknown words.
+#     '''
+#     keep_pairs = []
+# 
+#     for pair in pairs:
+#         input_sentence = pair[0]
+#         output_sentence = pair[1]
+#         keep_input = True
+#         keep_output = True
+# 
+#         for word in input_sentence.split(' '):
+#             if word not in vocab.word2index:
+#                 keep_input = False
+#                 break
+# 
+#         for word in output_sentence.split(' '):
+#             if word not in vocab.word2index:
+#                 keep_output = False
+#                 break
+# 
+#         # Remove if pair doesn't match input and output conditions
+#         if keep_input and keep_output:
+#             keep_pairs.append(pair)
+# 
+#     print("Trimmed from %d pairs to %d, %.4f of total" % (len(pairs), len(keep_pairs), len(keep_pairs) / len(pairs)))
+#     return keep_pairs
 
 
 # Turn a Unicode string to plain ASCII, thanks to http://stackoverflow.com/a/518232/2809427
@@ -128,11 +134,11 @@ def unicode_to_ascii(s):
     )
 
 # Lowercase, trim, and remove non-letter characters
-def normalize_string(s):
-    s = unicode_to_ascii(s.lower().strip())
-    s = re.sub(r"([,.!?])", r" \1 ", s)
-    s = re.sub(r"[^a-zA-Z,.!?]+", r" ", s)
-    s = re.sub(r"\s+", r" ", s).strip()
+def normalise_string_scan(s):
+    #s = unicode_to_ascii(s.lower().strip())
+    # s = re.sub(r"([,.!?])", r" \1 ", s)
+    # s = re.sub(r"[^a-zA-Z,.!?]+", r" ", s)
+    # s = re.sub(r"\s+", r" ", s).strip()
     return s
 
 def read_langs(filename):
@@ -154,9 +160,14 @@ def read_langs(filename):
         lines = [l[3:] for l in lines]
 
     # Split every line into pairs and normalize
-    pairs = [[normalize_string(s) for s in l.split(separator)] for l in lines]
+    # TODO right now also targets are normalised resulting in weird effects,
+    # update this
+    pairs = [[normalise_string_scan(s) for s in l.split(separator)] for l in lines]
 
-    return Vocab(pad_token=opt.pad_token, sos_token=opt.sos_token, eos_token=opt.eos_token), pairs
+    vocab_source = Vocab(pad=opt.pad_token, sos=opt.sos_token, eos=opt.eos_token)
+    vocab_target = Vocab(pad=opt.pad_token, sos=opt.sos_token, eos=opt.eos_token)
+
+    return vocab_source, vocab_target, pairs
 
 def filter_pairs(pairs):
     filtered_pairs = []
@@ -177,15 +188,15 @@ def pad_seq(seq, max_length):
     return seq
 
 
-def random_batch(batch_size, vocab, pairs):
+def random_batch(batch_size, vocab_source, vocab_target, pairs):
     input_seqs = []
     target_seqs = []
 
     # Choose random pairs
     for i in range(batch_size):
         pair = random.choice(pairs)
-        input_seqs.append(indexes_from_sentence(vocab, pair[0]))
-        target_seqs.append(indexes_from_sentence(vocab, pair[1]))
+        input_seqs.append(indexes_from_sentence(vocab_source, pair[0]))
+        target_seqs.append(indexes_from_sentence(vocab_target, pair[1]))
 
     # Zip into pairs, sort by length (descending), unzip
     seq_pairs = sorted(zip(input_seqs, target_seqs), key=lambda p: len(p[0]), reverse=True)
@@ -201,7 +212,7 @@ def random_batch(batch_size, vocab, pairs):
     input_var = Variable(torch.LongTensor(input_padded)).transpose(0, 1)
     target_var = Variable(torch.LongTensor(target_padded)).transpose(0, 1)
 
-    if use_cuda:
+    if opt.use_cuda:
         input_var = input_var.cuda()
         target_var = target_var.cuda()
 
