@@ -9,8 +9,6 @@ from torch.autograd import Variable
 
 import Constants
 
-USE_CUDA = False
-
 parser = argparse.ArgumentParser(description='data.py')
 
 # **Preprocess Options**
@@ -19,21 +17,35 @@ parser.add_argument('-dataname', type=str, default='SCAN',
 parser.add_argument('-trainfile',  type=str,
                     help="Path to the training data")
 parser.add_argument('-testfile',  type=str,
-                    help="Path to the training data")
+                    help="Path to the test data")
 parser.add_argument('-savedata',  type=str,
                     help="Output file for the prepared data")
+parser.add_argument('-pad_token',  type=int, default=0,
+                    help="Token used for padding")
+parser.add_argument('-sos_token',  type=int, default=1,
+                    help="Start of sentence token")
+parser.add_argument('-eos_token',  type=int, default=2,
+                    help="End of sentence token")
+parser.add_argument('-min_length',  type=int, default=3,
+                    help="Minimum sentence length")
+parser.add_argument('-max_length',  type=int, default=1000,
+                    help="Maximum sentence length")
+parser.add_argument('-min_count',  type=int, default=1,
+                    help="Cutoff count for vocabulary")
+parser.add_argument('-use_cuda', action='store_true',
+                    help="Set to true to run on GPU")
 
 opt = parser.parse_args()
 
 def main():
     print('Preparing training ...')
     vocab, train_pairs = prepare_data(opt.trainfile)
-    vocab.trim(Constants.MIN_COUNT)
+    vocab.trim(opt.min_count)
     train_pairs = clean_pairs(vocab, train_pairs)
 
     print('Preparing test ...')
     vocab, test_pairs = prepare_data(opt.testfile, vocab)
-    vocab.trim(Constants.MIN_COUNT)
+    vocab.trim(opt.min_count)
     test_pairs = clean_pairs(vocab, test_pairs)
 
     # TODO: here I need to save the data
@@ -115,7 +127,7 @@ class Vocab:
         self.trimmed = False
         self.word2index = {}
         self.word2count = {}
-        self.index2word = {Constants.PAD_token: "PAD", Constants.SOS_token: "SOS", Constants.EOS_token: "EOS"}
+        self.index2word = {opt.pad_token: "PAD", opt.sos_token: "SOS", opt.eos_token: "EOS"}
         self.n_words = 3  # Count default tokens
 
     def index_words(self, sentence):
@@ -201,19 +213,19 @@ def read_langs(filename):
 def filter_pairs(pairs):
     filtered_pairs = []
     for pair in pairs:
-        if len(pair[0]) >= Constants.MIN_LENGTH and len(pair[0]) <= Constants.MAX_LENGTH \
-            and len(pair[1]) >= Constants.MIN_LENGTH and len(pair[1]) <= Constants.MAX_LENGTH:
+        if len(pair[0]) >= opt.min_length and len(pair[0]) <= opt.max_length \
+            and len(pair[1]) >= opt.min_length and len(pair[1]) <= opt.max_length:
                 filtered_pairs.append(pair)
     return filtered_pairs
 
 # Return a list of indexes, one for each word in the sentence, plus EOS
 def indexes_from_sentence(lang, sentence):
-    return [lang.word2index[word] for word in sentence.split(' ')] + [Constants.EOS_token]
+    return [lang.word2index[word] for word in sentence.split(' ')] + [opt.eos_token]
 
 
 # Pad a with the PAD symbol
 def pad_seq(seq, max_length):
-    seq += [Constants.PAD_token for i in range(max_length - len(seq))]
+    seq += [opt.pad_token for i in range(max_length - len(seq))]
     return seq
 
 
@@ -241,7 +253,7 @@ def random_batch(batch_size, vocab, pairs):
     input_var = Variable(torch.LongTensor(input_padded)).transpose(0, 1)
     target_var = Variable(torch.LongTensor(target_padded)).transpose(0, 1)
 
-    if USE_CUDA:
+    if use_cuda:
         input_var = input_var.cuda()
         target_var = target_var.cuda()
 
