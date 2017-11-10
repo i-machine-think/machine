@@ -18,8 +18,6 @@ from models import *
 from data import *
 import Constants
 
-USE_CUDA = False
-
 parser = argparse.ArgumentParser(description='debug.py')
 # **Preprocess Options**
 parser.add_argument('-savedata', required=True, type=str,
@@ -28,7 +26,7 @@ parser.add_argument('-savedata', required=True, type=str,
 # **Configure models
 parser.add_argument('-attn_model', type=str, default='dot',
                     help='Number of layers in the encoder/decoder')
-parser.add_argument('-hidden_size', type=int, default=50,
+parser.add_argument('-hidden_size', type=int, default=100,
                     help='Size of the hidden states')
 parser.add_argument('-n_layers', type=int, default=2,
                     help='Number of layers in the encoder/decoder')
@@ -38,7 +36,7 @@ parser.add_argument('-dropout', type=float, default=0.1,
 # **Configure training/optimization
 parser.add_argument('-batch_size', type=int, default=5,
                     help='Batch size.')
-parser.add_argument('-n_epochs', type=int, default=100,
+parser.add_argument('-n_epochs', type=int, default=10000,
                     help='Number of epochs.')
 parser.add_argument('-clip', type=float, default=50.0,
                     help='Gradient clipping.')
@@ -57,6 +55,9 @@ parser.add_argument('-print_every', type=int, default=100,
 parser.add_argument('-evaluate_every', type=int, default=200,
                     help='When to evaluate model.')
 
+# GPU
+parser.add_argument('-cuda', action='store_true',
+                    help="Use CUDA")
 
 opt = parser.parse_args()
 
@@ -80,7 +81,7 @@ def train_model():
     criterion = nn.CrossEntropyLoss()
 
     # Move models to GPU
-    if USE_CUDA:
+    if opt.cuda:
         encoder.cuda()
         decoder.cuda()
 
@@ -173,7 +174,7 @@ def train(input_batches, input_lengths, target_batches, target_lengths, encoder,
     all_decoder_outputs = Variable(torch.zeros(max_target_length, opt.batch_size, decoder.output_size))
 
     # Move new Variables to CUDA
-    if USE_CUDA:
+    if opt.cuda:
         decoder_input = decoder_input.cuda()
         all_decoder_outputs = all_decoder_outputs.cuda()
 
@@ -209,7 +210,7 @@ def evaluate(encoder, decoder, input_seq, max_length=Constants.MAX_LENGTH):
     input_seqs = [indexes_from_sentence(vocab_source, input_seq)]
     input_batches = Variable(torch.LongTensor(input_seqs), volatile=True).transpose(0, 1)
 
-    if USE_CUDA:
+    if opt.cuda:
         input_batches = input_batches.cuda()
 
     # Set to not-training mode to disable dropout
@@ -223,7 +224,7 @@ def evaluate(encoder, decoder, input_seq, max_length=Constants.MAX_LENGTH):
     decoder_input = Variable(torch.LongTensor([Constants.SOS_token]), volatile=True)  # SOS
     decoder_hidden = encoder_hidden[:decoder.n_layers]  # Use last (forward) hidden state from encoder
 
-    if USE_CUDA:
+    if opt.cuda:
         decoder_input = decoder_input.cuda()
 
     # Store output words and attention states
@@ -248,7 +249,7 @@ def evaluate(encoder, decoder, input_seq, max_length=Constants.MAX_LENGTH):
 
         # Next input is chosen word
         decoder_input = Variable(torch.LongTensor([ni]))
-        if USE_CUDA: decoder_input = decoder_input.cuda()
+        if opt.cuda: decoder_input = decoder_input.cuda()
 
     # Set back to training mode
     encoder.train(True)
