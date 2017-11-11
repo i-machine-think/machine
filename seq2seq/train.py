@@ -1,11 +1,14 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import time
+import datetime
 import math
+import os
 import socket
 # hostname = socket.gethostname()
 hostname = "http://localhost:8888"
 
-import matplotlib.ticker as ticker
+
 import numpy as np
 
 from torch import optim
@@ -47,13 +50,17 @@ parser.add_argument('-learning_rate', type=float, default=0.0001,
 parser.add_argument('-decoder_learning_ratio', type=float, default=5.0,
                     help='Decoder learning ratio.')
 
-# **Training plot, log & eval
-parser.add_argument('-plot_every', type=int, default=20,
+# **Training plot, save, log & eval
+parser.add_argument('-plot_every', type=int, default=10,
                     help='When to plot train info.')
-parser.add_argument('-print_every', type=int, default=100,
+parser.add_argument('-print_every', type=int, default=10,
                     help='When to print train info.')
-parser.add_argument('-evaluate_every', type=int, default=200,
-                    help='When to evaluate model.')
+parser.add_argument('-evaluate_every', type=int, default=10,
+                    help='When to evaluate the model.')
+parser.add_argument('-save_every', type=int, default=100,
+                    help='When to save the model.')
+parser.add_argument('-save_models_path', type=str, default='models',
+                    help='When to save the model.')
 
 # GPU
 parser.add_argument('-cuda', action='store_true',
@@ -155,6 +162,15 @@ def train_model():
             vis.line(np.array(dcs), win=dcs_win, opts={'title': dcs_win})
             eca = 0
             dca = 0
+
+        if epoch % opt.save_every == 0:
+            timestamp = datetime.datetime.now().strftime("_%Y_%m_%d_%H_%M")
+            if not os.path.exists(opt.save_models_path):
+                os.makedirs(opt.save_models_path)
+            torch.save(encoder.state_dict(), os.path.join(opt.save_models_path, ''.join(
+                ['encoder',  timestamp, '_ep', str(epoch)])))
+            torch.save(decoder.state_dict(), os.path.join(opt.save_models_path, ''.join(
+                ['decoder', timestamp, '_ep', str(epoch)])))
 
 def train(input_batches, input_lengths, target_batches, target_lengths, encoder, decoder, encoder_optimizer,
           decoder_optimizer, criterion, max_length=Constants.MAX_LENGTH):
@@ -307,6 +323,7 @@ def evaluate_and_show_attention(encoder, decoder, input_sentence, target_sentenc
         print('=', target_sentence)
     print('<', output_sentence)
 
+    # todo: fix this!
     # show_attention(input_sentence, output_words, attentions)
 
     # Show input, target, output text in visdom
