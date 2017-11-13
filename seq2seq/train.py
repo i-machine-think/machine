@@ -7,6 +7,11 @@ import math
 import os
 import random
 import io
+import torch
+from models import EncoderRNN, LuongAttnDecoderRNN
+from torch import nn
+import masked_cross_entropy
+from torch.autograd import Variable
 import socket
 # hostname = socket.gethostname()
 hostname = "http://localhost:8888"
@@ -15,65 +20,65 @@ import numpy as np
 from torch import optim
 import torchvision
 
-from models import *
+# from models import *
 # import data
 from data import indexes_from_sentence, random_batch
 import Constants
 
-parser = argparse.ArgumentParser(description='train.py')
+train_parser = argparse.ArgumentParser(description='train.py')
 # **Preprocess Options**
-parser.add_argument('-savedata', required=True, type=str,
-                    help="Output file for the prepared data")
+train_parser.add_argument('-savedata', required=True, type=str,
+                          help="Output file for the prepared data")
 
 # **Configure models
-parser.add_argument('-attn_model', type=str, default='dot',
-                    help='Attention model')
-parser.add_argument('-hidden_size', type=int, default=100,
-                    help='Size of the hidden states')
-parser.add_argument('-n_layers', type=int, default=2,
-                    help='Number of layers in the encoder/decoder')
-parser.add_argument('-dropout', type=float, default=0.1,
-                    help='Dropout probability.')
+train_parser.add_argument('-attn_model', type=str, default='dot',
+                          help='Attention model')
+train_parser.add_argument('-hidden_size', type=int, default=100,
+                          help='Size of the hidden states')
+train_parser.add_argument('-n_layers', type=int, default=2,
+                          help='Number of layers in the encoder/decoder')
+train_parser.add_argument('-dropout', type=float, default=0.1,
+                          help='Dropout probability.')
 
 # **Configure training/optimization
-parser.add_argument('-batch_size', type=int, default=5,
-                    help='Batch size.')
-parser.add_argument('-n_epochs', type=int, default=10000,
-                    help='Number of epochs.')
-parser.add_argument('-clip', type=float, default=50.0,
-                    help='Gradient clipping.')
-parser.add_argument('-teacher_forcing_ratio', type=float, default=0.5,
-                    help='Teacher/forcing ration.')
-parser.add_argument('-learning_rate', type=float, default=0.0001,
-                    help='Learning rate.')
-parser.add_argument('-decoder_learning_ratio', type=float, default=5.0,
-                    help='Decoder learning ratio.')
+train_parser.add_argument('-batch_size', type=int, default=5,
+                          help='Batch size.')
+train_parser.add_argument('-n_epochs', type=int, default=10000,
+                          help='Number of epochs.')
+train_parser.add_argument('-clip', type=float, default=50.0,
+                          help='Gradient clipping.')
+train_parser.add_argument('-teacher_forcing_ratio', type=float, default=0.5,
+                          help='Teacher/forcing ration.')
+train_parser.add_argument('-learning_rate', type=float, default=0.0001,
+                          help='Learning rate.')
+train_parser.add_argument('-decoder_learning_ratio', type=float, default=5.0,
+                          help='Decoder learning ratio.')
 
 # **Training plot, save, log & eval
-parser.add_argument('-plot', type=bool, default=False,
-                    help='Whether plotting training.')
-parser.add_argument('-log', type=bool, default=False,
-                    help='Whether logging training.')
-parser.add_argument('-evaluate', type=bool, default=False,
-                    help='Whether evaluating training.')
-parser.add_argument('-save', type=bool, default=False,
-                    help='Whether saving models.')
-parser.add_argument('-plot_every', type=int, default=10,
-                    help='When to plot train info.')
-parser.add_argument('-print_every', type=int, default=10,
-                    help='When to print train info.')
-parser.add_argument('-evaluate_every', type=int, default=10,
-                    help='When to evaluate the model.')
-parser.add_argument('-save_every', type=int, default=100,
-                    help='When to save the model.')
-parser.add_argument('-save_models_path', type=str, default='models',
-                    help='When to save the model.')
+train_parser.add_argument('-plot', type=bool, default=False,
+                          help='Whether plotting training.')
+train_parser.add_argument('-log', type=bool, default=False,
+                          help='Whether logging training.')
+train_parser.add_argument('-evaluate', type=bool, default=False,
+                          help='Whether evaluating training.')
+train_parser.add_argument('-save', type=bool, default=False,
+                          help='Whether saving models.')
+train_parser.add_argument('-plot_every', type=int, default=10,
+                          help='When to plot train info.')
+train_parser.add_argument('-print_every', type=int, default=10,
+                          help='When to print train info.')
+train_parser.add_argument('-evaluate_every', type=int, default=10,
+                          help='When to evaluate the model.')
+train_parser.add_argument('-save_every', type=int, default=100,
+                          help='When to save the model.')
+train_parser.add_argument('-save_models_path', type=str, default='models',
+                          help='When to save the model.')
 
 # GPU
-parser.add_argument('-cuda', action='store_true',
-                    help="Use CUDA")
+train_parser.add_argument('-cuda', action='store_true',
+                          help="Use CUDA")
 
-opt = parser.parse_args()
+opt = train_parser.parse_args()
 
 if opt.plot or opt.evaluate:
     from PIL import Image
