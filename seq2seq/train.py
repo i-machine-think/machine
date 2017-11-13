@@ -84,6 +84,7 @@ if opt.plot or opt.evaluate:
     vis = visdom.Visdom()
 
 # load data
+# the lambda storage option is for data created without cuda
 savedata = torch.load(opt.savedata + '.pt', map_location=lambda storage, loc: storage.cuda())
 vocab_source = savedata['vocab_source']
 vocab_target = savedata['vocab_target']
