@@ -8,14 +8,9 @@ import socket
 # hostname = socket.gethostname()
 hostname = "http://localhost:8888"
 
-
 import numpy as np
-
 from torch import optim
 import torchvision
-from PIL import Image
-import visdom
-vis = visdom.Visdom()
 
 from models import *
 from data import *
@@ -51,6 +46,14 @@ parser.add_argument('-decoder_learning_ratio', type=float, default=5.0,
                     help='Decoder learning ratio.')
 
 # **Training plot, save, log & eval
+parser.add_argument('-plot', type=bool, default=False,
+                    help='Whether plotting training.')
+parser.add_argument('-log', type=bool, default=False,
+                    help='Whether logging training.')
+parser.add_argument('-evaluate', type=bool, default=False,
+                    help='Whether evaluating training.')
+parser.add_argument('-save', type=bool, default=False,
+                    help='Whether saving models.')
 parser.add_argument('-plot_every', type=int, default=10,
                     help='When to plot train info.')
 parser.add_argument('-print_every', type=int, default=10,
@@ -67,6 +70,11 @@ parser.add_argument('-cuda', action='store_true',
                     help="Use CUDA")
 
 opt = parser.parse_args()
+
+if opt.plot or opt.evaluate:
+    from PIL import Image
+    import visdom
+    vis = visdom.Visdom()
 
 # load data
 savedata = torch.load(opt.savedata + '.pt')
@@ -103,8 +111,11 @@ def train_model():
         'teacher_forcing_ratio': opt.teacher_forcing_ratio,
         'decoder_learning_ratio': opt.decoder_learning_ratio,
     })
-    job.plot_every = opt.plot_every
-    job.log_every = opt.print_every
+
+    if opt.plot:
+        job.plot_every = opt.plot_every
+    if opt.log:
+        job.log_every = opt.print_every
 
     # Keep track of time elapsed and running averages
     start = time.time()
@@ -138,17 +149,17 @@ def train_model():
 
         job.record(epoch, loss)
 
-        if epoch % opt.print_every == 0:
+        if opt.log and epoch % opt.print_every == 0:
             print_loss_avg = print_loss_total / opt.print_every
             print_loss_total = 0
             print_summary = '%s (%d %d%%) %.4f' % (
             time_since(start, max(1, epoch / opt.n_epochs)), epoch, epoch / opt.n_epochs * 100, print_loss_avg)
             print(print_summary)
 
-        if epoch % opt.evaluate_every == 0:
+        if opt.evaluate and epoch % opt.evaluate_every == 0:
             evaluate_randomly(encoder, decoder, train_pairs)
 
-        if epoch % opt.plot_every == 0:
+        if opt.plot and epoch % opt.plot_every == 0:
             plot_loss_avg = plot_loss_total / opt.plot_every
             plot_losses.append(plot_loss_avg)
             plot_loss_total = 0
@@ -163,7 +174,7 @@ def train_model():
             eca = 0
             dca = 0
 
-        if epoch % opt.save_every == 0:
+        if opt.save and epoch % opt.save_every == 0:
             timestamp = datetime.datetime.now().strftime("_%Y_%m_%d_%H_%M")
             if not os.path.exists(opt.save_models_path):
                 os.makedirs(opt.save_models_path)
