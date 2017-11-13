@@ -23,7 +23,7 @@ parser.add_argument('-savedata', required=True, type=str,
 
 # **Configure models
 parser.add_argument('-attn_model', type=str, default='dot',
-                    help='Number of layers in the encoder/decoder')
+                    help='Attention model')
 parser.add_argument('-hidden_size', type=int, default=100,
                     help='Size of the hidden states')
 parser.add_argument('-n_layers', type=int, default=2,
