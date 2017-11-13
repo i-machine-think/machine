@@ -9,34 +9,6 @@ from torch.autograd import Variable
 
 from Vocab import Vocab
 
-parser = argparse.ArgumentParser(description='data.py')
-
-# **Preprocess Options**
-parser.add_argument('-dataname', type=str, default='SCAN',
-                    help="Path to the training data")
-parser.add_argument('-trainfile',  type=str,
-                    help="Path to the training data")
-parser.add_argument('-testfile',  type=str,
-                    help="Path to the test data")
-parser.add_argument('-savedata',  type=str,
-                    help="Output file for the prepared data")
-parser.add_argument('-pad_token',  type=int, default=0,
-                    help="Token used for padding")
-parser.add_argument('-sos_token',  type=int, default=1,
-                    help="Start of sentence token")
-parser.add_argument('-eos_token',  type=int, default=2,
-                    help="End of sentence token")
-parser.add_argument('-min_length',  type=int, default=3,
-                    help="Minimum sentence length")
-parser.add_argument('-max_length',  type=int, default=1000,
-                    help="Maximum sentence length")
-parser.add_argument('-min_count',  type=int, default=1,
-                    help="Cutoff count for vocabulary")
-parser.add_argument('-use_cuda', action='store_true',
-                    help="Set to true to run on GPU")
-
-opt = parser.parse_args()
-
 def main():
     print('Preparing training ...')
     vocab_source, vocab_target, train_pairs = prepare_data(opt.trainfile)
@@ -221,5 +193,33 @@ def random_batch(batch_size, vocab_source, vocab_target, pairs):
 
     return input_var, input_lengths, target_var, target_lengths
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='data.py')
+
+    # **Preprocess Options**
+    parser.add_argument('-dataname', type=str, default='SCAN',
+                        help="Path to the training data")
+    parser.add_argument('-trainfile',  type=str,
+                        help="Path to the training data")
+    parser.add_argument('-testfile',  type=str,
+                        help="Path to the test data")
+    parser.add_argument('-savedata',  type=str,
+                        help="Output file for the prepared data")
+    parser.add_argument('-pad_token',  type=int, default=0,
+                        help="Token used for padding")
+    parser.add_argument('-sos_token',  type=int, default=1,
+                        help="Start of sentence token")
+    parser.add_argument('-eos_token',  type=int, default=2,
+                        help="End of sentence token")
+    parser.add_argument('-min_length',  type=int, default=3,
+                        help="Minimum sentence length")
+    parser.add_argument('-max_length',  type=int, default=1000,
+                        help="Maximum sentence length")
+    parser.add_argument('-min_count',  type=int, default=1,
+                        help="Cutoff count for vocabulary")
+    parser.add_argument('-use_cuda', action='store_true',
+                        help="Set to true to run on GPU")
+
+    opt = parser.parse_args()
+
     main()
