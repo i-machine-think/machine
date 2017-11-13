@@ -152,18 +152,21 @@ def read_langs(filename):
 
     print("Reading lines...")
 
-    lines = io.open(filename).read().strip().split('\n')
+    data = io.open(filename)
+
     separator = '\t'
     if opt.dataname == 'SCAN':
         separator = 'OUT:'
-        # remove 'IN: ' prefix
-        lines = [l[3:] for l in lines]
+
+    # take an input line of scan file and return a source-target pair
+    def make_source_target(line):
+        l = line[3:]   # remove 'IN: ' prefix
+        pair = [normalise_string_scan(s) for s in l.split(separator)] # split and normalise
+        return pair
 
     # Split every line into pairs and normalize
-    # TODO right now also targets are normalised resulting in weird effects,
-    # update this
-    pairs = [[normalise_string_scan(s) for s in l.split(separator)] for l in lines]
-
+    pairs = [make_source_target(line) for line in data]
+    
     vocab_source = Vocab(pad=opt.pad_token, sos=opt.sos_token, eos=opt.eos_token)
     vocab_target = Vocab(pad=opt.pad_token, sos=opt.sos_token, eos=opt.eos_token)
 
