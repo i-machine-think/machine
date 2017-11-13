@@ -1,9 +1,12 @@
+import argparse
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import time
 import datetime
 import math
 import os
+import random
+import io
 import socket
 # hostname = socket.gethostname()
 hostname = "http://localhost:8888"
@@ -13,7 +16,7 @@ from torch import optim
 import torchvision
 
 from models import *
-from data import *
+import data
 import Constants
 
 parser = argparse.ArgumentParser(description='debug.py')
@@ -132,7 +135,7 @@ def train_model():
         epoch += 1
 
         # Get training data for this cycle
-        input_batches, input_lengths, target_batches, target_lengths = random_batch(opt.batch_size, vocab_source, vocab_target, train_pairs)
+        input_batches, input_lengths, target_batches, target_lengths = data.random_batch(opt.batch_size, vocab_source, vocab_target, train_pairs)
 
         # Run the train function
         loss, ec, dc = train(
@@ -234,7 +237,7 @@ def train(input_batches, input_lengths, target_batches, target_lengths, encoder,
 
 def evaluate(encoder, decoder, input_seq, max_length=Constants.MAX_LENGTH):
     input_lengths = [len(input_seq)]
-    input_seqs = [indexes_from_sentence(vocab_source, input_seq)]
+    input_seqs = [data.indexes_from_sentence(vocab_source, input_seq)]
     input_batches = Variable(torch.LongTensor(input_seqs), volatile=True).transpose(0, 1)
 
     if opt.cuda:
