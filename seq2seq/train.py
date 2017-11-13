@@ -7,6 +7,11 @@ import math
 import os
 import random
 import io
+import torch
+from models import EncoderRNN, LuongAttnDecoderRNN
+from torch import nn
+import masked_cross_entropy
+from torch.autograd import Variable
 import socket
 # hostname = socket.gethostname()
 hostname = "http://localhost:8888"
@@ -15,7 +20,7 @@ import numpy as np
 from torch import optim
 import torchvision
 
-from models import *
+# from models import *
 # import data
 from data import indexes_from_sentence, random_batch
 import Constants
