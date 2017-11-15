@@ -1,7 +1,6 @@
-import argparse
-from models import *
-from data import *
 import Constants
+from data import *
+from models import *
 
 USE_CUDA = False
 

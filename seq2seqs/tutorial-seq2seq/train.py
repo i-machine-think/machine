@@ -1,18 +1,20 @@
 import argparse
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-import time
 import datetime
+import io
 import math
 import os
 import random
-import io
+import time
+
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import torch
-from models import EncoderRNN, LuongAttnDecoderRNN
 from torch import nn
-import masked_cross_entropy
 from torch.autograd import Variable
-import socket
+
+import masked_cross_entropy
+from models import EncoderRNN, LuongAttnDecoderRNN
+
 # hostname = socket.gethostname()
 hostname = "http://localhost:8888"
 
@@ -20,7 +22,7 @@ import numpy as np
 from torch import optim
 import torchvision
 
-from data import indexes_from_sentence, random_batch
+from data import indexes_from_sentence
 import Constants
 
 parser = argparse.ArgumentParser(description='train.py')
@@ -109,7 +111,7 @@ def train_model():
         decoder.cuda()
 
     import sconce
-    job = sconce.Job('seq2seq-translate', {
+    job = sconce.Job('tutorial-seq2seq-translate', {
         'attn_model': opt.attn_model,
         'n_layers': opt.n_layers,
         'dropout': opt.dropout,
@@ -140,7 +142,7 @@ def train_model():
         epoch += 1
 
         # Get training data for this cycle
-        input_batches, input_lengths, target_batches, target_lengths = random_batch(opt.batch_size, vocab_source, vocab_target, train_pairs)
+        input_batches, input_lengths, target_batches, target_lengths = (opt.batch_size, vocab_source, vocab_target, train_pairs)
 
         # Run the train function
         loss, ec, dc = train(

@@ -1,8 +1,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from masked_cross_entropy import *
 
 import Constants
+from masked_cross_entropy import *
 
 USE_CUDA = False
 
