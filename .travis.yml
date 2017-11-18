@@ -31,6 +31,6 @@ before_script:
 
 script: 
   # Unit test
-  - nosetests --with-coverage --cover-erase --cover-package=seq2seq
+  - nosetests --with-coverage --cover-erase --cover-package=ibm-seq2seq/seq2seq
   # Integration test
   - "if [[ $TRAVIS_BRANCH =~ (master|develop) ]]; then python ibm-seq2seq/setup.py install && ibm-seq2seq/scripts/integration_test.sh; fi"
