@@ -25,6 +25,10 @@ before_script:
   # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
   - time flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
+
+  # Prepare data for integration test
+  - scripts/toy.sh
+
 script: 
   # Unit test
   - nosetests --with-coverage --cover-erase --cover-package=seq2seq
