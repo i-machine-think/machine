@@ -27,7 +27,7 @@ before_script:
 
 
   # Prepare data for integration test
-  - scripts/toy.sh
+  - ibm-seq2seq/scripts/toy.sh
 
 script: 
   # Unit test
