@@ -9,4 +9,4 @@ python ibm-seq2seq/scripts/integration_test.py --train_path $TRAIN_PATH --dev_pa
 python ibm-seq2seq/scripts/integration_test.py --train_path $TRAIN_PATH --dev_path $DEV_PATH --resume
 # Load checkpoint
 python ibm-seq2seq/scripts/integration_test.py --train_path $TRAIN_PATH --dev_path $DEV_PATH \
-	--load_checkpoint $(ls -t experiment/checkpoints/ | head -1)
+	--load_checkpoint $(ls -t ibm-seq2seq/experiment/checkpoints/ | head -1)
