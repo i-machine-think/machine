@@ -1,1 +1,0 @@
-# Code adapated from https://github.com/spro/practical-pytorch/blob/master/seq2seq-translation/seq2seq-translation-batched.ipynb
