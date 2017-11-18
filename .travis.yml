@@ -40,4 +40,4 @@ script:
   # Unit test
   - nosetests --with-coverage --cover-erase --cover-package=ibm-seq2seq/seq2seq
   # Integration test
-  - "if [[ $TRAVIS_BRANCH =~ (master|develop) ]]; then cd seq2seq && python setup.py install && scripts/integration_test.sh; fi"
+  - "if [[ $TRAVIS_BRANCH =~ (master|develop) ]]; then cd ibm-seq2seq && python setup.py install && scripts/integration_test.sh; fi"
