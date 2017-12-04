@@ -10,6 +10,9 @@ python:
 git:
   submodules: false
 
+notifications:
+  slack: 'i-machine-think.slack.com:Gckgwf2l93LZo9tI6LZJ4UL8'
+
 # command to install dependencies
 install:
   - pip install -U pip
