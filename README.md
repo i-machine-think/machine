@@ -1,4 +1,4 @@
-# SAL &middot; [![Build Status](https://travis-ci.org/i-machine-think/SAL.svg?branch=master)](https://travis-ci.org/i-machine-think/SAL)
+# machine &middot; [![Build Status](https://travis-ci.org/i-machine-think/machine.svg?branch=master)](https://travis-ci.org/i-machine-think/machine)
 
 This repository uses the pytorch-seq2seq library developed by IBM as a submodule.
 If you clone this repository, run `git submodule update --init --recursive', to download the contents of the submodule.

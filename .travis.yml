@@ -6,10 +6,6 @@ python:
   - "2.7"
   - "3.6"
 
-# http://docs.travis-ci.com/user/customizing-the-build/#Git-Submodules
-git:
-  submodules: false
-
 notifications:
   slack: 'i-machine-think.slack.com:Gckgwf2l93LZo9tI6LZJ4UL8'
 
@@ -32,16 +28,8 @@ before_script:
   # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
   - time flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-  # https://github.com/travis-ci/travis-ci/issues/4099
-  - git submodule update --init --remote --recursive
-
-
-  # Prepare data for integration test
-  - cd ibm-seq2seq
-  - scripts/toy.sh
-
 script: 
   # Unit test
-  - nosetests --with-coverage --cover-erase --cover-package=seq2seq
-  # Integration test
-  - "if [[ $TRAVIS_BRANCH =~ (master|develop) ]]; then python setup.py install && scripts/integration_test.sh; fi"
+  - python -m unittest discover -v
+  - coverage run -m unittest discover
+  - coverage report -m
