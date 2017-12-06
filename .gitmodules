@@ -1,3 +1,0 @@
-[submodule "ibm-seq2seq"]
-	path = ibm-seq2seq
-	url = https://github.com/i-machine-think/pytorch-seq2seq
