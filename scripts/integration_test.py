@@ -2,6 +2,8 @@ import os
 import argparse
 import logging
 
+import make_path
+
 import torch
 import torchtext
 
@@ -51,8 +53,8 @@ dev = torchtext.data.TabularDataset(
     fields=[('src', src), ('tgt', tgt)],
     filter_pred=len_filter
 )
-src.build_vocab(train, max_size=500)
-tgt.build_vocab(train, max_size=500)
+src.build_vocab(train, max_size=50000)
+tgt.build_vocab(train, max_size=50000)
 input_vocab = src.vocab
 output_vocab = tgt.vocab
 
@@ -75,11 +77,9 @@ else:
     optimizer = None
     if not opt.resume:
         # Initialize model
-        hidden_size=24
-        embedding_size=8
+        hidden_size=128
         bidirectional = True
         encoder = EncoderRNN(len(src.vocab), max_len, hidden_size,
-                             embedding_size,
                              bidirectional=bidirectional,
                              rnn_cell='lstm',
                              variable_lengths=True)
@@ -101,7 +101,7 @@ else:
                           print_every=10, expt_dir=opt.expt_dir)
 
     seq2seq = t.train(seq2seq, train,
-                      num_epochs=3, dev_data=dev,
+                      num_epochs=6, dev_data=dev,
                       optimizer=optimizer,
                       teacher_forcing_ratio=0.5,
                       resume=opt.resume)
