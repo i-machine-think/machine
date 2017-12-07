@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import time
+import shutil
 
 import torch
 import torchtext
@@ -87,6 +88,7 @@ class SupervisedTrainer(object):
             log.debug("Epoch: %d, Step: %d" % (epoch, step))
 
             batch_generator = batch_iterator.__iter__()
+
             # consuming seen batches from previous training
             for _ in range((epoch - 1) * steps_per_epoch, step):
                 next(batch_generator)
@@ -105,6 +107,11 @@ class SupervisedTrainer(object):
                 print_loss_total += loss
                 epoch_loss_total += loss
 
+                if dev_data is not None:
+                    dev_loss, _ = self.evaluator.evaluate(model, dev_data)
+                    dev_loss_best = 5*[dev_loss]
+                    best_checkpoints = 5*[None]
+
                 if step % self.print_every == 0 and step_elapsed > self.print_every:
                     print_loss_avg = print_loss_total / self.print_every
                     print_loss_total = 0
@@ -114,8 +121,29 @@ class SupervisedTrainer(object):
                         print_loss_avg)
                     log.info(log_msg)
 
-                # Checkpoint
                 if step % self.checkpoint_every == 0 or step == total_steps:
+                    # compute dev loss
+                    if dev_data is not None:
+                        dev_loss, accuracy = self.evaluator.evaluate(model, dev_data)
+                        max_dev_loss = max(dev_loss_best)
+                        if dev_loss < max_dev_loss:
+                            index_max = dev_loss_best.index(max_dev_loss)
+                            # rm prev model
+                            shutil.rmtree(best_checkpoints[index_max])
+                            model_name = 'acc_%.2f_ppl_%.2f_e%d' % (accuracy, dev_loss, epoch)
+
+                            best_checkpoints[index_max] = model_name
+                            dev_loss_best[index_max] = dev_loss
+
+                            # save model
+                            Checkpoint(model=model,
+                                       optimizer=self.optimizer,
+                                       epoch=epoch, step=step,
+                                       input_vocab=data.fields[seq2seq.src_field_name].vocab,
+                                       output_vocab=data.fields[seq2seq.tgt_field_name].vocab).save(self.expt_dir, name=model_name)
+
+                    # Checkpoint at the end of training
+                if step == total_steps:
                     Checkpoint(model=model,
                                optimizer=self.optimizer,
                                epoch=epoch, step=step,
