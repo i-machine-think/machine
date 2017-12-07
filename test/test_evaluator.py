@@ -25,7 +25,7 @@ class TestPredictor(unittest.TestCase):
         src.build_vocab(self.dataset)
         tgt.build_vocab(self.dataset)
 
-        encoder = EncoderRNN(len(src.vocab), 10, 10, rnn_cell='lstm')
+        encoder = EncoderRNN(len(src.vocab), 10, 10, 10, rnn_cell='lstm')
         decoder = DecoderRNN(len(tgt.vocab), 10, 10, tgt.sos_id, tgt.eos_id, rnn_cell='lstm')
         self.seq2seq = Seq2seq(encoder, decoder)
 

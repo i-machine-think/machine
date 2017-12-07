@@ -14,7 +14,7 @@ class TestEncoderRNN(unittest.TestCase):
         self.lengths = [10] * 10
 
     def test_input_dropout_WITH_PROB_ZERO(self):
-        rnn = EncoderRNN(self.vocab_size, 50, 16, input_dropout_p=0)
+        rnn = EncoderRNN(self.vocab_size, 10, 50, 16, input_dropout_p=0)
         for param in rnn.parameters():
             param.data.uniform_(-1, 1)
         output1, _ = rnn(self.input_var, self.lengths)
@@ -22,7 +22,7 @@ class TestEncoderRNN(unittest.TestCase):
         self.assertTrue(torch.equal(output1.data, output2.data))
 
     def test_input_dropout_WITH_NON_ZERO_PROB(self):
-        rnn = EncoderRNN(self.vocab_size, 50, 16, input_dropout_p=0.5)
+        rnn = EncoderRNN(self.vocab_size, 10, 50, 16, input_dropout_p=0.5)
         for param in rnn.parameters():
             param.data.uniform_(-1, 1)
 
@@ -36,7 +36,7 @@ class TestEncoderRNN(unittest.TestCase):
         self.assertFalse(equal)
 
     def test_dropout_WITH_PROB_ZERO(self):
-        rnn = EncoderRNN(self.vocab_size, 50, 16, dropout_p=0)
+        rnn = EncoderRNN(self.vocab_size, 10, 50, 16, dropout_p=0)
         for param in rnn.parameters():
             param.data.uniform_(-1, 1)
         output1, _ = rnn(self.input_var, self.lengths)
@@ -46,7 +46,7 @@ class TestEncoderRNN(unittest.TestCase):
     def test_dropout_WITH_NON_ZERO_PROB(self):
         # It's critical to set n_layer=2 here since dropout won't work
         # when the RNN only has one layer according to pytorch's doc
-        rnn = EncoderRNN(self.vocab_size, 50, 16, n_layers=2, dropout_p=0.5)
+        rnn = EncoderRNN(self.vocab_size, 10, 50, 16, n_layers=2, dropout_p=0.5)
         for param in rnn.parameters():
             param.data.uniform_(-1, 1)
 
