@@ -51,18 +51,19 @@ class Checkpoint(object):
             raise LookupError("The checkpoint has not been saved.")
         return self._path
 
-    def save(self, experiment_dir):
+    def save(self, experiment_dir, name=None):
         """
         Saves the current model and related training parameters into a subdirectory of the checkpoint directory.
-        The name of the subdirectory is the current local time in Y_M_D_H_M_S format.
+        By default, the name of the subdirectory is the current local time in Y_M_D_H_M_S format, optionally a variable name can be passed to give the checkpoint a different name.
         Args:
             experiment_dir (str): path to the experiment root directory
+            name (str): alternative name for the model
         Returns:
              str: path to the saved checkpoint subdirectory
         """
-        date_time = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime())
+        name = name or time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime())
 
-        self._path = os.path.join(experiment_dir, self.CHECKPOINT_DIR_NAME, date_time)
+        self._path = os.path.join(experiment_dir, self.CHECKPOINT_DIR_NAME, name)
         path = self._path
 
         if os.path.exists(path):
