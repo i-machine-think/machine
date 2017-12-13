@@ -52,7 +52,7 @@ logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.uppe
 logging.info(opt)
 
 if torch.cuda.is_available():
-        print "Cuda device set to", opt.cuda_device
+        print("Cuda device set to %i" % opt.cuda_device)
         torch.cuda.set_device(opt.cuda_device)
 
 # Prepare dataset
