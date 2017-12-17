@@ -2,3 +2,5 @@ numpy
 dill
 tqdm
 torchtext
+six
+mock
