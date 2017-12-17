@@ -100,13 +100,14 @@ else:
     optimizer = None
     if not opt.resume:
         # Initialize model
-        hidden_size = opt.hidden_size*2 if opt.bidirectional else opt.hidden_size
+        hidden_size = opt.hidden_size
+        decoder_hidden_size = hidden_size*2 if opt.bidirectional else hidden_size
         encoder = EncoderRNN(len(src.vocab), max_len, hidden_size,
                              opt.embedding_size,
                              bidirectional=opt.bidirectional,
                              rnn_cell=opt.rnn_cell,
                              variable_lengths=True)
-        decoder = DecoderRNN(len(tgt.vocab), max_len, hidden_size,
+        decoder = DecoderRNN(len(tgt.vocab), max_len, decoder_hidden_size,
                              dropout_p=opt.dropout_p, use_attention=opt.attention,
                              bidirectional=opt.bidirectional,
                              rnn_cell=opt.rnn_cell,
