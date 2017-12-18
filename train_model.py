@@ -56,6 +56,7 @@ if torch.cuda.is_available():
         print("Cuda device set to %i" % opt.cuda_device)
         torch.cuda.set_device(opt.cuda_device)
 
+############################################################################
 # Prepare dataset
 src = SourceField()
 tgt = TargetField()
@@ -92,6 +93,9 @@ loss = Perplexity(weight, pad)
 if torch.cuda.is_available():
     loss.cuda()
 
+#################################################################################
+# prepare model
+
 if opt.load_checkpoint is not None:
     logging.info("loading checkpoint from {}".format(os.path.join(opt.output_dir, opt.load_checkpoint)))
     checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint)
@@ -100,40 +104,42 @@ if opt.load_checkpoint is not None:
     input_vocab = checkpoint.input_vocab
     output_vocab = checkpoint.output_vocab
 else:
-    seq2seq = None
-    optimizer = opt.optim
-    if not opt.resume:
-        # Initialize model
-        hidden_size = opt.hidden_size
-        decoder_hidden_size = hidden_size*2 if opt.bidirectional else hidden_size
-        encoder = EncoderRNN(len(src.vocab), max_len, hidden_size,
-                             opt.embedding_size,
-                             bidirectional=opt.bidirectional,
-                             rnn_cell=opt.rnn_cell,
-                             variable_lengths=True)
-        decoder = DecoderRNN(len(tgt.vocab), max_len, decoder_hidden_size,
-                             dropout_p=opt.dropout_p, use_attention=opt.attention,
-                             bidirectional=opt.bidirectional,
-                             rnn_cell=opt.rnn_cell,
-                             eos_id=tgt.eos_id, sos_id=tgt.sos_id)
-        seq2seq = Seq2seq(encoder, decoder)
-        if torch.cuda.is_available():
-            seq2seq.cuda()
+    # Initialize model
+    hidden_size = opt.hidden_size
+    decoder_hidden_size = hidden_size*2 if opt.bidirectional else hidden_size
+    encoder = EncoderRNN(len(src.vocab), max_len, hidden_size,
+                         opt.embedding_size,
+                         bidirectional=opt.bidirectional,
+                         rnn_cell=opt.rnn_cell,
+                         variable_lengths=True)
+    decoder = DecoderRNN(len(tgt.vocab), max_len, decoder_hidden_size,
+                         dropout_p=opt.dropout_p, use_attention=opt.attention,
+                         bidirectional=opt.bidirectional,
+                         rnn_cell=opt.rnn_cell,
+                         eos_id=tgt.eos_id, sos_id=tgt.sos_id)
+    seq2seq = Seq2seq(encoder, decoder)
+    if torch.cuda.is_available():
+        seq2seq.cuda()
 
-        for param in seq2seq.parameters():
-            param.data.uniform_(-0.08, 0.08)
+    for param in seq2seq.parameters():
+        param.data.uniform_(-0.08, 0.08)
 
-    # train
-    t = SupervisedTrainer(loss=loss, batch_size=opt.batch_size,
-                          checkpoint_every=opt.save_every,
-                          print_every=opt.print_every, expt_dir=opt.output_dir)
+##############################################################################
+# train model
 
-    seq2seq = t.train(seq2seq, train,
-                      num_epochs=opt.epochs, dev_data=dev,
-                      optimizer=optimizer,
-                      teacher_forcing_ratio=opt.teacher_forcing_ratio,
-                      learning_rate=opt.lr,
-                      resume=opt.resume)
+t = SupervisedTrainer(loss=loss, batch_size=opt.batch_size,
+                      checkpoint_every=opt.save_every,
+                      print_every=opt.print_every, expt_dir=opt.output_dir)
+
+checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resume else None
+
+seq2seq = t.train(seq2seq, train,
+                  num_epochs=opt.epochs, dev_data=dev,
+                  optimizer=opt.optim,
+                  teacher_forcing_ratio=opt.teacher_forcing_ratio,
+                  learning_rate=opt.lr,
+                  resume=opt.resume,
+                  checkpoint_path=checkpoint_path)
 
 # evaluator = Evaluator(loss=loss, batch_size=opt.batch_size)
 # dev_loss, accuracy = evaluator.evaluate(seq2seq, dev)
