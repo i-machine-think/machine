@@ -48,6 +48,9 @@ parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device 
 
 opt = parser.parse_args()
 
+if opt.resume and not opt.load_checkpoint:
+    parser.error('load_checkpoint argument is required to resume training from checkpoint')
+
 LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
 logging.info(opt)
