@@ -23,14 +23,12 @@ class Checkpoint(object):
         output_vocab (Vocabulary): vocabulary for the output language
 
     Attributes:
-        CHECKPOINT_DIR_NAME (str): name of the checkpoint directory
         TRAINER_STATE_NAME (str): name of the file storing trainer states
         MODEL_NAME (str): name of the file storing model
         INPUT_VOCAB_FILE (str): name of the input vocab file
         OUTPUT_VOCAB_FILE (str): name of the output vocab file
     """
 
-    CHECKPOINT_DIR_NAME = 'checkpoints'
     TRAINER_STATE_NAME = 'trainer_states.pt'
     MODEL_NAME = 'model.pt'
     INPUT_VOCAB_FILE = 'input_vocab.pt'
@@ -63,7 +61,7 @@ class Checkpoint(object):
         """
         name = name or time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime())
 
-        self._path = os.path.join(experiment_dir, self.CHECKPOINT_DIR_NAME, name)
+        self._path = os.path.join(experiment_dir, name)
         path = self._path
 
         if os.path.exists(path):
@@ -124,6 +122,6 @@ class Checkpoint(object):
         Returns:
              str: path to the last saved checkpoint's subdirectory
         """
-        checkpoints_path = os.path.join(experiment_path, cls.CHECKPOINT_DIR_NAME)
+        checkpoints_path = os.path.join(experiment_path)
         all_times = sorted(os.listdir(checkpoints_path), reverse=True)
         return os.path.join(checkpoints_path, all_times[0])

@@ -22,7 +22,7 @@ python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --resume --output_dir 
 
 echo "\n\nTest load checkpoint"
 # Load checkpoint
-python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --epoch $EPOCH --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --load_checkpoint $(ls -t experiment/checkpoints/ | head -1)
+python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --epoch $EPOCH --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --load_checkpoint $(ls -t experiment/ | head -1)
 
 # test with attention
 echo "\n\nTest training with attention"

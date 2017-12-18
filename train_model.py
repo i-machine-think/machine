@@ -90,8 +90,8 @@ if torch.cuda.is_available():
     loss.cuda()
 
 if opt.load_checkpoint is not None:
-    logging.info("loading checkpoint from {}".format(os.path.join(opt.output_dir, Checkpoint.CHECKPOINT_DIR_NAME, opt.load_checkpoint)))
-    checkpoint_path = os.path.join(opt.output_dir, Checkpoint.CHECKPOINT_DIR_NAME, opt.load_checkpoint)
+    logging.info("loading checkpoint from {}".format(os.path.join(opt.output_dir, opt.load_checkpoint)))
+    checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint)
     checkpoint = Checkpoint.load(checkpoint_path)
     seq2seq = checkpoint.model
     input_vocab = checkpoint.input_vocab

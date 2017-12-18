@@ -29,7 +29,7 @@ class TestCheckpoint(unittest.TestCase):
         latest_checkpoint = Checkpoint.get_latest_checkpoint(self.EXP_DIR)
         self.assertEquals(latest_checkpoint,
                           os.path.join(self.EXP_DIR,
-                                       'checkpoints/2017_05_23_10_47_29'))
+                                       '2017_05_23_10_47_29'))
 
     @mock.patch('seq2seq.util.checkpoint.torch')
     @mock.patch('seq2seq.util.checkpoint.dill')
