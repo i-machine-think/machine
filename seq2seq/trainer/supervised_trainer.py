@@ -204,9 +204,16 @@ class SupervisedTrainer(object):
         else:
             start_epoch = 1
             step = 0
-            if optimizer is None:
-                optimizer = Optimizer(optim.Adam(model.parameters(), lr=learning_rate), max_grad_norm=5)
-            self.optimizer = optimizer
+
+            def get_optim(optim_name):
+                optims = {'adam': optim.Adam, 'adagrad': optim.Adagrad,
+                          'adadelta': optim.Adadelta, 'adamax': optim.Adamax,
+                          'rmsprop': optim.RMSprop, 'sgd': optim.SGD,
+                           None:optim.Adam}
+                return optims[optim_name]
+
+            self.optimizer = Optimizer(get_optim(optimizer)(model.parameters(), lr=learning_rate),
+                                       max_grad_norm=5)
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))
 

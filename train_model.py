@@ -25,6 +25,7 @@ parser.add_argument('--train', help='Training data')
 parser.add_argument('--dev', help='Development data')
 parser.add_argument('--output_dir', default='../models', help='Path to model directory. If load_checkpoint is True, then path to checkpoint directory has to be provided')
 parser.add_argument('--epochs', type=int, help='Number of epochs', default=6)
+parser.add_argument('--optim', type=str, help='Choose optimizer', choices=['adam', 'adadelta', 'adagrad', 'adamax', 'rmsprop', 'sgd'])
 parser.add_argument('--max_len', type=int, help='Maximum sequence length', default=50)
 parser.add_argument('--rnn_cell', help="Chose type of rnn cell", default='lstm')
 parser.add_argument('--bidirectional', action='store_true', help="Flag for bidirectional encoder")
@@ -36,7 +37,7 @@ parser.add_argument('--dropout_p', type=float, help='Dropout probability', defau
 parser.add_argument('--teacher_forcing_ratio', type=float, help='Teacher forcing ratio', default=0.2)
 parser.add_argument('--attention', action='store_true')
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
-parser.add_argument('--lr', type=float, help='Learning rate', default=0.0001)
+parser.add_argument('--lr', type=float, help='Learning rate, recommended settings.\nrecommended settings: adam=0.001 adadelta=1.0 adamax=0.002 rmsprop=0.01 sgd=0.1', default=0.001)
 
 parser.add_argument('--load_checkpoint', help='The name of the checkpoint to load, usually an encoded time string')
 parser.add_argument('--save_every', type=int, help='Every how many batches the model should be saved', default=100)
@@ -97,7 +98,7 @@ if opt.load_checkpoint is not None:
     output_vocab = checkpoint.output_vocab
 else:
     seq2seq = None
-    optimizer = None
+    optimizer = opt.optim
     if not opt.resume:
         # Initialize model
         hidden_size = opt.hidden_size

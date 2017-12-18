@@ -10,32 +10,37 @@ H_SIZE=5
 CELL='lstm'
 EPOCH=3
 
-
 # check basic training, resuming training and leading checkpoint
 
 # Start training
 echo "Test training"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH
+
 # Resume training
-echo "Test resume training"
+echo "\n\nTest resume training"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --resume --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH
-echo "Test load checkpoint"
+
+echo "\n\nTest load checkpoint"
 # Load checkpoint
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --epoch $EPOCH --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --load_checkpoint $(ls -t experiment/checkpoints/ | head -1)
 
 # test with attention
-echo "Test training with attention"
+echo "\n\nTest training with attention"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention --epoch $EPOCH
 
 # test with gru cell
-echo "\nTest GRU"
+echo "\n\nTest GRU"
 CELL="gru"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 10 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH
  
 # test bidirectional
-echo "Test bidirectional model"
+echo "\n\nTest bidirectional model"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --bidirectional --epoch $EPOCH
 
-test bidirectional with attention
-echo "\nTest bidirectional model with attention"
+# test bidirectional with attention
+echo "\n\nTest bidirectional model with attention"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention --bidirectional --epoch $EPOCH
+
+test input optimizer
+echo "\n\nTest command line optimizer"
+python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --optim adagrad
