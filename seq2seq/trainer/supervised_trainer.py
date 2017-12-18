@@ -67,7 +67,7 @@ class SupervisedTrainer(object):
         return loss.get_loss()
 
     def _train_epoches(self, data, model, n_epochs, start_epoch, start_step,
-                       dev_data=None, teacher_forcing_ratio=0):
+                       dev_data=None, teacher_forcing_ratio=0, top_k=5):
         log = self.logger
 
         print_loss_total = 0  # Reset every print_every
@@ -85,6 +85,22 @@ class SupervisedTrainer(object):
 
         step = start_step
         step_elapsed = 0
+
+        # store initial model to be sure at least one model is stored
+        eval_data = dev_data or data
+        loss, accuracy = self.evaluator.evaluate(model, eval_data)
+        loss_best = top_k*[loss]
+        best_checkpoints = top_k*[None]
+        model_name = 'acc_%.2f_ppl_%.2f_s%d' % (accuracy, loss, 0)
+        best_checkpoints[0] = model_name
+
+        Checkpoint(model=model,
+                   optimizer=self.optimizer,
+                   epoch=start_epoch, step=start_step,
+                   input_vocab=data.fields[seq2seq.src_field_name].vocab,
+                   output_vocab=data.fields[seq2seq.tgt_field_name].vocab).save(self.expt_dir, name=model_name)
+
+
         for epoch in range(start_epoch, n_epochs + 1):
             log.debug("Epoch: %d, Step: %d" % (epoch, step))
 
@@ -108,11 +124,7 @@ class SupervisedTrainer(object):
                 print_loss_total += loss
                 epoch_loss_total += loss
 
-                if dev_data is not None:
-                    dev_loss, _ = self.evaluator.evaluate(model, dev_data)
-                    dev_loss_best = 5*[dev_loss]
-                    best_checkpoints = 5*[None]
-
+                # print log info according to print_every parm
                 if step % self.print_every == 0 and step_elapsed > self.print_every:
                     print_loss_avg = print_loss_total / self.print_every
                     print_loss_total = 0
@@ -122,19 +134,20 @@ class SupervisedTrainer(object):
                         print_loss_avg)
                     log.info(log_msg)
 
+                # check if new model should be saved
                 if step % self.checkpoint_every == 0 or step == total_steps:
                     # compute dev loss
-                    if dev_data is not None:
-                        dev_loss, accuracy = self.evaluator.evaluate(model, dev_data)
-                        max_dev_loss = max(dev_loss_best)
-                        if dev_loss < max_dev_loss:
-                            index_max = dev_loss_best.index(max_dev_loss)
+                    loss, accuracy = self.evaluator.evaluate(model, eval_data)
+                    max_eval_loss = max(loss_best)
+                    if loss < max_eval_loss:
+                            index_max = loss_best.index(max_eval_loss)
                             # rm prev model
-                            shutil.rmtree(best_checkpoints[index_max])
-                            model_name = 'acc_%.2f_ppl_%.2f_e%d' % (accuracy, dev_loss, epoch)
+                            if best_checkpoints[index_max] is not None:
+                                shutil.rmtree(os.path.join(self.expt_dir, best_checkpoints[index_max]))
+                            model_name = 'acc_%.2f_ppl_%.2f_s%d' % (accuracy, loss, step)
 
                             best_checkpoints[index_max] = model_name
-                            dev_loss_best[index_max] = dev_loss
+                            loss_best[index_max] = loss
 
                             # save model
                             Checkpoint(model=model,
@@ -142,14 +155,6 @@ class SupervisedTrainer(object):
                                        epoch=epoch, step=step,
                                        input_vocab=data.fields[seq2seq.src_field_name].vocab,
                                        output_vocab=data.fields[seq2seq.tgt_field_name].vocab).save(self.expt_dir, name=model_name)
-
-                    # Checkpoint at the end of training
-                if step == total_steps:
-                    Checkpoint(model=model,
-                               optimizer=self.optimizer,
-                               epoch=epoch, step=step,
-                               input_vocab=data.fields[seq2seq.src_field_name].vocab,
-                               output_vocab=data.fields[seq2seq.tgt_field_name].vocab).save(self.expt_dir)
 
             if step_elapsed == 0: continue
 
@@ -169,7 +174,7 @@ class SupervisedTrainer(object):
     def train(self, model, data, num_epochs=5,
               resume=False, dev_data=None,
               optimizer=None, teacher_forcing_ratio=0,
-              learning_rate=0.001):
+              learning_rate=0.001, top_k=5):
         """ Run training for a given model.
 
         Args:
@@ -219,5 +224,6 @@ class SupervisedTrainer(object):
 
         self._train_epoches(data, model, num_epochs,
                             start_epoch, step, dev_data=dev_data,
-                            teacher_forcing_ratio=teacher_forcing_ratio)
+                            teacher_forcing_ratio=teacher_forcing_ratio,
+                            top_k=top_k)
         return model

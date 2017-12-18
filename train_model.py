@@ -71,11 +71,14 @@ train = torchtext.data.TabularDataset(
     filter_pred=len_filter
 )
 
-dev = torchtext.data.TabularDataset(
-    path=opt.dev, format='tsv',
-    fields=[('src', src), ('tgt', tgt)],
-    filter_pred=len_filter
-)
+if opt.dev:
+    dev = torchtext.data.TabularDataset(
+        path=opt.dev, format='tsv',
+        fields=[('src', src), ('tgt', tgt)],
+        filter_pred=len_filter
+    )
+else:
+    dev = None
 
 src.build_vocab(train, max_size=opt.src_vocab)
 tgt.build_vocab(train, max_size=opt.tgt_vocab)
@@ -132,5 +135,5 @@ else:
                       learning_rate=opt.lr,
                       resume=opt.resume)
 
-evaluator = Evaluator(loss=loss, batch_size=opt.batch_size)
-dev_loss, accuracy = evaluator.evaluate(seq2seq, dev)
+# evaluator = Evaluator(loss=loss, batch_size=opt.batch_size)
+# dev_loss, accuracy = evaluator.evaluate(seq2seq, dev)
