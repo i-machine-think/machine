@@ -1,0 +1,4 @@
+- create script to evaluate or predict
+- extend unit tests
+    - test if correct optimizers and lr are put
+    - fix resume from training tests

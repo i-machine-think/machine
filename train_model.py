@@ -84,18 +84,6 @@ if opt.dev:
 else:
     dev = None
 
-src.build_vocab(train, max_size=opt.src_vocab)
-tgt.build_vocab(train, max_size=opt.tgt_vocab)
-input_vocab = src.vocab
-output_vocab = tgt.vocab
-
-# Prepare loss
-weight = torch.ones(len(tgt.vocab))
-pad = tgt.vocab.stoi[tgt.pad_token]
-loss = Perplexity(weight, pad)
-if torch.cuda.is_available():
-    loss.cuda()
-
 #################################################################################
 # prepare model
 
@@ -106,7 +94,15 @@ if opt.load_checkpoint is not None:
     seq2seq = checkpoint.model
     input_vocab = checkpoint.input_vocab
     output_vocab = checkpoint.output_vocab
+    src.vocab = input_vocab
+    tgt.vocab = output_vocab
 else:
+    # build vocabulary
+    src.build_vocab(train, max_size=opt.src_vocab)
+    tgt.build_vocab(train, max_size=opt.tgt_vocab)
+    input_vocab = src.vocab
+    output_vocab = tgt.vocab
+
     # Initialize model
     hidden_size = opt.hidden_size
     decoder_hidden_size = hidden_size*2 if opt.bidirectional else hidden_size
@@ -130,6 +126,14 @@ else:
 ##############################################################################
 # train model
 
+# Prepare loss
+weight = torch.ones(len(output_vocab))
+pad = output_vocab.stoi[tgt.pad_token]
+loss = Perplexity(weight, pad)
+if torch.cuda.is_available():
+    loss.cuda()
+
+# create trainer
 t = SupervisedTrainer(loss=loss, batch_size=opt.batch_size,
                       checkpoint_every=opt.save_every,
                       print_every=opt.print_every, expt_dir=opt.output_dir)
