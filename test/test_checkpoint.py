@@ -21,16 +21,6 @@ class TestCheckpoint(unittest.TestCase):
         ckpt = Checkpoint(None, None, None, None, None, None)
         self.assertRaises(LookupError, lambda: ckpt.path)
 
-    @mock.patch('seq2seq.util.checkpoint.os.listdir')
-    def test_get_latest_checkpoint(self, mock_listdir):
-        mock_listdir.return_value = ['2017_05_22_09_47_26',
-                                     '2017_05_22_09_47_31',
-                                     '2017_05_23_10_47_29']
-        latest_checkpoint = Checkpoint.get_latest_checkpoint(self.EXP_DIR)
-        self.assertEquals(latest_checkpoint,
-                          os.path.join(self.EXP_DIR,
-                                       '2017_05_23_10_47_29'))
-
     @mock.patch('seq2seq.util.checkpoint.torch')
     @mock.patch('seq2seq.util.checkpoint.dill')
     @mock.patch('seq2seq.util.checkpoint.open')

@@ -110,18 +110,3 @@ class Checkpoint(object):
                           epoch=resume_checkpoint['epoch'],
                           step=resume_checkpoint['step'],
                           path=path)
-
-    @classmethod
-    def get_latest_checkpoint(cls, experiment_path):
-        """
-        Given the path to an experiment directory, returns the path to the last saved checkpoint's subdirectory.
-
-        Precondition: at least one checkpoint has been made (i.e., latest checkpoint subdirectory exists).
-        Args:
-            experiment_path (str): path to the experiment directory
-        Returns:
-             str: path to the last saved checkpoint's subdirectory
-        """
-        checkpoints_path = os.path.join(experiment_path)
-        all_times = sorted(os.listdir(checkpoints_path), reverse=True)
-        return os.path.join(checkpoints_path, all_times[0])
