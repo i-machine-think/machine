@@ -50,5 +50,29 @@ class TestSupervisedTrainer(unittest.TestCase):
         step = 7
         trainer._train_epoches(self.dataset, mock_model, n_epoches, start_epoch, step, dev_data=self.dataset)
 
+    @mock.patch('seq2seq.util.checkpoint.Checkpoint')
+    @mock.patch('seq2seq.util.checkpoint.Checkpoint.load')
+    @mock.patch('seq2seq.optim.Optimizer')
+    @mock.patch('torch.optim.SGD')
+    @mock.patch('seq2seq.trainer.SupervisedTrainer._train_epoches')
+    def test_loading_optimizer(self, train_func, sgd, optimizer, load_function, checkpoint):
+
+        load_function.returnvalue = checkpoint
+        mock_model = mock.Mock()
+        mock_model.params.returnvalue = True
+        n_epoches = 2
+
+        trainer = SupervisedTrainer(batch_size=16)
+
+        trainer.train(mock_model, self.dataset, n_epoches, resume=True, checkpoint_path='dummy', optimizer='sgd')
+
+        self.assertFalse(sgd.called, "Failed to not call Optimizer() when optimizer should be loaded from checkpoint")
+
+        trainer.train(mock_model, self.dataset, n_epoches, resume=False, checkpoint_path='dummy', optimizer='sgd')
+
+        sgd.assert_called()
+        
+        return
+
 if __name__ == '__main__':
     unittest.main()
