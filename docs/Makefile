@@ -1,10 +1,11 @@
 # Minimal makefile for Sphinx documentation
 #
+# export PYTHONPATH="${PYTHONPATH}:../"
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = pytorch-seq2seq
+SPHINXPROJ    = machine
 SOURCEDIR     = source
 BUILDDIR      = build
 
