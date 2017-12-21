@@ -16,5 +16,8 @@ TF=0.5
 echo "Train model on example data"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --print_every $PRINT_EVERY --teacher_forcing $TF --bidirectional --attention
 
+echo "Evaluate model on test data"
+python evaluate.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) --test_data $DEV_PATH
+
 echo "Run predictor"
 python predict.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) 
