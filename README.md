@@ -1,5 +1,7 @@
 # machine &middot; [![Build Status](https://travis-ci.org/i-machine-think/machine.svg?branch=master)](https://travis-ci.org/i-machine-think/machine)
 
+[Documentation](https://i-machine-think.github.io/machine/build/html/index.html)
+
 # Introduction
 
 This is a pytorch implementation of a sequence to sequence learning toolkit for the i-machine-think project. This repository is a fork from the pytorch-seq2seq library developed by IBM, but has substantially diverged from it after heavy development. For the original implementation, visit [https://github.com/IBM/pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq).
