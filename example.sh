@@ -19,5 +19,5 @@ python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR
 echo "Evaluate model on test data"
 python evaluate.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) --test_data $DEV_PATH
 
-echo "Run predictor"
-python predict.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) 
+echo "Run in inference mode"
+python infer.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) 
