@@ -37,7 +37,7 @@
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="i-machine-think-seq2seq 0.1.0 documentation" href="../index.html"/>
         <link rel="next" title="Dataset" href="../dataset.html"/>
-        <link rel="prev" title="PyTorch-Seq2seq: A sequence-to-sequence framework for PyTorch" href="../index.html"/> 
+        <link rel="prev" title="Pytorch seq2seq library for the i-machine-think project" href="../index.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -92,26 +92,16 @@
             
               <p class="caption"><span class="caption-text">Notes</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#roadmap">Roadmap</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#install-from-source">Install from source</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#quickstart">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#training">Training</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluation-and-inference">Evaluation and inference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-script">Example script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#checkpoints">Checkpoints</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#get-started">Get Started</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#prepare-toy-dataset">Prepare toy dataset</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#train-and-play">Train and play</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#checkpoints">Checkpoints</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#troubleshoots-and-contributing">Troubleshoots and Contributing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#development-environment">Development Environment</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#code-style">Code Style</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="#contributing">Contributing</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Package Reference</span></p>
 <ul>
@@ -187,90 +177,65 @@
             
   <div class="section" id="introduction">
 <span id="introduction"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>This is a framework for sequence-to-sequence (seq2seq) models implemented in <a class="reference external" href="http://pytorch.org">PyTorch</a>.  The framework has modularized and extensible components for seq2seq models, training and inference, checkpoints, etc.  This is an alpha release. We appreciate any kind of feedback or contribution.</p>
-<div class="section" id="roadmap">
-<span id="roadmap"></span><h2>Roadmap<a class="headerlink" href="#roadmap" title="Permalink to this headline">¶</a></h2>
-<p>Seq2seq is a fast evolving field with new techniques and architectures being published frequently.  The goal of this library is facilitating the development of such techniques and applications.  While constantly improving the quality of code and documentation, we will focus on the following items:</p>
+<p>This is a pytorch implementation of a sequence to sequence learning toolkit for the i-machine-think project. This repository is a fork from the pytorch-seq2seq library developed by IBM, but has substantially diverged from it after heavy development. For the original implementation, visit <a class="reference external" href="https://github.com/IBM/pytorch-seq2seq">https://github.com/IBM/pytorch-seq2seq</a>.</p>
+</div>
+<div class="section" id="requirements">
+<span id="requirements"></span><h1>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h1>
+<p>This library runs with PyTorch 0.3.0. We refer to the <a class="reference external" href="http://pytorch.org/">PyTorch website</a> to install the right version for your environment.
+To install additional requirements (including numpy and torchtext), run:</p>
+<p><code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">requirements</span></code></p>
+</div>
+<div class="section" id="quickstart">
+<span id="quickstart"></span><h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>There are 3 commandline tools available</p>
 <ul class="simple">
-<li>Evaluation with benchmarks such as WMT machine translation, COCO image captioning, conversational models, etc;</li>
-<li>Provide more flexible model options, improving the usability of the library;</li>
-<li>Adding latest architectures such as the CNN based model proposed by <a class="reference external" href="https://arxiv.org/abs/1705.03122">Convolutional Sequence to Sequence Learning</a> and the transformer model proposed by <a class="reference external" href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>;</li>
-<li>Support features in the new versions of PyTorch.</li>
+<li><code class="docutils literal"><span class="pre">train_model.py</span></code></li>
+<li><code class="docutils literal"><span class="pre">evaluate.py</span></code></li>
+<li><code class="docutils literal"><span class="pre">infer.py</span></code></li>
 </ul>
-</div>
-<div class="section" id="installation">
-<span id="installation"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>This package requires Python 2.7. We recommend creating a new virtual environment for this project (using virtualenv or conda).</p>
-<div class="section" id="prerequisites">
-<span id="prerequisites"></span><h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li>Numpy: <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">numpy</span></code> (Refer <a class="reference external" href="https://github.com/numpy/numpy">here</a> for problem installing Numpy).</li>
-<li>PyTorch: Refer to <a class="reference external" href="http://pytorch.org/">PyTorch website</a> to install the version w.r.t. your environment.</li>
-</ul>
-</div>
-<div class="section" id="install-from-source">
-<span id="install-from-source"></span><h3>Install from source<a class="headerlink" href="#install-from-source" title="Permalink to this headline">¶</a></h3>
-<p>Currently we only support installation from source code using setuptools.  Checkout the source code and run the following commands:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
-<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+<div class="section" id="training">
+<span id="training"></span><h2>Training<a class="headerlink" href="#training" title="Permalink to this headline">¶</a></h2>
+<p>The script <code class="docutils literal"><span class="pre">train_model.py</span></code> can be used to train a new model, resume the training of an existing model from a checkpoint, or retrain an existing model from a checkpoint. E.g. to train a model from scratch:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span> # Train a simple model with hidden layer size 128 and embedding size 128
+`python train_model.py --train $train_path --dev $dev_path --output_dir $expt_dir  --embedding_size 128 --hidden_size 256 --rnn_cell gru --epoch 20 
 </pre></div>
 </div>
-<p>If you already had a version of PyTorch installed on your system, please verify that the active torch package is at least version 0.1.11.</p>
+<p>Several options are available from the command line, including changing the optimizer, batch size, using attention/bidirectionality and using teacher forcing.
+For a complete overview, use the <em>help</em> function of the script.</p>
 </div>
-</div>
-<div class="section" id="get-started">
-<span id="get-started"></span><h2>Get Started<a class="headerlink" href="#get-started" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="prepare-toy-dataset">
-<span id="prepare-toy-dataset"></span><h3>Prepare toy dataset<a class="headerlink" href="#prepare-toy-dataset" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Run script to generate the reverse toy dataset</span>
-<span class="c1"># The generated data is stored in data/toy_reverse by default</span>
-<span class="n">scripts</span><span class="o">/</span><span class="n">toy</span><span class="o">.</span><span class="n">sh</span>
+<div class="section" id="evaluation-and-inference">
+<span id="evaluation-and-inference"></span><h2>Evaluation and inference<a class="headerlink" href="#evaluation-and-inference" title="Permalink to this headline">¶</a></h2>
+<p>The scripts <code class="docutils literal"><span class="pre">infer.py</span></code> and <code class="docutils literal"><span class="pre">evaluate.py</span></code> can be used to run an existing model (loaded from a checkpoint) in inference mode, and evaluate a model on a test set, respectively. E.g:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>  # Use the model stored in $checkpoint_path in inference mode
+` python infer.py --checkpoint_path $checkpoint_path
+
+  # Evaluate a trained model stored in $checkpoint_path
+` python evaluate.py --checkpoint_path $checkpoint_path --test_data $test_data
 </pre></div>
 </div>
 </div>
-<div class="section" id="train-and-play">
-<span id="train-and-play"></span><h3>Train and play<a class="headerlink" href="#train-and-play" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default"><div class="highlight"><pre><span></span>TRAIN_PATH=data/toy_reverse/train/data.txt
-DEV_PATH=data/toy_reverse/dev/data.txt
-# Start training
-python examples/sample.py --train_path $TRAIN_PATH --dev_path $DEV_PATH
-</pre></div>
-</div>
-<p>It will take about 3 minutes to train on CPU and less than 1 minute with a Tesla K80.  Once training is complete, you will be prompted to enter a new sequence to translate and the model will print out its prediction (use ctrl-C to terminate).  Try the example below!</p>
+<div class="section" id="example-script">
+<span id="example-script"></span><h2>Example script<a class="headerlink" href="#example-script" title="Permalink to this headline">¶</a></h2>
+<p>The script <code class="docutils literal"><span class="pre">example.sh</span></code> illustrates the usage of all three tools: it uses the toy data from the test directory (containing a 'reverse' dataset in which the translation of any sequence of numbers is its inverse), trains a model on this data using <code class="docutils literal"><span class="pre">train_model.py</span></code>, evaluates this model using <code class="docutils literal"><span class="pre">evaluate.py</span></code> and then runs <code class="docutils literal"><span class="pre">infer.py</span></code> to generate outputs.</p>
+<p>Once training is complete, you will be prompted to enter a new sequence to translate and the model will print out its prediction (use ctrl-C to terminate).  Try the example below!</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Input</span><span class="p">:</span>  <span class="mi">1</span> <span class="mi">3</span> <span class="mi">5</span> <span class="mi">7</span> <span class="mi">9</span>
 <span class="n">Expected</span> <span class="n">output</span><span class="p">:</span> <span class="mi">9</span> <span class="mi">7</span> <span class="mi">5</span> <span class="mi">3</span> <span class="mi">1</span> <span class="n">EOS</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="checkpoints">
-<span id="checkpoints"></span><h3>Checkpoints<a class="headerlink" href="#checkpoints" title="Permalink to this headline">¶</a></h3>
-<p>Checkpoints are organized by experiments and timestamps as shown in the following file structure</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">experiment_dir</span>
-<span class="o">+--</span> <span class="n">input_vocab</span>
-<span class="o">+--</span> <span class="n">output_vocab</span>
-<span class="o">+--</span> <span class="n">checkpoints</span>
-<span class="o">|</span>  <span class="o">+--</span> <span class="n">YYYY_mm_dd_HH_MM_SS</span>
-   <span class="o">|</span>  <span class="o">+--</span> <span class="n">decoder</span>
-   <span class="o">|</span>  <span class="o">+--</span> <span class="n">encoder</span>
-   <span class="o">|</span>  <span class="o">+--</span> <span class="n">model_checkpoint</span>
-</pre></div>
-</div>
-<p>The sample script by default saves checkpoints in the <code class="docutils literal"><span class="pre">experiment</span></code> folder of the root directory.  Look at the usages of the sample code for more options, including resuming and loading from checkpoints.</p>
+<span id="checkpoints"></span><h2>Checkpoints<a class="headerlink" href="#checkpoints" title="Permalink to this headline">¶</a></h2>
+<p>During training, the top <em>k</em> models are stored in a folder which is named using the accuracy and loss of the model on the development set.
+Currently, <em>k</em> is set to 5.
+The folder contains the model, the source and target vocabulary and the trainer states.</p>
 </div>
 </div>
-<div class="section" id="troubleshoots-and-contributing">
-<span id="troubleshoots-and-contributing"></span><h2>Troubleshoots and Contributing<a class="headerlink" href="#troubleshoots-and-contributing" title="Permalink to this headline">¶</a></h2>
-<p>If you have any questions, bug reports, and feature requests, please <a class="reference external" href="https://github.com/IBM/pytorch-seq2seq/issues/new">open an issue</a> on Github.</p>
-<p>We appreciate any kind of feedback or contribution.  Feel free to proceed with small issues like bug fixes, documentation improvement.  For major contributions and new features, please discuss with the collaborators in corresponding issues.</p>
-<div class="section" id="development-environment">
-<span id="development-environment"></span><h3>Development Environment<a class="headerlink" href="#development-environment" title="Permalink to this headline">¶</a></h3>
-<p>We setup the development environment using <a class="reference external" href="https://www.vagrantup.com/">Vagrant</a>.  Run <code class="docutils literal"><span class="pre">vagrant</span> <span class="pre">up</span></code> with our 'Vagrantfile' to get started.</p>
-</div>
-<div class="section" id="code-style">
-<span id="code-style"></span><h3>Code Style<a class="headerlink" href="#code-style" title="Permalink to this headline">¶</a></h3>
-<p>We follow <a class="reference external" href="https://google.github.io/styleguide/pyguide.html">Google Python Style Guide</a> for code style.  Especially the style of docstrings is important to generate documentation.</p>
-</div>
-</div>
+<div class="section" id="contributing">
+<span id="contributing"></span><h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
+<p>We welcome pull requests for the library.
+Please run both the unittests and integration test before committing:</p>
+<p><code class="docutils literal"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">unittest</span> <span class="pre">discover</span></code>
+<code class="docutils literal"><span class="pre">sh</span> <span class="pre">integration_test.sh</span></code></p>
 </div>
 
 
@@ -286,7 +251,7 @@ python examples/sample.py --train_path $TRAIN_PATH --dev_path $DEV_PATH
         <a href="../dataset.html" class="btn btn-neutral float-right" title="Dataset" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../index.html" class="btn btn-neutral" title="PyTorch-Seq2seq: A sequence-to-sequence framework for PyTorch" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../index.html" class="btn btn-neutral" title="Pytorch seq2seq library for the i-machine-think project" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

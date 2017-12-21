@@ -1,5 +1,3 @@
-# machine &middot; [![Build Status](https://travis-ci.org/i-machine-think/machine.svg?branch=master)](https://travis-ci.org/i-machine-think/machine)
-
 # Introduction
 
 This is a pytorch implementation of a sequence to sequence learning toolkit for the i-machine-think project. This repository is a fork from the pytorch-seq2seq library developed by IBM, but has substantially diverged from it after heavy development. For the original implementation, visit [https://github.com/IBM/pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq).
@@ -19,7 +17,7 @@ There are 3 commandline tools available
 * `evaluate.py`
 * `infer.py`
 
-### Training
+## Training
 
 The script `train_model.py` can be used to train a new model, resume the training of an existing model from a checkpoint, or retrain an existing model from a checkpoint. E.g. to train a model from scratch:
 
@@ -29,7 +27,7 @@ The script `train_model.py` can be used to train a new model, resume the trainin
 Several options are available from the command line, including changing the optimizer, batch size, using attention/bidirectionality and using teacher forcing. 
 For a complete overview, use the *help* function of the script.
 
-### Evaluation and inference
+## Evaluation and inference
 
 The scripts `infer.py` and `evaluate.py` can be used to run an existing model (loaded from a checkpoint) in inference mode, and evaluate a model on a test set, respectively. E.g: 
 
@@ -39,7 +37,7 @@ The scripts `infer.py` and `evaluate.py` can be used to run an existing model (l
       # Evaluate a trained model stored in $checkpoint_path
     ` python evaluate.py --checkpoint_path $checkpoint_path --test_data $test_data
 
-### Example script
+## Example script
 
 The script `example.sh` illustrates the usage of all three tools: it uses the toy data from the test directory (containing a 'reverse' dataset in which the translation of any sequence of numbers is its inverse), trains a model on this data using `train_model.py`, evaluates this model using `evaluate.py` and then runs `infer.py` to generate outputs.
 
@@ -49,13 +47,13 @@ Once training is complete, you will be prompted to enter a new sequence to trans
 	Expected output: 9 7 5 3 1 EOS
 
 
-### Checkpoints
+## Checkpoints
 
 During training, the top *k* models are stored in a folder which is named using the accuracy and loss of the model on the development set.
 Currently, *k* is set to 5.
 The folder contains the model, the source and target vocabulary and the trainer states.
 
-# Pull requests
+# Contributing
 
 We welcome pull requests for the library.
 Please run both the unittests and integration test before committing:
