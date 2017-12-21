@@ -187,6 +187,9 @@ class SupervisedTrainer(object):
             optimizer (seq2seq.optim.Optimizer, optional): optimizer for training
                (default: Optimizer(pytorch.optim.Adam, max_grad_norm=5))
             teacher_forcing_ratio (float, optional): teaching forcing ratio (default 0)
+            learing_rate (float, optional): learning rate used by the optimizer (default 0.001)
+            checkpoint_path (str, optional): path to load checkpoint from in case training should be resumed
+            top_k (int): how many models should be stored during training
         Returns:
             model (seq2seq.models): trained model.
         """

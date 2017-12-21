@@ -358,6 +358,9 @@
 <span class="sd">            optimizer (seq2seq.optim.Optimizer, optional): optimizer for training</span>
 <span class="sd">               (default: Optimizer(pytorch.optim.Adam, max_grad_norm=5))</span>
 <span class="sd">            teacher_forcing_ratio (float, optional): teaching forcing ratio (default 0)</span>
+<span class="sd">            learing_rate (float, optional): learning rate used by the optimizer (default 0.001)</span>
+<span class="sd">            checkpoint_path (str, optional): path to load checkpoint from in case training should be resumed</span>
+<span class="sd">            top_k (int): how many models should be stored during training</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            model (seq2seq.models): trained model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>

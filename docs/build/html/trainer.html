@@ -93,6 +93,9 @@
               <p class="caption"><span class="caption-text">Notes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="notes/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notes/intro.html#requirements">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notes/intro.html#quickstart">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notes/intro.html#contributing">Contributing</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Package Reference</span></p>
 <ul class="current">
@@ -211,6 +214,9 @@ overwritten by the model loaded from the latest checkpoint.</li>
 <li><strong>optimizer</strong> (<em>seq2seq.optim.Optimizer</em><em>, </em><em>optional</em>) – optimizer for training
 (default: Optimizer(pytorch.optim.Adam, max_grad_norm=5))</li>
 <li><strong>teacher_forcing_ratio</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>, </em><em>optional</em>) – teaching forcing ratio (default 0)</li>
+<li><strong>learing_rate</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>, </em><em>optional</em>) – learning rate used by the optimizer (default 0.001)</li>
+<li><strong>checkpoint_path</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>, </em><em>optional</em>) – path to load checkpoint from in case training should be resumed</li>
+<li><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – how many models should be stored during training</li>
 </ul>
 </td>
 </tr>

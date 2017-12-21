@@ -15,13 +15,13 @@ class Loss(object):
 
     Args:
         name (str): name of the loss function used by logging messages.
-        criterion (torch.nn._Loss): one of PyTorch's loss function.  Refer
+        criterion (torch.nn._Loss): one of PyTorch's loss functions.  Refer
             to http://pytorch.org/docs/master/nn.html#loss-functions for
             a list of them.
 
     Attributes:
         name (str): name of the loss function used by logging messages.
-        criterion (torch.nn._Loss): one of PyTorch's loss function.  Refer
+        criterion (torch.nn._Loss): one of PyTorch's loss functions.  Refer
             to http://pytorch.org/docs/master/nn.html#loss-functions for
             a list of them.  Implementation depends on individual
             sub-classes.
