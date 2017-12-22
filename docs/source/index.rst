@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Pytorch seq2seq library for the i-machine-think project
-=======================================================
+Codebase for the i-machine-think project, a modular and fully tested Pytorch implementation for seq2seq models
+==============================================================================================================
 
 .. toctree::
    :maxdepth: 1

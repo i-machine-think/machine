@@ -63,7 +63,7 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
 # General information about the project.
-project = u'i-machine-think-seq2seq'
+project = u'i-machine-think/machine'
 # copyright = u'2017, pytorch-seq2seq Contritors'
 author = u'Dieuwke Hupkes and Elia Bruni'
 
