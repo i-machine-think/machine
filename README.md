@@ -59,34 +59,34 @@ The folder contains the model, the source and target vocabulary and the trainer 
 
 # Contributing
 
-if you have any questions, bug reports and feature requests, please [open an issue](https://github.com/i-machine-think/machine/issues/new) on Github. We welcome any kind of feedback or contribution. Do you want to contribute changes to the codebase? Make sure to read this first.
+If you have any questions, bug reports and feature requests, please [open an issue](https://github.com/i-machine-think/machine/issues/new) on Github. We welcome any kind of feedback or contribution. Do you want to contribute changes to the codebase? Make sure to read this first.
 
 ## Bug reporting
 
 Have you found a bug in the library? Follow these steps to report it:
-1. Make sure you have the most recent version of the library. In case you forked the library, add the [master branch](https://github.com/i-machine-think/machine/tree/master) of the library as a remote to your local version to keep it up to date.
+1. Make sure you have the most recent version of the library. In case you forked the library, consider adding the [original library](https://github.com/i-machine-think/machine/tree/master) as a [remote](https://help.github.com/categories/managing-remotes/) to your local version to keep it up to date.
 2. Check if an issue report for your bug already exists.
 3. File an issue report, make sure you include the useful information necessary to reproduce the issue, e.g.:
-    * what OS are you using?
+    * What OS are you using?
     * Are you running on GPU? If so, what is your version of Cuda?
 4. Provide a script to reproduce the issue. This script should be runnable as-is and should not require external data to download (use randomly generated data if you need to run a model on some test data). We recommend that you use Github Gists to post your code.
 5. If possible, try to fix the bug yourself!
 
 ## Requesting a feature
 
-You can also use Github issues to request features you would like to have added, or changes in the API.
-1. Provide a clear and detailed explanation of the feature you want and why it is important
+You can also use Github issues to request features you would like to have added, or changes in the API. When you do so:
+1. Provide a clear and detailed explanation of the feature you want and why it is important.
 2. Provide code snippets demonstrating the API you have in mind and illustrating use cases of your feature (writing real code is not required).
 3. You may choose to attempt a Pull Request (see below) to include the feature yourself.
 
 ## Pull Requests
 
-Before doing a pull request, create an issue describing the feature you want to implement/the bug you have found. When writing the code, please adher to the following guidelines:
-* Include proper docstrings for any new function or class you introduce. They should be formatted in MarkDown and there should be sections for `Args` and `Inputs` and `Outputs`. If applicable, provide also an example. We refer to the docstrings already existing in the codebase for more information about formatting.
-* Write tests. Your code should have full unit test coverage. If you want to see your PR merged promptly, this is crucial. For testing, we use unittest in combination with the library *mock*. Please note that all unittests as well as an integration test will be ran automatically when you put your PR, to test if your code does not break any existing functionality. Please run both the unittests and integration test before committing:
+Before doing a pull request, create an issue describing the feature you want to implement/the bug you have found. When writing the code, please adhere to the following guidelines:
+* Include proper docstrings for any new function or class you introduce. They should be formatted in MarkDown and there should be sections for `Args` and `Inputs` and `Outputs`. If applicable, provide also an example. We refer to the docstrings already existing in the codebase for more examples.
+* Write tests. Your code should have full unit test coverage. If you want to see your PR merged promptly, this is crucial. For testing, we use unittest in combination with the library [mock](https://docs.python.org/3/library/unittest.mock.html). Please note that all unittests as well as an integration test will be ran automatically when you put your PR, to assure your code does not break any existing functionality. Please run both the unittests and integration test before committing:
 
-        `python -m unittest discover`
-        `sh integration_test.sh`
+        python -m unittest discover
+        sh integration_test.sh
 
 * When committing, use appropriate, descriptive commit messages. 
 
