@@ -11,7 +11,7 @@ This is a pytorch implementation of a sequence to sequence learning toolkit for 
 This library runs with PyTorch 0.3.0. We refer to the [PyTorch website](http://pytorch.org/) to install the right version for your environment.
 To install additional requirements (including numpy and torchtext), run:
 
-`pip install requirements`
+`pip install -r requirements.txt`
 
 # Quickstart
 
