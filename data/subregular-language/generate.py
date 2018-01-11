@@ -56,7 +56,7 @@ for i in range(n_grammars):
         if show_progress:
             sys.stderr.write("\r{:02.2f}%".format(100*(i*n_examples+j)/n_grammars/n_examples))
         pos = gen_example(g, True)
-        print("\t".join([g_str, "1", pos]))
+        print("\t".join([g_str, pos, "1"]))
         neg = gen_example(g, False)
-        print("\t".join([g_str, "0", neg]))
+        print("\t".join([g_str, neg, "0"]))
 
