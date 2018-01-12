@@ -240,10 +240,11 @@
 <li><strong>vocab_size</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – size of the vocabulary</li>
 <li><strong>max_len</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – a maximum allowed length for the sequence to be processed</li>
 <li><strong>hidden_size</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the number of features in the hidden state <cite>h</cite></li>
+<li><strong>embedding_size</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the size of the embedding of input variables</li>
 <li><strong>input_dropout_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>, </em><em>optional</em>) – dropout probability for the input sequence (default: 0)</li>
 <li><strong>dropout_p</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>, </em><em>optional</em>) – dropout probability for the output sequence (default: 0)</li>
 <li><strong>n_layers</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>, </em><em>optional</em>) – number of recurrent layers (default: 1)</li>
-<li><strong>bidirectional</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>, </em><em>optional</em>) – if True, becomes a bidirectional encodr (defulat False)</li>
+<li><strong>bidirectional</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>, </em><em>optional</em>) – if True, becomes a bidirectional encoder (default False)</li>
 <li><strong>rnn_cell</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>, </em><em>optional</em>) – type of RNN cell (default: gru)</li>
 <li><strong>variable_lengths</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>, </em><em>optional</em>) – if use variable length RNN (default: False)</li>
 </ul>
@@ -420,7 +421,7 @@ outputs if provided for decoding}.</li>
 <dl class="method">
 <dt id="seq2seq.models.TopKDecoder.TopKDecoder.forward">
 <code class="descname">forward</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>encoder_hidden=None</em>, <em>encoder_outputs=None</em>, <em>function=&lt;function log_softmax&gt;</em>, <em>teacher_forcing_ratio=0</em>, <em>retain_output_probs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq2seq/models/TopKDecoder.html#TopKDecoder.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#seq2seq.models.TopKDecoder.TopKDecoder.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Forward rnn for MAX_LENGTH steps.  Look at <code class="xref py py-func docutils literal"><span class="pre">seq2seq.models.DecoderRNN.DecoderRNN.forward_rnn()</span></code> for details.</p>
+<dd><p>Forward rnn for MAX_LENGTH steps.  Look at  for details.</p>
 </dd></dl>
 
 </dd></dl>
@@ -465,8 +466,8 @@ output = \tanh(w * (attn * context) + b * output)
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>linear_out</strong> (<a class="reference external" href="http://pytorch.org/docs/master/nn.html#torch.nn.Linear" title="(in PyTorch vmaster (0.4.0a0+32a4a52 ))"><em>torch.nn.Linear</em></a>) – applies a linear transformation to the incoming data: <span class="math">\(y = Ax + b\)</span>.</li>
-<li><strong>mask</strong> (<a class="reference external" href="http://pytorch.org/docs/master/tensors.html#torch.Tensor" title="(in PyTorch vmaster (0.4.0a0+32a4a52 ))"><em>torch.Tensor</em></a><em>, </em><em>optional</em>) – applies a <span class="math">\(-inf\)</span> to the indices specified in the <cite>Tensor</cite>.</li>
+<li><strong>linear_out</strong> (<a class="reference external" href="http://pytorch.org/docs/master/nn.html#torch.nn.Linear" title="(in PyTorch vmaster (0.4.0a0+b42f163 ))"><em>torch.nn.Linear</em></a>) – applies a linear transformation to the incoming data: <span class="math">\(y = Ax + b\)</span>.</li>
+<li><strong>mask</strong> (<a class="reference external" href="http://pytorch.org/docs/master/tensors.html#torch.Tensor" title="(in PyTorch vmaster (0.4.0a0+b42f163 ))"><em>torch.Tensor</em></a><em>, </em><em>optional</em>) – applies a <span class="math">\(-inf\)</span> to the indices specified in the <cite>Tensor</cite>.</li>
 </ul>
 </td>
 </tr>
@@ -487,7 +488,7 @@ output = \tanh(w * (attn * context) + b * output)
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mask</strong> (<a class="reference external" href="http://pytorch.org/docs/master/tensors.html#torch.Tensor" title="(in PyTorch vmaster (0.4.0a0+32a4a52 ))"><em>torch.Tensor</em></a>) – tensor containing indices to be masked</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mask</strong> (<a class="reference external" href="http://pytorch.org/docs/master/tensors.html#torch.Tensor" title="(in PyTorch vmaster (0.4.0a0+b42f163 ))"><em>torch.Tensor</em></a>) – tensor containing indices to be masked</td>
 </tr>
 </tbody>
 </table>
