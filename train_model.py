@@ -33,7 +33,8 @@ parser.add_argument('--embedding_size', type=int, help='Embedding size', default
 parser.add_argument('--hidden_size', type=int, help='Hidden layer size', default=128)
 parser.add_argument('--src_vocab', type=int, help='source vocabulary size', default=50000)
 parser.add_argument('--tgt_vocab', type=int, help='target vocabulary size', default=50000)
-parser.add_argument('--dropout_p', type=float, help='Dropout probability', default=0.2)
+parser.add_argument('--dropout_p_encoder', type=float, help='Dropout probability for the encoder', default=0.2)
+parser.add_argument('--dropout_p_decoder', type=float, help='Dropout probability for the decoder', default=0.2)
 parser.add_argument('--teacher_forcing_ratio', type=float, help='Teacher forcing ratio', default=0.2)
 parser.add_argument('--attention', action='store_true')
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
@@ -108,11 +109,13 @@ else:
     decoder_hidden_size = hidden_size*2 if opt.bidirectional else hidden_size
     encoder = EncoderRNN(len(src.vocab), max_len, hidden_size,
                          opt.embedding_size,
+                         dropout_p=opt.dropout_p_encoder,
                          bidirectional=opt.bidirectional,
                          rnn_cell=opt.rnn_cell,
                          variable_lengths=True)
     decoder = DecoderRNN(len(tgt.vocab), max_len, decoder_hidden_size,
-                         dropout_p=opt.dropout_p, use_attention=opt.attention,
+                         dropout_p=opt.dropout_p_decoder,
+                         use_attention=opt.attention,
                          bidirectional=opt.bidirectional,
                          rnn_cell=opt.rnn_cell,
                          eos_id=tgt.eos_id, sos_id=tgt.sos_id)
