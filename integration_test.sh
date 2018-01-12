@@ -63,4 +63,8 @@ python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR
 echo "\n\nTest decoder dropout"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY --dropout_p_decoder 0.5
 
+# test n_layers
+echo "\n\nTest n_layers"
+python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY --n_layers 2
+
 rm -r $EXPT_DIR

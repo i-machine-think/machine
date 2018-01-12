@@ -31,6 +31,7 @@ parser.add_argument('--rnn_cell', help="Chose type of rnn cell", default='lstm')
 parser.add_argument('--bidirectional', action='store_true', help="Flag for bidirectional encoder")
 parser.add_argument('--embedding_size', type=int, help='Embedding size', default=128)
 parser.add_argument('--hidden_size', type=int, help='Hidden layer size', default=128)
+parser.add_argument('--n_layers', type=int, help='Number of RNN layers in both encoder and decoder', default=1)
 parser.add_argument('--src_vocab', type=int, help='source vocabulary size', default=50000)
 parser.add_argument('--tgt_vocab', type=int, help='target vocabulary size', default=50000)
 parser.add_argument('--dropout_p_encoder', type=float, help='Dropout probability for the encoder', default=0.2)
@@ -110,11 +111,13 @@ else:
     encoder = EncoderRNN(len(src.vocab), max_len, hidden_size,
                          opt.embedding_size,
                          dropout_p=opt.dropout_p_encoder,
+                         n_layers=opt.n_layers,
                          bidirectional=opt.bidirectional,
                          rnn_cell=opt.rnn_cell,
                          variable_lengths=True)
     decoder = DecoderRNN(len(tgt.vocab), max_len, decoder_hidden_size,
                          dropout_p=opt.dropout_p_decoder,
+                         n_layers=opt.n_layers,
                          use_attention=opt.attention,
                          bidirectional=opt.bidirectional,
                          rnn_cell=opt.rnn_cell,
