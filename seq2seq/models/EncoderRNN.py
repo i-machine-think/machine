@@ -10,10 +10,11 @@ class EncoderRNN(BaseRNN):
         vocab_size (int): size of the vocabulary
         max_len (int): a maximum allowed length for the sequence to be processed
         hidden_size (int): the number of features in the hidden state `h`
+        embedding_size (int): the size of the embedding of input variables
         input_dropout_p (float, optional): dropout probability for the input sequence (default: 0)
         dropout_p (float, optional): dropout probability for the output sequence (default: 0)
         n_layers (int, optional): number of recurrent layers (default: 1)
-        bidirectional (bool, optional): if True, becomes a bidirectional encodr (defulat False)
+        bidirectional (bool, optional): if True, becomes a bidirectional encoder (default False)
         rnn_cell (str, optional): type of RNN cell (default: gru)
         variable_lengths (bool, optional): if use variable length RNN (default: False)
 
