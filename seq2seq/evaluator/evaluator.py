@@ -27,6 +27,7 @@ class Evaluator(object):
 
         Returns:
             loss (float): loss of the given model on the given dataset
+            accuracy (float): accuracy of the given model on the given dataset
         """
         model.eval()
 
