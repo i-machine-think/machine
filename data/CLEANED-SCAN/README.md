@@ -1,6 +1,8 @@
 # SCAN tasks for  compositional learning
 
 SCAN is a set of simple language-driven navigation tasks for studying compositional learning and zero-shot generalization. The SCAN tasks were inspired by the [CommAI environment](https://github.com/facebookresearch/CommAI-env), which is the origin of the acronym (**S**implified versions of the **C**omm**A**I **N**avigation tasks).
+This folder contains a version of the SCAN dataset without the meta information indicating in- and output.
+Input and output sentences are separated by tabs.
 
 ### Citing this data set
 Please cite the following paper:
@@ -13,13 +15,13 @@ SCAN consists of a set of commands (see table) and their corresponding action se
 
 |Command | Action sequence |
 | --- | --- | 
-| IN: jump                |                       OUT: JUMP |
-| IN: jump left            |                       OUT:  LTURN JUMP | 
-| IN: jump around right       |                   OUT: RTURN JUMP RTURN JUMP RTURN JUMP RTURN JUMP |
-| IN: turn left twice          |                  OUT: LTURN LTURN |
-| IN: jump thrice               |                 OUT: JUMP JUMP JUMP | 
-| IN: jump opposite left and walk thrice   |      OUT: LTURN LTURN JUMP WALK WALK WALK | 
-| IN: jump opposite left after walk around left | OUT: LTURN WALK LTURN WALK LTURN WALK LTURN WALK LTURN LTURN JUMP |
+|jump                |                       JUMP |
+|jump left            |                      LTURN JUMP | 
+|jump around right       |                   RTURN JUMP RTURN JUMP RTURN JUMP RTURN JUMP |
+|turn left twice          |                  LTURN LTURN |
+|jump thrice               |                 JUMP JUMP JUMP | 
+|jump opposite left and walk thrice   |      LTURN LTURN JUMP WALK WALK WALK | 
+|jump opposite left after walk around left | LTURN WALK LTURN WALK LTURN WALK LTURN WALK LTURN LTURN JUMP |
 
 ### Contents of this repository 
 
@@ -56,4 +58,3 @@ The folder [simple_split/size_variations](simple_split/size_variations) contains
 
 The folder [add_prim_split/with_additional_examples](add_prim_split/with_additiona_examples) contains variations of the setup for adding the primitive "jump" command, where both the primitive jump command and varying numbers of compositional jump commands are included in the training set. Files are named "tasks_train_addprim_complex_jump_numX_repY.txt" where X is the number of (randomly selected) compositional jump commands included in training, and Y denotes different replications of the random selection.
 
-Please refer to the paper above for a discussion of the additional splits.
