@@ -68,7 +68,7 @@ if torch.cuda.is_available():
 # Evaluate model on test set
 
 evaluator = Evaluator(loss=loss, batch_size=opt.batch_size)
-loss, accuracy = evaluator.evaluate(seq2seq, test)
+loss, accuracy, seq_accuracy = evaluator.evaluate(seq2seq, test)
 
-print("Loss: %f, accuracy: %f" % (loss, accuracy))
+print("Loss: %f, Word accuracy: %f, Sequence accuracy: %f" % (loss, accuracy, seq_accuracy))
 

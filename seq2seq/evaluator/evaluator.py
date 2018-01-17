@@ -33,8 +33,12 @@ class Evaluator(object):
 
         loss = self.loss
         loss.reset()
-        match = 0
-        total = 0
+
+        word_match = 0
+        word_total = 0
+
+        seq_match = 0
+        seq_total = 0
 
         device = None if torch.cuda.is_available() else -1
         batch_iterator = torchtext.data.BucketIterator(
@@ -52,18 +56,34 @@ class Evaluator(object):
 
             # Evaluation
             seqlist = other['sequence']
+
+            match_per_seq = torch.zeros(batch.batch_size).type(torch.FloatTensor)
+            total_per_seq = torch.zeros(batch.batch_size).type(torch.FloatTensor)
+
             for step, step_output in enumerate(decoder_outputs):
                 target = target_variables[:, step + 1]
                 loss.eval_batch(step_output.view(target_variables.size(0), -1), target)
 
                 non_padding = target.ne(pad)
-                correct = seqlist[step].view(-1).eq(target).masked_select(non_padding).sum().data[0]
-                match += correct
-                total += non_padding.sum().data[0]
 
-        if total == 0:
+                correct_per_seq = (seqlist[step].view(-1).eq(target).data + non_padding.data).eq(2)
+                match_per_seq += correct_per_seq.type(torch.FloatTensor)
+                total_per_seq += non_padding.type(torch.FloatTensor).data
+
+            word_match += match_per_seq.sum()
+            word_total += total_per_seq.sum()
+
+            seq_match += match_per_seq.eq(total_per_seq).sum()
+            seq_total += total_per_seq.shape[0]
+
+        if word_total == 0:
             accuracy = float('nan')
         else:
-            accuracy = match / total
+            accuracy = word_match / word_total
 
-        return loss.get_loss(), accuracy
+        if seq_total == 0:
+            seq_accuracy = float('nan')
+        else:
+            seq_accuracy = seq_match/seq_total
+
+        return loss.get_loss(), accuracy, seq_accuracy
