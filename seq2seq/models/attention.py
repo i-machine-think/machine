@@ -51,22 +51,22 @@ class Attention(nn.Module):
         """
         self.mask = mask
 
-    def forward(self, output, context):
-        batch_size = output.size(0)
-        hidden_size = output.size(2)
-        input_size = context.size(1)
+    def forward(self, decoder_states, encoder_states):
+
+        # print encoder_states.size()
+        # print decoder_states.size()
+        # raw_input()
+
+        batch_size = decoder_states.size(0)
+        decoder_states_size = decoder_states.size(2)
+        input_size = encoder_states.size(1)
         # (batch, out_len, dim) * (batch, in_len, dim) -> (batch, out_len, in_len)
-        attn = torch.bmm(output, context.transpose(1, 2))
+        attn = torch.bmm(decoder_states, encoder_states.transpose(1, 2))
         if self.mask is not None:
             attn.data.masked_fill_(self.mask, -float('inf'))
         attn = F.softmax(attn.view(-1, input_size), dim=1).view(batch_size, -1, input_size)
 
         # (batch, out_len, in_len) * (batch, in_len, dim) -> (batch, out_len, dim)
-        mix = torch.bmm(attn, context)
+        context = torch.bmm(attn, encoder_states)
 
-        # concat -> (batch, out_len, 2*dim)
-        combined = torch.cat((mix, output), dim=2)
-        # output -> (batch, out_len, dim)
-        output = F.tanh(self.linear_out(combined.view(-1, 2 * hidden_size))).view(batch_size, -1, hidden_size)
-
-        return output, attn
+        return context, attn

@@ -74,7 +74,13 @@ class DecoderRNN(BaseRNN):
                 n_layers, rnn_cell)
 
         self.bidirectional_encoder = bidirectional
-        self.rnn = self.rnn_cell(hidden_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
+        input_size = hidden_size
+        
+        # increase input size decoder if attention is applied before decoder rnn
+        if use_attention == 'pre-rnn':
+            input_size*=2
+
+        self.rnn = self.rnn_cell(input_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
 
         self.output_size = vocab_size
         self.max_length = max_len
@@ -87,22 +93,39 @@ class DecoderRNN(BaseRNN):
         self.embedding = nn.Embedding(self.output_size, self.hidden_size)
         if use_attention:
             self.attention = Attention(self.hidden_size)
+            self.attention_type=use_attention
 
-        self.out = nn.Linear(self.hidden_size, self.output_size)
+        if use_attention == 'post-rnn':
+            self.out = nn.Linear(2*self.hidden_size, self.output_size)
+        else:
+            self.out = nn.Linear(self.hidden_size, self.output_size)
 
     def forward_step(self, input_var, hidden, encoder_outputs, function):
+
         batch_size = input_var.size(0)
         output_size = input_var.size(1)
         embedded = self.embedding(input_var)
         embedded = self.input_dropout(embedded)
 
-        output, hidden = self.rnn(embedded, hidden)
+        if self.use_attention == 'pre-rnn':
+            h = hidden
+            if isinstance(hidden, tuple):
+                h, c = hidden
+            context, attn = self.attention(h[-1:].transpose(0,1), encoder_outputs) # transpose to get batch at the second index
+            combined_input = torch.cat((context, embedded), dim=2)
+            output, hidden = self.rnn(combined_input, hidden)
 
-        attn = None
-        if self.use_attention:
-            output, attn = self.attention(output, encoder_outputs)
+        elif self.use_attention == 'post-rnn':
+            output, hidden = self.rnn(embedded, hidden) # for GRU hidden=h, for LSTM (h, c)
+            context, attn = self.attention(output, encoder_outputs)
+            output = torch.cat((context, output), dim=2)
 
-        predicted_softmax = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
+        elif not self.use_attention:
+            attn = None
+            output, hidden = self.rnn(embedded, hidden)
+
+        predicted_softmax = function(self.out(output.contiguous().view(-1, self.out.in_features)), dim=1).view(batch_size, output_size, -1)
+
         return predicted_softmax, hidden, attn
 
     def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None,
@@ -113,6 +136,7 @@ class DecoderRNN(BaseRNN):
 
         inputs, batch_size, max_length = self._validate_args(inputs, encoder_hidden, encoder_outputs,
                                                              function, teacher_forcing_ratio)
+        
         decoder_hidden = self._init_state(encoder_hidden)
 
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
@@ -137,7 +161,7 @@ class DecoderRNN(BaseRNN):
 
         # Manual unrolling is used to support random teacher forcing.
         # If teacher_forcing_ratio is True or False instead of a probability, the unrolling can be done in graph
-        if use_teacher_forcing:
+        if use_teacher_forcing and self.use_attention == 'post-rnn':
             decoder_input = inputs[:, :-1]
             decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
                                                                      function=function)
@@ -149,6 +173,16 @@ class DecoderRNN(BaseRNN):
                 else:
                     step_attn = None
                 decode(di, step_output, step_attn)
+
+        elif use_teacher_forcing and self.use_attention == 'pre-rnn':
+            # unroll computation to apply attention before rnn layer
+            for di in range(inputs.size(1)-1):
+                decoder_input = inputs[:, di].unsqueeze(1)
+                decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
+                                                                         function=function)
+                step_output = decoder_output.squeeze(1)
+                decode(di, step_output, step_attn)
+
         else:
             decoder_input = inputs[:, 0].unsqueeze(1)
             for di in range(max_length):
