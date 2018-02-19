@@ -17,7 +17,7 @@ else:
 
 
 class DecoderRNN(BaseRNN):
-    r"""
+    """
     Provides functionality for decoding in a seq2seq framework, with an option for attention.
 
     Args:
@@ -68,14 +68,22 @@ class DecoderRNN(BaseRNN):
     def __init__(self, vocab_size, max_len, hidden_size,
             sos_id, eos_id,
             n_layers=1, rnn_cell='gru', bidirectional=False,
-            input_dropout_p=0, dropout_p=0, use_attention=False):
+            input_dropout_p=0, dropout_p=0, use_attention=False, attention_method=None):
         super(DecoderRNN, self).__init__(vocab_size, max_len, hidden_size,
                 input_dropout_p, dropout_p,
                 n_layers, rnn_cell)
 
         self.bidirectional_encoder = bidirectional
         input_size = hidden_size
-        
+
+        if use_attention != False and attention_method == None:
+                raise ValueError("Method for computing attention should be provided")
+
+        if use_attention == 'post-rnn' and attention_method == 'mlp':
+                raise NotImplementedError("post-rnn attention with mlp alignment model not implemented")
+
+        self.attention_method = attention_method
+
         # increase input size decoder if attention is applied before decoder rnn
         if use_attention == 'pre-rnn':
             input_size*=2
@@ -92,8 +100,7 @@ class DecoderRNN(BaseRNN):
 
         self.embedding = nn.Embedding(self.output_size, self.hidden_size)
         if use_attention:
-            self.attention = Attention(self.hidden_size)
-            self.attention_type=use_attention
+            self.attention = Attention(self.hidden_size, self.attention_method)
 
         if use_attention == 'post-rnn':
             self.out = nn.Linear(2*self.hidden_size, self.output_size)

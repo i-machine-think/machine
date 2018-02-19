@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class Attention(nn.Module):
-    r"""
+    """
     Applies an attention mechanism on the output features from the decoder.
 
     .. math::
@@ -16,6 +16,7 @@ class Attention(nn.Module):
 
     Args:
         dim(int): The number of expected features in the output
+        method(str): The method to compute the alignment, mlp or dot
 
     Inputs: output, context
         - **output** (batch, output_len, dimensions): tensor containing the output features from the decoder.
@@ -26,8 +27,8 @@ class Attention(nn.Module):
         - **attn** (batch, output_len, input_len): tensor containing attention weights.
 
     Attributes:
-        linear_out (torch.nn.Linear): applies a linear transformation to the incoming data: :math:`y = Ax + b`.
         mask (torch.Tensor, optional): applies a :math:`-inf` to the indices specified in the `Tensor`.
+        method (torch.nn.Module): layer that implements the method of computing the attention vector
 
     Examples::
 
@@ -37,10 +38,10 @@ class Attention(nn.Module):
          >>> output, attn = attention(output, context)
 
     """
-    def __init__(self, dim):
+    def __init__(self, dim, method):
         super(Attention, self).__init__()
-        self.linear_out = nn.Linear(dim*2, dim)
         self.mask = None
+        self.method = self.get_method(method, dim)
 
     def set_mask(self, mask):
         """
@@ -53,15 +54,13 @@ class Attention(nn.Module):
 
     def forward(self, decoder_states, encoder_states):
 
-        # print encoder_states.size()
-        # print decoder_states.size()
-        # raw_input()
-
         batch_size = decoder_states.size(0)
         decoder_states_size = decoder_states.size(2)
         input_size = encoder_states.size(1)
-        # (batch, out_len, dim) * (batch, in_len, dim) -> (batch, out_len, in_len)
-        attn = torch.bmm(decoder_states, encoder_states.transpose(1, 2))
+
+        # compute attention vals
+        attn = self.method(decoder_states, encoder_states)
+
         if self.mask is not None:
             attn.data.masked_fill_(self.mask, -float('inf'))
         attn = F.softmax(attn.view(-1, input_size), dim=1).view(batch_size, -1, input_size)
@@ -70,3 +69,56 @@ class Attention(nn.Module):
         context = torch.bmm(attn, encoder_states)
 
         return context, attn
+
+    def get_method(self, method, dim):
+        """
+        Set method to compute attention
+        """
+        if method == 'mlp':
+            method = Concat(dim)
+        elif method == 'dot':
+            method = Dot()
+        else:
+            return ValueError("Unknown attention method")
+        return method
+
+class Concat(nn.Module):
+    """
+    Implements the computation of attention by applying an
+    MLP to the concatenation of the decoder and encoder
+    hidden states.
+    """
+    def __init__(self, dim):
+        super(Concat, self).__init__()
+        self.mlp = nn.Linear(dim*2, 1)
+
+    def forward(self, decoder_states, encoder_states):
+        # apply mlp to all encoder states for current decoder
+
+        # decoder_states --> (batch, 1, hl_size)
+        # encoder_states --> (batch, seqlen, hl_size)
+        batch_size, seqlen, hl_size = encoder_states.size()
+
+        # expand decoder states and transpose
+        decoder_states_exp = decoder_states.expand(batch_size, seqlen, hl_size)
+        decoder_states_tr = decoder_states_exp.contiguous().view(-1, hl_size)
+
+        # reshape encoder states to allow batchwise computation
+        encoder_states_tr = encoder_states.contiguous().view(-1, hl_size)
+
+        mlp_input = torch.cat((encoder_states_tr, decoder_states_tr), dim=1)
+
+        # apply mlp and respape to get in correct form
+        mlp_output = self.mlp(mlp_input)
+        attn = mlp_output.view(batch_size, seqlen)
+
+        return attn
+
+
+class Dot(nn.Module):
+    def __init__(self):
+        super(Dot, self).__init__()
+
+    def forward(self, decoder_states, encoder_states):
+        attn = torch.bmm(decoder_states, encoder_states.transpose(1, 2))
+        return attn

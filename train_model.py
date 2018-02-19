@@ -62,6 +62,10 @@ if torch.cuda.is_available():
         print("Cuda device set to %i" % opt.cuda_device)
         torch.cuda.set_device(opt.cuda_device)
 
+if opt.attention:
+    if not opt.attention_method:
+        opt.attention_method = 'dot'
+
 ############################################################################
 # Prepare dataset
 src = SourceField()
@@ -120,7 +124,7 @@ else:
                          dropout_p=opt.dropout_p_decoder,
                          n_layers=opt.n_layers,
                          use_attention=opt.attention,
-                         # attention_method=opt.attention_method,
+                         attention_method=opt.attention_method,
                          bidirectional=opt.bidirectional,
                          rnn_cell=opt.rnn_cell,
                          eos_id=tgt.eos_id, sos_id=tgt.sos_id)
