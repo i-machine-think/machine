@@ -14,9 +14,29 @@ class Evaluator(object):
         batch_size (int, optional): batch size for evaluator (default: 64)
     """
 
-    def __init__(self, loss=NLLLoss(), batch_size=64):
-        self.loss = loss
+    def __init__(self, loss=[NLLLoss()], batch_size=64):
+        self.losses = loss
         self.batch_size = batch_size
+
+    def compute_batch_loss(self, decoder_outputs, decoder_hidden, other, target_variable):
+
+        losses = self.losses
+        for loss in losses:
+            loss.reset()
+
+        losses = self.update_loss(losses, decoder_outputs, decoder_hidden, other, target_variable)
+
+        return losses
+
+    def update_loss(self, losses, decoder_outputs, decoder_hidden, other, target_variable):
+
+        batch_size = target_variable.size(0)
+        for step, step_output in enumerate(decoder_outputs):
+            target = target_variable[:, step + 1]
+            for loss in losses:
+                loss.eval_batch(step_output.contiguous().view(batch_size, -1), target)
+
+        return losses
 
     def evaluate(self, model, data):
         """ Evaluate a model on given dataset and return performance.
@@ -31,8 +51,9 @@ class Evaluator(object):
         """
         model.eval()
 
-        loss = self.loss
-        loss.reset()
+        losses = self.losses
+        for loss in losses:
+            loss.reset()
 
         word_match = 0
         word_total = 0
@@ -49,10 +70,10 @@ class Evaluator(object):
         pad = tgt_vocab.stoi[data.fields[seq2seq.tgt_field_name].pad_token]
 
         for batch in batch_iterator:
-            input_variables, input_lengths  = getattr(batch, seq2seq.src_field_name)
-            target_variables = getattr(batch, seq2seq.tgt_field_name)
+            input_variable, input_lengths  = getattr(batch, seq2seq.src_field_name)
+            target_variable = getattr(batch, seq2seq.tgt_field_name)
 
-            decoder_outputs, decoder_hidden, other = model(input_variables, input_lengths.tolist(), target_variables)
+            decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths.tolist(), target_variable)
 
             # Evaluation
             seqlist = other['sequence']
@@ -60,9 +81,10 @@ class Evaluator(object):
             match_per_seq = torch.zeros(batch.batch_size).type(torch.FloatTensor)
             total_per_seq = torch.zeros(batch.batch_size).type(torch.FloatTensor)
 
+            losses = self.update_loss(losses, decoder_outputs, decoder_hidden, other, target_variable)
+
             for step, step_output in enumerate(decoder_outputs):
-                target = target_variables[:, step + 1]
-                loss.eval_batch(step_output.view(target_variables.size(0), -1), target)
+                target = target_variable[:, step + 1]
 
                 non_padding = target.ne(pad)
 
