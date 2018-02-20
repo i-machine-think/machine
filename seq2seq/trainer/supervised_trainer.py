@@ -26,7 +26,7 @@ class SupervisedTrainer(object):
         batch_size (int, optional): batch size for experiment, (default: 64)
         checkpoint_every (int, optional): number of epochs to checkpoint after, (default: 100)
     """
-    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=[1.], batch_size=64,
+    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None, batch_size=64,
                  random_seed=None,
                  checkpoint_every=100, print_every=100):
         self._trainer = "Simple Trainer"
@@ -35,8 +35,8 @@ class SupervisedTrainer(object):
             random.seed(random_seed)
             torch.manual_seed(random_seed)
         self.loss = loss
-        self.loss_weights = loss_weights
-        self.evaluator = Evaluator(loss=self.loss[0], batch_size=batch_size)
+        self.loss_weights = loss_weights or len(loss)*[1.]
+        self.evaluator = Evaluator(loss=self.loss, batch_size=batch_size)
         self.optimizer = None
         self.checkpoint_every = checkpoint_every
         self.print_every = print_every
@@ -52,25 +52,18 @@ class SupervisedTrainer(object):
 
     def _train_batch(self, input_variable, input_lengths, target_variable, model, teacher_forcing_ratio):
         loss = self.loss
+
         # Forward propagation
         decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths, target_variable,
                                                        teacher_forcing_ratio=teacher_forcing_ratio)
-        losses = self.loss
-        # Get loss
-        for loss in losses:
-            loss.reset()
 
-        batch_size = target_variable.size(0)
-        for step, step_output in enumerate(decoder_outputs):
-            for i, loss in enumerate(losses, 0):
-                loss.eval_batch(step_output.contiguous().view(batch_size, -1), target_variable[:, step + 1])
-                loss.scale_loss(self.loss_weights[i])
-
+        losses = self.evaluator.compute_batch_loss(decoder_outputs, decoder_hidden, other, target_variable)
+        
         # Backward propagation
-        model.zero_grad()
         for loss in losses:
             loss.backward()
         self.optimizer.step()
+        model.zero_grad()
 
         return losses[0].get_loss()
 
