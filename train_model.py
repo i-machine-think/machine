@@ -146,7 +146,7 @@ if torch.cuda.is_available():
     loss.cuda()
 
 # create trainer
-t = SupervisedTrainer(loss=loss, batch_size=opt.batch_size,
+t = SupervisedTrainer(loss=[loss], batch_size=opt.batch_size,
                       checkpoint_every=opt.save_every,
                       print_every=opt.print_every, expt_dir=opt.output_dir)
 

@@ -80,6 +80,9 @@ class Loss(object):
             raise ValueError("No loss to back propagate.")
         self.acc_loss.backward()
 
+    def scale_loss(self, factor):
+        self.acc_loss*=factor
+
 class NLLLoss(Loss):
     """ Batch averaged negative log-likelihood loss.
 
