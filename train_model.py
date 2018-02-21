@@ -10,6 +10,7 @@ import seq2seq
 from seq2seq.trainer import SupervisedTrainer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
 from seq2seq.loss import Perplexity
+from seq2seq.metrics import WordAccuracy, SequenceAccuracy
 from seq2seq.optim import Optimizer
 from seq2seq.dataset import SourceField, TargetField
 from seq2seq.evaluator import Predictor, Evaluator
@@ -138,15 +139,21 @@ else:
 ##############################################################################
 # train model
 
-# Prepare loss
+# Prepare loss and metrics
 weight = torch.ones(len(output_vocab))
 pad = output_vocab.stoi[tgt.pad_token]
 loss = Perplexity(weight, pad)
+metrics = [WordAccuracy(weight, pad), SequenceAccuracy(weight, pad)]
 if torch.cuda.is_available():
     loss.cuda()
+    for metric in metrics:
+        metric.cuda()
+
+# metrics = [WordAccuracy(weight, pad)] # , SequenceAccuracy(weight, pad)]
 
 # create trainer
-t = SupervisedTrainer(loss=[loss], batch_size=opt.batch_size,
+t = SupervisedTrainer(loss=[loss], metrics=metrics, 
+                      batch_size=opt.batch_size,
                       checkpoint_every=opt.save_every,
                       print_every=opt.print_every, expt_dir=opt.output_dir)
 

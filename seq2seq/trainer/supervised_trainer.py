@@ -26,7 +26,7 @@ class SupervisedTrainer(object):
         batch_size (int, optional): batch size for experiment, (default: 64)
         checkpoint_every (int, optional): number of epochs to checkpoint after, (default: 100)
     """
-    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None, batch_size=64,
+    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None, metrics=None, batch_size=64,
                  random_seed=None,
                  checkpoint_every=100, print_every=100):
         self._trainer = "Simple Trainer"
@@ -34,9 +34,11 @@ class SupervisedTrainer(object):
         if random_seed is not None:
             random.seed(random_seed)
             torch.manual_seed(random_seed)
+        k = NLLLoss()
         self.loss = loss
+        self.metrics = metrics
         self.loss_weights = loss_weights or len(loss)*[1.]
-        self.evaluator = Evaluator(loss=self.loss, batch_size=batch_size)
+        self.evaluator = Evaluator(loss=self.loss, metrics=self.metrics, batch_size=batch_size)
         self.optimizer = None
         self.checkpoint_every = checkpoint_every
         self.print_every = print_every
@@ -60,7 +62,8 @@ class SupervisedTrainer(object):
         losses = self.evaluator.compute_batch_loss(decoder_outputs, decoder_hidden, other, target_variable)
         
         # Backward propagation
-        for loss in losses:
+        for i, loss in enumerate(losses, 0):
+            loss.scale_loss(self.loss_weights[i])
             loss.backward()
         self.optimizer.step()
         model.zero_grad()
@@ -90,6 +93,7 @@ class SupervisedTrainer(object):
         # store initial model to be sure at least one model is stored
         eval_data = dev_data or data
         loss, accuracy, seq_accuracy = self.evaluator.evaluate(model, eval_data)
+        print "Accuracy:", accuracy, "Seq Accuracy", seq_accuracy
         loss_best = top_k*[loss]
         best_checkpoints = top_k*[None]
         model_name = 'acc_%.2f_seq_acc_%.2f_ppl_%.2f_s%d' % (accuracy, seq_accuracy, loss, 0)
