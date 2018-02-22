@@ -79,10 +79,9 @@ class Loss(object):
         else:
             outputs = other[self.inputs]
 
-        batch_size = target_variable.size(0)
         for step, step_output in enumerate(outputs):
             target = target_variable[:, step + 1]
-            self.eval_step(step_output.contiguous().view(batch_size, -1), target)
+            self.eval_step(step_output, target)
 
     def eval_step(self, outputs, target):
         """ Function called by eval batch to evaluate a timestep of the batch
@@ -138,7 +137,9 @@ class NLLLoss(Loss):
             loss /= self.norm_term
         return loss
 
-    def eval_step(self, outputs, target):
+    def eval_step(self, step_outputs, target):
+        batch_size = target.size(0)
+        outputs = step_outputs.contiguous().view(batch_size, -1)
         self.acc_loss += self.criterion(outputs, target)
         self.norm_term += 1
 
