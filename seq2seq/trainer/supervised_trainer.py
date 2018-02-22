@@ -12,6 +12,7 @@ from torch import optim
 import seq2seq
 from seq2seq.evaluator import Evaluator
 from seq2seq.loss import NLLLoss
+from seq2seq.metrics import WordAccuracy
 from seq2seq.optim import Optimizer
 from seq2seq.util.checkpoint import Checkpoint
 
@@ -26,7 +27,7 @@ class SupervisedTrainer(object):
         batch_size (int, optional): batch size for experiment, (default: 64)
         checkpoint_every (int, optional): number of epochs to checkpoint after, (default: 100)
     """
-    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None, metrics=None, batch_size=64,
+    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None, metrics=[], batch_size=64,
                  random_seed=None,
                  checkpoint_every=100, print_every=100):
         self._trainer = "Simple Trainer"
@@ -245,7 +246,8 @@ class SupervisedTrainer(object):
         target_variables = getattr(batch, seq2seq.tgt_field_name)
         return input_variables, input_lengths, target_variables
 
-    def print_eval(self, losses, metrics, step):
+    @staticmethod
+    def print_eval(losses, metrics, step):
         total_loss = 0
         model_name = ''
         log_msg= ''
