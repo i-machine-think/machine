@@ -31,8 +31,9 @@ class Loss(object):
             sub-classes.
     """
 
-    def __init__(self, name, criterion):
+    def __init__(self, name, log_name, criterion):
         self.name = name
+        self.log_name = log_name
         self.criterion = criterion
         if not issubclass(type(self.criterion), nn.modules.loss._Loss):
             raise ValueError("Criterion has to be a subclass of torch.nn._Loss")
@@ -93,6 +94,7 @@ class NLLLoss(Loss):
     """
 
     _NAME = "Avg NLLLoss"
+    _SHORTNAME = "nll_loss"
 
     def __init__(self, weight=None, mask=None, size_average=True):
         self.mask = mask
@@ -103,7 +105,7 @@ class NLLLoss(Loss):
             weight[mask] = 0
 
         super(NLLLoss, self).__init__(
-            self._NAME,
+            self._NAME, self._SHORTNAME,
             nn.NLLLoss(weight=weight, size_average=size_average))
 
     def get_loss(self):
@@ -132,6 +134,7 @@ class Perplexity(NLLLoss):
     """
 
     _NAME = "Perplexity"
+    _SHORTNAME = "ppl"
     _MAX_EXP = 100
 
     def __init__(self, weight=None, mask=None):

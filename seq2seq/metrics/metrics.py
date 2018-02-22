@@ -24,8 +24,9 @@ class Metric(object):
             sub-classes.
     """
 
-    def __init__(self, name, input_var):
+    def __init__(self, name, log_name, input_var):
         self.name = name
+        self.log_name = log_name
         self.input = input_var
 
     def reset(self):
@@ -59,6 +60,7 @@ class WordAccuracy(Metric):
     """
 
     _NAME = "Word Accuracy"
+    _SHORTNAME = "acc"
     _INPUT = "sequence"
 
     def __init__(self, weight=None, mask=None):
@@ -72,7 +74,7 @@ class WordAccuracy(Metric):
                 raise ValueError("Must provide weight with a mask.")
             weight[mask] = 0
 
-        super(WordAccuracy, self).__init__(self._NAME, self._INPUT)
+        super(WordAccuracy, self).__init__(self._NAME, self._SHORTNAME, self._INPUT)
 
     def get_val(self):
         if self.word_total != 0:
@@ -104,6 +106,7 @@ class SequenceAccuracy(Metric):
     """
 
     _NAME = "Sequence Accuracy"
+    _SHORTNAME = "seq_acc"
     _INPUT = "seqlist"
 
     def __init__(self, weight=None, mask=None):
@@ -117,7 +120,7 @@ class SequenceAccuracy(Metric):
                 raise ValueError("Must provide weight with a mask.")
             weight[mask] = 0
 
-        super(SequenceAccuracy, self).__init__(self._NAME, self._INPUT)
+        super(SequenceAccuracy, self).__init__(self._NAME, self._SHORTNAME, self._INPUT)
 
     def get_val(self):
         if self.seq_total != 0:

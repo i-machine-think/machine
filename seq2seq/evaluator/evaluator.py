@@ -90,4 +90,4 @@ class Evaluator(object):
         accuracy = metrics[0].get_val()
         seq_accuracy = metrics[1].get_val()
 
-        return loss.get_loss(), accuracy, seq_accuracy
+        return losses, metrics
