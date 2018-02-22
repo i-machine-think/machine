@@ -22,7 +22,7 @@ class TestSupervisedTrainer(unittest.TestCase):
 
     @mock.patch('seq2seq.trainer.SupervisedTrainer._train_batch', return_value=0)
     @mock.patch('seq2seq.util.checkpoint.Checkpoint.save')
-    @mock.patch('seq2seq.evaluator.Evaluator.evaluate', return_value=(0,0,0))
+    @mock.patch('seq2seq.evaluator.Evaluator.evaluate', return_value=([],[]))
     def test_batch_num_when_resuming(self, mock_evaluator, mock_checkpoint, mock_func):
         mock_model = mock.Mock()
         mock_optim = mock.Mock()
@@ -38,7 +38,7 @@ class TestSupervisedTrainer(unittest.TestCase):
 
     @mock.patch('seq2seq.trainer.SupervisedTrainer._train_batch', return_value=0)
     @mock.patch('seq2seq.util.checkpoint.Checkpoint.save')
-    @mock.patch('seq2seq.evaluator.Evaluator.evaluate', return_value=(0,0,0))
+    @mock.patch('seq2seq.evaluator.Evaluator.evaluate', return_value=([],[]))
     def test_resume_from_multiple_of_epoches(self, mock_evaluator, mock_checkpoint, mock_func):
         mock_model = mock.Mock()
         mock_optim = mock.Mock()

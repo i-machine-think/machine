@@ -24,19 +24,22 @@ class TestLoss(unittest.TestCase):
 
     def test_loss_init(self):
         name = "name"
-        loss = Loss(name, torch.nn.NLLLoss())
+        shortname = "shortname"
+        loss = Loss(name, shortname, torch.nn.NLLLoss())
         self.assertEqual(loss.name, name)
+        self.assertEqual(loss.log_name, shortname)
 
     def test_loss_init_WITH_NON_LOSS(self):
-        self.assertRaises(ValueError, lambda: Loss("name", "loss"))
+        self.assertRaises(ValueError, lambda: Loss("name", "shortname", "loss"))
 
     def test_loss_backward_WITH_NO_LOSS(self):
-        loss = Loss("name", torch.nn.NLLLoss())
+        loss = Loss("name", "shortname", torch.nn.NLLLoss())
         self.assertRaises(ValueError, lambda: loss.backward())
 
     def test_nllloss_init(self):
         loss = NLLLoss()
         self.assertEqual(loss.name, NLLLoss._NAME)
+        self.assertEqual(loss.log_name, NLLLoss._SHORTNAME)
         self.assertTrue(type(loss.criterion) is torch.nn.NLLLoss)
 
     def test_nllloss_init_WITH_MASK_BUT_NO_WEIGHT(self):
@@ -71,6 +74,7 @@ class TestLoss(unittest.TestCase):
     def test_perplexity_init(self):
         loss = Perplexity()
         self.assertEqual(loss.name, Perplexity._NAME)
+        self.assertEqual(loss.log_name, Perplexity._SHORTNAME)
 
     def test_perplexity(self):
         nll = NLLLoss()
