@@ -5,6 +5,7 @@ import torchtext
 
 import seq2seq
 from seq2seq.loss import NLLLoss
+from seq2seq.metrics import WordAccuracy, SequenceAccuracy
 
 class Evaluator(object):
     """ Class to evaluate models with given datasets.
@@ -14,7 +15,7 @@ class Evaluator(object):
         batch_size (int, optional): batch size for evaluator (default: 64)
     """
 
-    def __init__(self, loss=[NLLLoss()], metrics=['word_accuracy', 'sequence_accuracy'], batch_size=64):
+    def __init__(self, loss=[NLLLoss()], metrics=[WordAccuracy(), SequenceAccuracy()], batch_size=64):
         self.losses = loss
         self.metrics = metrics
         self.batch_size = batch_size
