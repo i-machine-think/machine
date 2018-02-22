@@ -25,15 +25,16 @@ class TestLoss(unittest.TestCase):
     def test_loss_init(self):
         name = "name"
         shortname = "shortname"
-        loss = Loss(name, shortname, torch.nn.NLLLoss())
+        inputs="decoder_output"
+        loss = Loss(name, shortname, inputs, torch.nn.NLLLoss())
         self.assertEqual(loss.name, name)
         self.assertEqual(loss.log_name, shortname)
 
     def test_loss_init_WITH_NON_LOSS(self):
-        self.assertRaises(ValueError, lambda: Loss("name", "shortname", "loss"))
+        self.assertRaises(ValueError, lambda: Loss("name", "shortname", "decoder_outputs", "loss"))
 
     def test_loss_backward_WITH_NO_LOSS(self):
-        loss = Loss("name", "shortname", torch.nn.NLLLoss())
+        loss = Loss("name", "shortname", "decoder_output", torch.nn.NLLLoss())
         self.assertRaises(ValueError, lambda: loss.backward())
 
     def test_nllloss_init(self):
@@ -51,7 +52,7 @@ class TestLoss(unittest.TestCase):
         pytorch_loss = 0
         pytorch_criterion = torch.nn.NLLLoss()
         for output, target in zip(self.outputs, self.targets):
-            loss.eval_batch(output, target)
+            loss.eval_step(output, target)
             pytorch_loss += pytorch_criterion(output, target)
 
         loss_val = loss.get_loss()
@@ -64,7 +65,7 @@ class TestLoss(unittest.TestCase):
         pytorch_loss = 0
         pytorch_criterion = torch.nn.NLLLoss(size_average=False)
         for output, target in zip(self.outputs, self.targets):
-            loss.eval_batch(output, target)
+            loss.eval_step(output, target)
             pytorch_loss += pytorch_criterion(output, target)
 
         loss_val = loss.get_loss()
@@ -80,8 +81,8 @@ class TestLoss(unittest.TestCase):
         nll = NLLLoss()
         ppl = Perplexity()
         for output, target in zip(self.outputs, self.targets):
-            nll.eval_batch(output, target)
-            ppl.eval_batch(output, target)
+            nll.eval_step(output, target)
+            ppl.eval_step(output, target)
 
         nll_loss = nll.get_loss()
         ppl_loss = ppl.get_loss()
