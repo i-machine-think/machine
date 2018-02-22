@@ -31,9 +31,10 @@ class Loss(object):
             sub-classes.
     """
 
-    def __init__(self, name, log_name, criterion):
+    def __init__(self, name, log_name, inputs, criterion):
         self.name = name
         self.log_name = log_name
+        self.inputs = inputs
         self.criterion = criterion
         if not issubclass(type(self.criterion), nn.modules.loss._Loss):
             raise ValueError("Criterion has to be a subclass of torch.nn._Loss")
@@ -59,7 +60,7 @@ class Loss(object):
         """
         raise NotImplementedError
 
-    def eval_batch(self, outputs, target):
+    def eval_batch(self, decoder_outputs, other, target_variable):
         """ Evaluate and accumulate loss given outputs and expected results.
 
         This method is called after each batch with the batch outputs and
@@ -67,6 +68,24 @@ class Loss(object):
         accumulated in this method.  Override it to define your own accumulation
         method.
 
+        Args:
+            decoder_outputs (torch.Tensor): outputs of a batch.
+            other (dictionary): extra outputs of the model
+            target_variable (torch.Tensor): expected output of a batch.
+        """
+
+        if self.inputs == 'decoder_output':
+            outputs = decoder_outputs
+        else:
+            outputs = other[self.inputs]
+
+        batch_size = target_variable.size(0)
+        for step, step_output in enumerate(outputs):
+            target = target_variable[:, step + 1]
+            self.eval_step(step_output.contiguous().view(batch_size, -1), target)
+
+    def eval_step(self, outputs, target):
+        """ Function called by eval batch to evaluate a timestep of the batch
         Args:
             outputs (torch.Tensor): outputs of a batch.
             target (torch.Tensor): expected output of a batch.
@@ -95,6 +114,7 @@ class NLLLoss(Loss):
 
     _NAME = "Avg NLLLoss"
     _SHORTNAME = "nll_loss"
+    _INPUTS = "decoder_output"
 
     def __init__(self, weight=None, mask=None, size_average=True):
         self.mask = mask
@@ -105,7 +125,7 @@ class NLLLoss(Loss):
             weight[mask] = 0
 
         super(NLLLoss, self).__init__(
-            self._NAME, self._SHORTNAME,
+            self._NAME, self._SHORTNAME, self._INPUTS,
             nn.NLLLoss(weight=weight, size_average=size_average))
 
     def get_loss(self):
@@ -118,7 +138,7 @@ class NLLLoss(Loss):
             loss /= self.norm_term
         return loss
 
-    def eval_batch(self, outputs, target):
+    def eval_step(self, outputs, target):
         self.acc_loss += self.criterion(outputs, target)
         self.norm_term += 1
 
@@ -136,11 +156,12 @@ class Perplexity(NLLLoss):
     _NAME = "Perplexity"
     _SHORTNAME = "ppl"
     _MAX_EXP = 100
+    _INPUTS = "decoder_output"
 
     def __init__(self, weight=None, mask=None):
         super(Perplexity, self).__init__(weight=weight, mask=mask, size_average=False)
 
-    def eval_batch(self, outputs, target):
+    def eval_step(self, outputs, target):
         self.acc_loss += self.criterion(outputs, target)
         if self.mask is None:
             self.norm_term += np.prod(target.size())

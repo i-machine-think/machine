@@ -41,11 +41,8 @@ class Evaluator(object):
 
     def update_loss(self, losses, decoder_outputs, decoder_hidden, other, target_variable):
 
-        batch_size = target_variable.size(0)
-        for step, step_output in enumerate(decoder_outputs):
-            target = target_variable[:, step + 1]
-            for loss in losses:
-                loss.eval_batch(step_output.contiguous().view(batch_size, -1), target)
+        for loss in losses:
+            loss.eval_batch(decoder_outputs, other, target_variable)
 
         return losses
 
