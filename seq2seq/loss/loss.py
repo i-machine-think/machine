@@ -1,6 +1,8 @@
 from __future__ import print_function
 import math
 import torch.nn as nn
+from torch.autograd import Variable
+import torch
 import numpy as np
 
 class Loss(object):
@@ -73,6 +75,11 @@ class Loss(object):
             other (dictionary): extra outputs of the model
             target_variable (torch.Tensor): expected output of a batch.
         """
+
+        # all are a list which loops over output steps of the decoder, elements
+        # in the list are:
+        # decoder outputs # (batch, vocab_size?)
+        # attention scores # (batch, 1, input_length)
 
         if self.inputs == 'decoder_output':
             outputs = decoder_outputs
@@ -176,3 +183,17 @@ class Perplexity(NLLLoss):
             print("WARNING: Loss exceeded maximum value, capping to e^100")
             return math.exp(Perplexity._MAX_EXP)
         return math.exp(nll)
+
+class AttentionLoss(NLLLoss):
+    """ Cross entropy loss over attentions
+
+    Args:
+        weight (torch.Tensor, optional): refer to http://pytorch.org/docs/master/nn.html#nllloss
+        mask (int, optional): index of masked token, i.e. weight[mask] = 0.
+    """
+    _NAME = "Attention Loss"
+    _SHORTNAME = "attn_loss"
+    _INPUTS = "attention_score"
+
+    def __init__(self, weight=None, mask=None):
+        super(AttentionLoss, self).__init__(weight=None, mask=None, size_average=False)
