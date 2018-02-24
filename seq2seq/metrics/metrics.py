@@ -88,6 +88,7 @@ class WordAccuracy(Metric):
 
     def eval_batch(self, outputs, targets):
         # evaluate batch
+        targets = targets['decoder_output']
         batch_size = targets.size(0)
 
         for step, step_output in enumerate(outputs):
@@ -133,6 +134,8 @@ class SequenceAccuracy(Metric):
         self.seq_total = 0
 
     def eval_batch(self, outputs, targets):
+
+        targets = targets['decoder_output']
 
         batch_size = targets.size(0)
 

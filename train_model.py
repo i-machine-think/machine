@@ -9,7 +9,7 @@ import torchtext
 import seq2seq
 from seq2seq.trainer import SupervisedTrainer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
-from seq2seq.loss import Perplexity
+from seq2seq.loss import Perplexity, AttentionLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy
 from seq2seq.optim import Optimizer
 from seq2seq.dataset import SourceField, TargetField
@@ -40,6 +40,8 @@ parser.add_argument('--dropout_p_decoder', type=float, help='Dropout probability
 parser.add_argument('--teacher_forcing_ratio', type=float, help='Teacher forcing ratio', default=0.2)
 parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
 parser.add_argument('--attention_method', choices=['dot', 'mlp'], default=None)
+parser.add_argument('--use_attention_loss', action='store_true')
+parser.add_argument('--scale_attention_loss', type=float, default=1.)
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
 parser.add_argument('--lr', type=float, help='Learning rate, recommended settings.\nrecommended settings: adam=0.001 adadelta=1.0 adamax=0.002 rmsprop=0.01 sgd=0.1', default=0.001)
 
@@ -54,6 +56,9 @@ opt = parser.parse_args()
 
 if opt.resume and not opt.load_checkpoint:
     parser.error('load_checkpoint argument is required to resume training from checkpoint')
+
+if opt.use_attention_loss and not opt.attention:
+    parser.error('Specify attention type to use attention loss')
 
 LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
@@ -142,17 +147,22 @@ else:
 # Prepare loss and metrics
 weight = torch.ones(len(output_vocab))
 pad = output_vocab.stoi[tgt.pad_token]
-loss = Perplexity(weight, pad)
+loss = [Perplexity(weight, pad)]
+loss_weights = [1.]
+
+if opt.use_attention_loss:
+    loss.append(AttentionLoss(weight, pad))
+    loss_weights.append(opt.scale_attention_loss)
+
 metrics = [WordAccuracy(weight, pad), SequenceAccuracy(weight, pad)]
 if torch.cuda.is_available():
     loss.cuda()
     for metric in metrics:
         metric.cuda()
 
-# metrics = [WordAccuracy(weight, pad)] # , SequenceAccuracy(weight, pad)]
-
 # create trainer
-t = SupervisedTrainer(loss=[loss], metrics=metrics, 
+t = SupervisedTrainer(loss=loss, metrics=metrics, 
+                      loss_weights=loss_weights,
                       batch_size=opt.batch_size,
                       checkpoint_every=opt.save_every,
                       print_every=opt.print_every, expt_dir=opt.output_dir)
