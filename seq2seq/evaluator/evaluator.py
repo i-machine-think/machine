@@ -46,7 +46,7 @@ class Evaluator(object):
 
         return losses
 
-    def evaluate(self, model, data):
+    def evaluate(self, model, data, get_batch_data):
         """ Evaluate a model on given dataset and return performance.
 
         Args:
@@ -76,8 +76,10 @@ class Evaluator(object):
 
         # loop over batches
         for batch in batch_iterator:
-            input_variable, input_lengths  = getattr(batch, seq2seq.src_field_name)
-            target_variable = {'decoder_output': getattr(batch, seq2seq.tgt_field_name)}
+
+            input_variable, input_lengths, target_variable = get_batch_data(batch)
+            # input_variable, input_lengths  = getattr(batch, seq2seq.src_field_name)
+            # target_variable = {'decoder_output': getattr(batch, seq2seq.tgt_field_name)}
 
             decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths.tolist(), target_variable['decoder_output'])
 
