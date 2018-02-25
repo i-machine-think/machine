@@ -26,15 +26,16 @@ class TestLoss(unittest.TestCase):
         name = "name"
         shortname = "shortname"
         inputs="decoder_output"
-        loss = Loss(name, shortname, inputs, torch.nn.NLLLoss())
+        targets="decoder_output"
+        loss = Loss(name, shortname, inputs, targets, torch.nn.NLLLoss())
         self.assertEqual(loss.name, name)
         self.assertEqual(loss.log_name, shortname)
 
     def test_loss_init_WITH_NON_LOSS(self):
-        self.assertRaises(ValueError, lambda: Loss("name", "shortname", "decoder_outputs", "loss"))
+        self.assertRaises(ValueError, lambda: Loss("name", "shortname", "decoder_outputs", "decoder_targets", "loss"))
 
     def test_loss_backward_WITH_NO_LOSS(self):
-        loss = Loss("name", "shortname", "decoder_output", torch.nn.NLLLoss())
+        loss = Loss("name", "shortname", "decoder_output", "decoder_output", torch.nn.NLLLoss())
         self.assertRaises(ValueError, lambda: loss.backward())
 
     def test_nllloss_init(self):
@@ -42,10 +43,6 @@ class TestLoss(unittest.TestCase):
         self.assertEqual(loss.name, NLLLoss._NAME)
         self.assertEqual(loss.log_name, NLLLoss._SHORTNAME)
         self.assertTrue(type(loss.criterion) is torch.nn.NLLLoss)
-
-    def test_nllloss_init_WITH_MASK_BUT_NO_WEIGHT(self):
-        mask = 1
-        self.assertRaises(ValueError, lambda: NLLLoss(mask=mask))
 
     def test_nllloss(self):
         loss = NLLLoss()
