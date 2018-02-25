@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import StepLR
 import torchtext
 
 import seq2seq
-from seq2seq.trainer import SupervisedTrainer
+from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, AttentionTrainer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
 from seq2seq.loss import Perplexity, AttentionLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy
@@ -145,37 +145,52 @@ else:
 # train model
 
 # Prepare loss and metrics
-weight = torch.ones(len(output_vocab))
 pad = output_vocab.stoi[tgt.pad_token]
-loss = [Perplexity(weight, pad)]
+loss = [Perplexity(ignore_index=pad)]
 loss_weights = [1.]
 
 if opt.use_attention_loss:
-    loss.append(AttentionLoss(weight, pad))
+    loss.append(AttentionLoss(ignore_index=-1))     # TODO deal with masking
     loss_weights.append(opt.scale_attention_loss)
 
-metrics = [WordAccuracy(weight, pad), SequenceAccuracy(weight, pad)]
+metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad)]
 if torch.cuda.is_available():
     loss.cuda()
     for metric in metrics:
         metric.cuda()
 
-# create trainer
-t = SupervisedTrainer(loss=loss, metrics=metrics, 
-                      loss_weights=loss_weights,
-                      batch_size=opt.batch_size,
-                      checkpoint_every=opt.save_every,
-                      print_every=opt.print_every, expt_dir=opt.output_dir)
-
 checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resume else None
 
-seq2seq = t.train(seq2seq, train,
-                  num_epochs=opt.epochs, dev_data=dev,
-                  optimizer=opt.optim,
-                  teacher_forcing_ratio=opt.teacher_forcing_ratio,
-                  learning_rate=opt.lr,
-                  resume=opt.resume,
-                  checkpoint_path=checkpoint_path)
+# create trainer
+if not opt.use_attention_loss:
+    t = SupervisedTrainer(loss=loss, metrics=metrics, 
+                          loss_weights=loss_weights,
+                          batch_size=opt.batch_size,
+                          checkpoint_every=opt.save_every,
+                          print_every=opt.print_every, expt_dir=opt.output_dir)
+
+    seq2seq = t.train(seq2seq, train, 
+                      num_epochs=opt.epochs, dev_data=dev,
+                      optimizer=opt.optim,
+                      teacher_forcing_ratio=opt.teacher_forcing_ratio,
+                      learning_rate=opt.lr,
+                      resume=opt.resume,
+                      checkpoint_path=checkpoint_path)
+else:
+    t = AttentionTrainer(loss=loss, metrics=metrics, 
+                          loss_weights=loss_weights,
+                          batch_size=opt.batch_size,
+                          checkpoint_every=opt.save_every,
+                          print_every=opt.print_every, expt_dir=opt.output_dir)
+
+    seq2seq = t.train(seq2seq, train, 
+                      num_epochs=opt.epochs, dev_data=dev,
+                      attention_function=LookupTableAttention(),
+                      optimizer=opt.optim,
+                      teacher_forcing_ratio=opt.teacher_forcing_ratio,
+                      learning_rate=opt.lr,
+                      resume=opt.resume,
+                      checkpoint_path=checkpoint_path)
 
 # evaluator = Evaluator(loss=loss, batch_size=opt.batch_size)
 # dev_loss, accuracy = evaluator.evaluate(seq2seq, dev)
