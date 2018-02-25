@@ -56,23 +56,17 @@ class WordAccuracy(Metric):
     Batch average of word accuracy.
 
     Args:
-        mask (int, optional): index of masked token, i.e. weight[mask] = 0.
+        ignore_index (int, optional): index of masked token
     """
 
     _NAME = "Word Accuracy"
     _SHORTNAME = "acc"
     _INPUT = "sequence"
 
-    def __init__(self, weight=None, mask=None):
-        self.mask = mask
-        self.weight = weight
+    def __init__(self, ignore_index=None):
+        self.ignore_index = ignore_index
         self.word_match = 0
         self.word_total = 0
-
-        if mask is not None:
-            if weight is None:
-                raise ValueError("Must provide weight with a mask.")
-            weight[mask] = 0
 
         super(WordAccuracy, self).__init__(self._NAME, self._SHORTNAME, self._INPUT)
 
@@ -93,7 +87,7 @@ class WordAccuracy(Metric):
 
         for step, step_output in enumerate(outputs):
             target = targets[:, step + 1]
-            non_padding = target.ne(self.mask)
+            non_padding = target.ne(self.ignore_index)
             correct = outputs[step].view(-1).eq(target).masked_select(non_padding).sum().data[0]
             self.word_match += correct
             self.word_total += non_padding.sum().data[0]
@@ -103,23 +97,17 @@ class SequenceAccuracy(Metric):
     Batch average of word accuracy.
 
     Args:
-        mask (int, optional): index of masked token, i.e. weight[mask] = 0.
+        ignore_index (int, optional): index of masked token
     """
 
     _NAME = "Sequence Accuracy"
     _SHORTNAME = "seq_acc"
     _INPUT = "seqlist"
 
-    def __init__(self, weight=None, mask=None):
-        self.mask = mask
-        self.weight = weight
+    def __init__(self, ignore_index=None):
+        self.ignore_index = ignore_index
         self.seq_match = 0
         self.seq_total = 0
-
-        if mask is not None:
-            if weight is None:
-                raise ValueError("Must provide weight with a mask.")
-            weight[mask] = 0
 
         super(SequenceAccuracy, self).__init__(self._NAME, self._SHORTNAME, self._INPUT)
 
@@ -146,7 +134,7 @@ class SequenceAccuracy(Metric):
         for step, step_output in enumerate(outputs):
             target = targets[:, step + 1]
 
-            non_padding = target.ne(self.mask)
+            non_padding = target.ne(self.ignore_index)
 
             correct_per_seq = (outputs[step].view(-1).eq(target).data + non_padding.data).eq(2)
             match_per_seq += correct_per_seq.type(torch.FloatTensor)
