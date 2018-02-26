@@ -247,7 +247,8 @@ class SupervisedTrainer(object):
                             top_k=top_k)
         return model
 
-    def get_batch_data(self, batch):
+    @staticmethod
+    def get_batch_data(batch):
         input_variables, input_lengths = getattr(batch, seq2seq.src_field_name)
         target_variables = {'decoder_output': getattr(batch, seq2seq.tgt_field_name)}
         return input_variables, input_lengths, target_variables

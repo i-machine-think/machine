@@ -11,6 +11,7 @@ from seq2seq.evaluator import Evaluator
 from seq2seq.models.seq2seq import Seq2seq
 from seq2seq.models.EncoderRNN import EncoderRNN
 from seq2seq.models.DecoderRNN import DecoderRNN
+from seq2seq.trainer.supervised_trainer import SupervisedTrainer as trainer
 
 class TestPredictor(unittest.TestCase):
 
@@ -45,7 +46,7 @@ class TestPredictor(unittest.TestCase):
              patch('seq2seq.metrics.WordAccuracy.eval_batch', return_value=None), \
              patch('seq2seq.metrics.WordAccuracy.eval_batch', return_value=None), \
              patch('seq2seq.loss.NLLLoss.eval_batch', return_value=None):
-            evaluator.evaluate(self.seq2seq, self.dataset)
+            evaluator.evaluate(self.seq2seq, self.dataset, trainer.get_batch_data)
 
         num_batches = int(math.ceil(len(self.dataset) / evaluator.batch_size))
         expected_calls = [call.eval()] + num_batches * [call.call(ANY, ANY, ANY)]
