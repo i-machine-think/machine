@@ -28,8 +28,8 @@ class SupervisedTrainer(object):
         batch_size (int, optional): batch size for experiment, (default: 64)
         checkpoint_every (int, optional): number of epochs to checkpoint after, (default: 100)
     """
-    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None, metrics=[], batch_size=64,
-                 random_seed=None,
+    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None,
+                 metrics=[], batch_size=64, random_seed=None,
                  checkpoint_every=100, print_every=100):
         self._trainer = "Simple Trainer"
         self.random_seed = random_seed
@@ -60,6 +60,9 @@ class SupervisedTrainer(object):
         # Forward propagation
         decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths, target_variable['decoder_output'],
                                                        teacher_forcing_ratio=teacher_forcing_ratio)
+
+        if self.ponderer is not None:
+            decoder_outputs = self.ponderer.mask_silent_steps(input_variable, input_lengths, decoder_outputs)
 
         losses = self.evaluator.compute_batch_loss(decoder_outputs, decoder_hidden, other, target_variable)
         
@@ -183,9 +186,9 @@ class SupervisedTrainer(object):
 
             log.info(log_msg)
 
-    def train(self, model, data, num_epochs=5,
-              resume=False, dev_data=None,
-              optimizer=None, teacher_forcing_ratio=0,
+    def train(self, model, data, ponderer=None, num_epochs=5,
+              resume=False, dev_data=None, optimizer=None,
+              teacher_forcing_ratio=0,
               learning_rate=0.001, checkpoint_path=None, top_k=5):
         """ Run training for a given model.
 
@@ -235,6 +238,8 @@ class SupervisedTrainer(object):
                                        max_grad_norm=5)
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))
+
+        self.ponderer = ponderer
 
         self._train_epoches(data, model, num_epochs,
                             start_epoch, step, dev_data=dev_data,

@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import StepLR
 import torchtext
 
 import seq2seq
-from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, AttentionTrainer
+from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, AttentionTrainer, LookupTablePonderer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
 from seq2seq.loss import Perplexity, AttentionLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy
@@ -38,6 +38,7 @@ parser.add_argument('--tgt_vocab', type=int, help='target vocabulary size', defa
 parser.add_argument('--dropout_p_encoder', type=float, help='Dropout probability for the encoder', default=0.2)
 parser.add_argument('--dropout_p_decoder', type=float, help='Dropout probability for the decoder', default=0.2)
 parser.add_argument('--teacher_forcing_ratio', type=float, help='Teacher forcing ratio', default=0.2)
+parser.add_argument('--pondering', action='store_true')
 parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
 parser.add_argument('--attention_method', choices=['dot', 'mlp'], default=None)
 parser.add_argument('--use_attention_loss', action='store_true')
@@ -53,6 +54,8 @@ parser.add_argument('--log-level', default='info', help='Logging level.')
 parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
 
 opt = parser.parse_args()
+
+IGNORE_INDEX=-1
 
 if opt.resume and not opt.load_checkpoint:
     parser.error('load_checkpoint argument is required to resume training from checkpoint')
@@ -150,7 +153,7 @@ loss = [Perplexity(ignore_index=pad)]
 loss_weights = [1.]
 
 if opt.use_attention_loss:
-    loss.append(AttentionLoss(ignore_index=-1))     # TODO deal with masking
+    loss.append(AttentionLoss(ignore_index=IGNORE_INDEX))
     loss_weights.append(opt.scale_attention_loss)
 
 metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad)]
@@ -160,6 +163,12 @@ if torch.cuda.is_available():
         metric.cuda()
 
 checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resume else None
+
+ponderer = None
+if opt.pondering:
+    ponderer = LookupTablePonderer()
+if opt.use_attention_loss:
+    attention_function = LookupTableAttention(pad_value=IGNORE_INDEX)
 
 # create trainer
 if not opt.use_attention_loss:
@@ -171,6 +180,7 @@ if not opt.use_attention_loss:
 
     seq2seq = t.train(seq2seq, train, 
                       num_epochs=opt.epochs, dev_data=dev,
+                      ponderer=ponderer,
                       optimizer=opt.optim,
                       teacher_forcing_ratio=opt.teacher_forcing_ratio,
                       learning_rate=opt.lr,
@@ -185,7 +195,8 @@ else:
 
     seq2seq = t.train(seq2seq, train, 
                       num_epochs=opt.epochs, dev_data=dev,
-                      attention_function=LookupTableAttention(),
+                      attention_function=attention_function,
+                      ponderer=ponderer,
                       optimizer=opt.optim,
                       teacher_forcing_ratio=opt.teacher_forcing_ratio,
                       learning_rate=opt.lr,
