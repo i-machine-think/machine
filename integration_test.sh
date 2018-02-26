@@ -2,13 +2,14 @@
 
 TRAIN_PATH=test/test_data/train_small.txt
 DEV_PATH=test/test_data/dev_small.txt
+LOOKUP=test/test_data/lookup_small.txt
 EXPT_DIR=test_exp
 
 mkdir $EXPT_DIR
 
 # use small parameters for quicker testing
 EMB_SIZE=2
-H_SIZE=5
+H_SIZE=4
 CELL='lstm'
 CELL2='gru'
 EPOCH=3
@@ -19,7 +20,11 @@ ERR=0
 
 # Start training
 echo "Test training"
-python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY
+python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY --batch_size 6
+ERR=$((ERR+$?)); EX=$((EX+1))
+
+echo "\n\nTest ponderer"
+python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --pondering --epoch $EPOCH --save_every $CP_EVERY --batch_size 6
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # Resume training
@@ -49,7 +54,7 @@ echo "\n\nTest train from checkpoint without dev set"
 python train_model.py --train $TRAIN_PATH --output_dir $EXPT_DIR --print_every 50 --epoch $EPOCH --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --load_checkpoint $(ls -t test_exp/ | head -1) --save_every $CP_EVERY --optim sgd
 ERR=$((ERR+$?)); EX=$((EX+1))
 
-test with attention
+# test with attention
 echo "\n\nTest training with pre_rnn attention and LSTM cell"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'dot' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 1
 ERR=$((ERR+$?)); EX=$((EX+1))
@@ -60,6 +65,16 @@ ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest training with post-rnn attention and LSTM cell"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'post-rnn' --attention_method 'dot' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5
+ERR=$((ERR+$?)); EX=$((EX+1))
+
+# test attention loss
+echo "\n\nTest training with attention loss"
+python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7
+R=$((ERR+$?)); EX=$((EX+1))
+
+# test attention loss and pondering
+echo "\n\nTest training with attention loss and ponderer"
+python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --pondering --batch_size=6
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test bidirectional

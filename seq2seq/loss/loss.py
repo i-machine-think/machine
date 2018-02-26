@@ -77,8 +77,7 @@ class Loss(object):
             target_variable (torch.Tensor): expected output of a batch.
         """
 
-        # all are a list which loops over output steps of the decoder, elements
-        # in the list are:
+        # lists with:
         # decoder outputs # (batch, vocab_size?)
         # attention scores # (batch, 1, input_length)
 
@@ -89,6 +88,7 @@ class Loss(object):
 
         targets = target_variable[self.target]
 
+        # TODO targets start only at second step, check why
         for step, step_output in enumerate(outputs):
             target = targets[:, step + 1]
             self.eval_step(step_output, target)
@@ -199,10 +199,5 @@ class AttentionLoss(NLLLoss):
     def eval_step(self, step_outputs, target):
         batch_size = target.size(0)
         outputs = torch.log(step_outputs.contiguous().view(batch_size, -1))
-        # print("target", target)
-        # raw_input()
-        # print("output", outputs)
-        # raw_input()
-        # print('criterion', self.criterion)
         self.acc_loss += self.criterion(outputs, target)
         self.norm_term += 1

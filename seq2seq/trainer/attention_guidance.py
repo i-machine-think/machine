@@ -59,7 +59,7 @@ class LookupTableAttention(AttentionGenerator):
         batch_size = input_lengths.size(0)
 
         # get target attentions
-        target_attentions = Variable(torch.cat(tuple([torch.cat((torch.arange(l), self.pad_value*torch.ones(max_val-l)), 0) for l in input_lengths]), 0).view(batch_size, max_val).long())
+        target_attentions = Variable(torch.cat(tuple([torch.cat((torch.ones(1), torch.arange(l), self.pad_value*torch.ones(max_val-l)), 0) for l in input_lengths]), 0).view(batch_size, max_val+1).long())
 
         target_variables['attention_target'] = target_attentions
         return target_variables
@@ -120,17 +120,8 @@ class LookupTablePonderer(PonderGenerator):
         super(LookupTablePonderer, self).__init__(name=self._NAME, key=self._KEY, pad_token=-1)
 
     def mask_silent_steps(self, input_variable, input_lengths, decoder_outputs):
-        # get non_silent step mask
+            
 
-        # decoder outputs = list containing step outputs (len max_len batch)
-        # decoder_outputs[i] contains step_output i dim batch x output_vocab
-
-        # thus what do I do?
-        # - take the first output of everything
-        # - if an input has length i, decoder output i needs to be added,
-        #   which mean that in case of different input lengths we have to do
-        #   some mix and matching
-        
         first_step = decoder_outputs[0]
         # create last step by creating an empty tensor and add 
         last_step = self.find_last_outputs(decoder_outputs, input_lengths)
@@ -141,10 +132,16 @@ class LookupTablePonderer(PonderGenerator):
 
     def find_last_outputs(self, decoder_outputs, input_lengths):
 
-        # find deep copy function
-        outputs = torch.copy(decoder_outputs[input_lengths[0]])
-        
-        # - find some function that allows to find the next boundary in input_lengths
-        # - fetch next input length and put it in outputs
+        # decoder outputs = list containing step outputs (len max_len batch)
+        # decoder_outputs[i] contains step_output i dim batch x output_vocab
 
-        return_outputs
+        outputs = torch.zeros_like(decoder_outputs[0])
+
+        # for seq i in the batch, target is decoder_outputs[input_lengths[i]-1][i]
+        for i, l in enumerate(input_lengths):
+            outputs[i] = decoder_outputs[l-1][i,:]
+
+        # print decoder_outputs
+        # raw_input()
+
+        return outputs
