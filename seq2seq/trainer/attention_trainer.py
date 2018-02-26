@@ -23,9 +23,11 @@ class AttentionTrainer(SupervisedTrainer):
     Args:
         expt_dir (optional, str): experiment Directory to store details of the experiment,
             by default it makes a folder in the current directory to store the details (default: `experiment`).
-        loss (seq2seq.loss.loss.Loss, optional): loss for training, (default: seq2seq.loss.NLLLoss)
+        loss (list, optional): list of seq2seq.loss.Loss objects for training (default: [seq2seq.loss.NLLLoss, seq2seq.loss.AttentionLoss])
+        metrics (list, optional): list of seq2seq.metric.metric objects to be computed during evaluation
         batch_size (int, optional): batch size for experiment, (default: 64)
-        checkpoint_every (int, optional): number of epochs to checkpoint after, (default: 100)
+        checkpoint_every (int, optional): number of iterations to checkpoint after, (default: 100)
+        print_every (int, optional): number of iterations to print after, (default: 100)
     """
     def __init__(self, expt_dir='experiment', loss=[NLLLoss(), AttentionLoss()],
                  loss_weights=None, metrics=[], batch_size=64, random_seed=None,

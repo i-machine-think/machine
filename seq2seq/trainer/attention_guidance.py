@@ -12,12 +12,14 @@ class AttentionGenerator(object):
         Do not use this class directly, use one of the sub classes.
 
     Args:
+        name (str): name of the attention generation mechanism
+        key (str): key under which targets are stored in target dict
+        pad_value (int): target token to use for padding
 
     Attributes:
         name (str): name of the attention generation mechanism
         key (str): key under which targets are stored in target dict
-        pad_token (int): target token to be ignored
-
+        pad_value (int): target token to use for padding
     """
 
     def __init__(self, name, key, pad_value=-1):
@@ -46,6 +48,11 @@ class AttentionGenerator(object):
 
 class LookupTableAttention(AttentionGenerator):
     """ Attention for lookup tables postfix annotation
+    The class implements attention that slides over
+    the input.
+
+    Args:
+        pad_value (int): target token to use for padding
 
     """
     _NAME = "lookup_table"
@@ -77,6 +84,9 @@ class PonderGenerator(object):
         Do not use this class directly, use one of the sub classes.
 
     Args:
+        name (str): name of the attention generation mechanism
+        key (str): key under which targets are stored in target dict
+        pad_value (int): target token to use for padding
 
     Attributes:
         name (str): name of the attention generation mechanism
@@ -120,10 +130,11 @@ class LookupTablePonderer(PonderGenerator):
         super(LookupTablePonderer, self).__init__(name=self._NAME, key=self._KEY, pad_token=-1)
 
     def mask_silent_steps(self, input_variable, input_lengths, decoder_outputs):
-            
 
+        # evaluate first (copy) step
         first_step = decoder_outputs[0]
-        # create last step by creating an empty tensor and add 
+
+        # find last steps for every input in the batch
         last_step = self.find_last_outputs(decoder_outputs, input_lengths)
 
         decoder_outputs_non_silent = [first_step, last_step]
@@ -131,6 +142,16 @@ class LookupTablePonderer(PonderGenerator):
         return decoder_outputs_non_silent
 
     def find_last_outputs(self, decoder_outputs, input_lengths):
+        """ Find the last steps for every sequence.
+
+        Args:
+            input_variables (torch.Tensor): inputs to a batch
+            decoder_outputs (list): List of step outputs for batch
+            input_lengths (torch.Tensor): input lengths
+
+        Returns:
+            outputs (torch.Tensor): a tensor containing the last step, to be evaluated, for every input sequence
+        """
 
         # decoder outputs = list containing step outputs (len max_len batch)
         # decoder_outputs[i] contains step_output i dim batch x output_vocab

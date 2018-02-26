@@ -94,7 +94,9 @@ class Loss(object):
             self.eval_step(step_output, target)
 
     def eval_step(self, outputs, target):
-        """ Function called by eval batch to evaluate a timestep of the batch
+        """ Function called by eval batch to evaluate a timestep of the batch.
+        When called it updates self.acc_loss with the loss of the current step.
+
         Args:
             outputs (torch.Tensor): outputs of a batch.
             target (torch.Tensor): expected output of a batch.
@@ -105,11 +107,15 @@ class Loss(object):
         self.criterion.cuda()
 
     def backward(self, retain_graph=False):
+        """ Backpropagate the computed loss.
+        """
         if type(self.acc_loss) is int:
             raise ValueError("No loss to back propagate.")
         self.acc_loss.backward(retain_graph=retain_graph)
 
     def scale_loss(self, factor):
+        """ Scale loss with a factor
+        """
         self.acc_loss*=factor
 
 class NLLLoss(Loss):
