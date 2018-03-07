@@ -75,12 +75,16 @@ class Attention(nn.Module):
         Set method to compute attention
         """
         if method == 'mlp':
+            method = MLP(dim)
+        elif method == 'concat':
             method = Concat(dim)
         elif method == 'dot':
             method = Dot()
         else:
             return ValueError("Unknown attention method")
+
         return method
+
 
 class Concat(nn.Module):
     """
@@ -121,4 +125,36 @@ class Dot(nn.Module):
 
     def forward(self, decoder_states, encoder_states):
         attn = torch.bmm(decoder_states, encoder_states.transpose(1, 2))
+        return attn
+
+
+class MLP(nn.Module):
+    def __init__(self, dim):
+        super(MLP, self).__init__()
+        self.mlp = nn.Linear(dim*2, dim)
+        self.activation = nn.ReLU()
+        self.out = nn.Linear(dim, 1)
+
+    def forward(self, decoder_states, encoder_states):
+        # apply mlp to all encoder states for current decoder
+
+        # decoder_states --> (batch, 1, hl_size)
+        # encoder_states --> (batch, seqlen, hl_size)
+        batch_size, seqlen, hl_size = encoder_states.size()
+
+        # expand decoder states and transpose
+        decoder_states_exp = decoder_states.expand(batch_size, seqlen, hl_size)
+        decoder_states_tr = decoder_states_exp.contiguous().view(-1, hl_size)
+
+        # reshape encoder states to allow batchwise computation
+        encoder_states_tr = encoder_states.contiguous().view(-1, hl_size)
+
+        mlp_input = torch.cat((encoder_states_tr, decoder_states_tr), dim=1)
+
+        # apply mlp and reshape to get in correct form
+        mlp_output = self.mlp(mlp_input)
+        mlp_output = self.activation(mlp_output)
+        out = self.out(mlp_output)
+        attn = out.view(batch_size, seqlen)
+
         return attn
