@@ -177,8 +177,6 @@ metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad)]
 if torch.cuda.is_available():
     for loss in loss:
         loss.cuda()
-    for metric in metrics:
-        metric.cuda()
 
 checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resume else None
 
