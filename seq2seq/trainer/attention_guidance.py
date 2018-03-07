@@ -169,6 +169,6 @@ class LookupTablePonderer(PonderGenerator):
 
         # for seq i in the batch, final target is decoder_target[i][input_lengths[i]]
         for i, l in enumerate(input_lengths):
-            targets_non_silent[i,1] = decoder_targets[i][l]
+            targets_non_silent[i,2] = decoder_targets[i][l]
 
         return targets_non_silent
