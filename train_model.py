@@ -175,8 +175,8 @@ if opt.use_attention_loss:
 
 metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad)]
 if torch.cuda.is_available():
-    for loss in loss:
-        loss.cuda()
+    for loss_func in loss:
+        loss_func.cuda()
 
 checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resume else None
 
