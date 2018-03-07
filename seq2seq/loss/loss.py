@@ -88,10 +88,9 @@ class Loss(object):
 
         targets = target_variable[self.target]
 
-        # TODO targets start only at second step, check why
         for step, step_output in enumerate(outputs):
-            target = targets[:, step + 1]
-            self.eval_step(step_output, target)
+            step_target = targets[:, step + 1]
+            self.eval_step(step_output, step_target)
 
     def eval_step(self, outputs, target):
         """ Function called by eval batch to evaluate a timestep of the batch.

@@ -59,12 +59,17 @@ class SupervisedTrainer(object):
     def _train_batch(self, input_variable, input_lengths, target_variable, model, teacher_forcing_ratio):
         loss = self.loss
 
+        # print "input variable:", input_variable
+        # print "input lengths:", input_lengths
+
         # Forward propagation
         decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths, target_variable['decoder_output'],
                                                        teacher_forcing_ratio=teacher_forcing_ratio)
 
         if self.ponderer is not None:
-            decoder_outputs = self.ponderer.mask_silent_steps(input_variable, input_lengths, decoder_outputs)
+            decoder_outputs = self.ponderer.mask_silent_outputs(input_variable, input_lengths, decoder_outputs)
+            decoder_targets = self.ponderer.mask_silent_targets(input_variable, input_lengths, target_variable['decoder_output'])
+            target_variable['decoder_output'] = decoder_targets
 
         losses = self.evaluator.compute_batch_loss(decoder_outputs, decoder_hidden, other, target_variable)
         
@@ -99,7 +104,7 @@ class SupervisedTrainer(object):
 
         # store initial model to be sure at least one model is stored
         eval_data = dev_data or data
-        losses, metrics = self.evaluator.evaluate(model, eval_data, self.get_batch_data)
+        losses, metrics = self.evaluator.evaluate(model, eval_data, self.get_batch_data, ponderer=self.ponderer)
 
         total_loss, log_msg, model_name = self.print_eval(losses, metrics, step)
         print log_msg
@@ -151,7 +156,7 @@ class SupervisedTrainer(object):
                 # check if new model should be saved
                 if step % self.checkpoint_every == 0 or step == total_steps:
                     # compute dev loss
-                    losses, metrics = self.evaluator.evaluate(model, eval_data, self.get_batch_data)
+                    losses, metrics = self.evaluator.evaluate(model, eval_data, self.get_batch_data, ponderer=self.ponderer)
                     total_loss, log_msg, model_name = self.print_eval(losses, metrics, step)
 
 
@@ -177,7 +182,7 @@ class SupervisedTrainer(object):
             epoch_loss_total = 0
             log_msg = "Finished epoch %d: Train %s: %.4f" % (epoch, self.loss[0].name, epoch_loss_avg)
             if dev_data is not None:
-                losses, metrics = self.evaluator.evaluate(model, dev_data, self.get_batch_data)
+                losses, metrics = self.evaluator.evaluate(model, dev_data, self.get_batch_data, ponderer=self.ponderer)
                 loss_total, log_, model_name = self.print_eval(losses, metrics, step)
 
                 self.optimizer.update(loss_total, epoch)    # TODO check if this makes sense!

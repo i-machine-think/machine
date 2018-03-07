@@ -6,6 +6,8 @@ import torch
 from torch.optim.lr_scheduler import StepLR
 import torchtext
 
+import random
+
 import seq2seq
 from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, AttentionTrainer, LookupTablePonderer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
@@ -143,6 +145,21 @@ else:
 
     for param in seq2seq.parameters():
         param.data.uniform_(-0.08, 0.08)
+
+input_vocabulary = input_vocab.itos
+output_vocabulary = output_vocab.itos
+
+# random.seed(3)
+
+# print "Input vocabulary:"
+# for i, word in enumerate(input_vocabulary):
+#     print i, word
+# 
+# print "Output vocabulary:"
+# for i, word in enumerate(output_vocabulary):
+#     print i, word
+# 
+# raw_input()
 
 ##############################################################################
 # train model

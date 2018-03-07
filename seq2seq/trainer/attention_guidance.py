@@ -129,40 +129,46 @@ class LookupTablePonderer(PonderGenerator):
     def __init__(self):
         super(LookupTablePonderer, self).__init__(name=self._NAME, key=self._KEY, pad_token=-1)
 
-    def mask_silent_steps(self, input_variable, input_lengths, decoder_outputs):
+    def mask_silent_outputs(self, input_variable, input_lengths, decoder_outputs):
+        """ Find the last steps for every output sequence sequence.
+
+        Args:
+            input_variables (torch.Tensor): inputs to a batch
+            decoder_targets (list): list of step outputs for batch
+            input_lengths (torch.Tensor): input lengths
+
+        Returns:
+            outputs (list): a list containng the first and last step for every input sequence
+        """
 
         # evaluate first (copy) step
         first_step = decoder_outputs[0]
 
-        # find last steps for every input in the batch
-        last_step = self.find_last_outputs(decoder_outputs, input_lengths)
+        # for seq i in the batch, target is decoder_outputs[input_lengths[i]-1][i]
+        last_step = torch.zeros_like(decoder_outputs[0])
+        for i, l in enumerate(input_lengths):
+            last_step[i] = decoder_outputs[l-1][i,:]
 
         decoder_outputs_non_silent = [first_step, last_step]
 
         return decoder_outputs_non_silent
 
-    def find_last_outputs(self, decoder_outputs, input_lengths):
-        """ Find the last steps for every sequence.
+    def mask_silent_targets(self, input_variable, input_lengths, decoder_targets):
+        """ Find the last steps for every target sequence.
 
         Args:
             input_variables (torch.Tensor): inputs to a batch
-            decoder_outputs (list): List of step outputs for batch
+            decoder_targets (torch.Tensor): targets of a batch # batch x maxlen
             input_lengths (torch.Tensor): input lengths
 
         Returns:
-            outputs (torch.Tensor): a tensor containing the last step, to be evaluated, for every input sequence
+            outputs (torch.Tensor): a tensor containing the last step, the final target for every input sequence
         """
+        # take first and second decoder output
+        targets_non_silent = decoder_targets[:,0:3].clone()
 
-        # decoder outputs = list containing step outputs (len max_len batch)
-        # decoder_outputs[i] contains step_output i dim batch x output_vocab
-
-        outputs = torch.zeros_like(decoder_outputs[0])
-
-        # for seq i in the batch, target is decoder_outputs[input_lengths[i]-1][i]
+        # for seq i in the batch, final target is decoder_target[i][input_lengths[i]]
         for i, l in enumerate(input_lengths):
-            outputs[i] = decoder_outputs[l-1][i,:]
+            targets_non_silent[i,1] = decoder_targets[i][l]
 
-        # print decoder_outputs
-        # raw_input()
-
-        return outputs
+        return targets_non_silent
