@@ -175,7 +175,8 @@ if opt.use_attention_loss:
 
 metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad)]
 if torch.cuda.is_available():
-    loss.cuda()
+    for loss in loss:
+        loss.cuda()
     for metric in metrics:
         metric.cuda()
 
