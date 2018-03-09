@@ -113,8 +113,8 @@ class FinalTargetAccuracy(Metric):
         super(FinalTargetAccuracy, self).__init__(self._NAME, self._SHORTNAME, self._INPUT)
 
     def get_val(self):
-        if self.word_total != 0:
-            return float(self.word_match)/self.word_total
+        if self.target_total != 0:
+            return float(self.target_match)/self.target_total
         else:
             return 0
 
