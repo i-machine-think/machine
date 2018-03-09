@@ -74,6 +74,3 @@ losses, metrics = evaluator.evaluate(seq2seq, test)
 total_loss, log_msg, _ = SupervisedTrainer.print_eval(losses, metrics, 0)
 
 print(log_msg)
-
-print("Loss: %f, Word accuracy: %f, Sequence accuracy: %f" % (loss, accuracy, seq_accuracy))
-
