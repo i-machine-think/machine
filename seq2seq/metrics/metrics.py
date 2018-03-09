@@ -92,6 +92,65 @@ class WordAccuracy(Metric):
             self.word_match += correct
             self.word_total += non_padding.sum().data[0]
 
+class FinalTargetAccuracy(Metric):
+    """
+    Batch average of the accuracy on the final target (step before <eos>)
+
+    Args:
+        ignore_index (int, optional): index of padding
+    """
+
+    _NAME = "Final Target Accuracy"
+    _SHORTNAME = "target_acc"
+    _INPUT = "sequence"
+
+    def __init__(self, ignore_index=None, eos_token=2):
+        self.ignore_index = ignore_index
+        self.eos = eos_token
+        self.word_match = 0
+        self.word_total = 0
+
+        super(FinalTargetAccuracy, self).__init__(self._NAME, self._SHORTNAME, self._INPUT)
+
+    def get_val(self):
+        if self.word_total != 0:
+            return float(self.word_match)/self.word_total
+        else:
+            return 0
+
+    def reset(self):
+        self.target_match = 0
+        self.target_total = 0
+
+    def eval_batch(self, outputs, targets):
+        # evaluate batch
+        targets = targets['decoder_output']
+        batch_size = targets.size(0)
+
+        self.target_total += batch_size
+
+        for step, next_step_output in enumerate(outputs[1:]):
+            cur_step_output = outputs[step]
+
+            target = targets[:, step + 1]
+
+            # compute mask for current step
+            cur_mask = target.ne(self.ignore_index)*target.ne(self.eos) # return 1 only if not equal to pad or <eos>
+
+            # compute whether next step is <eos> or pad
+            try:
+                target_next = targets[:, step + 2]
+                mask_next = target_next.eq(self.ignore_index)+target_next.ne(self.eos)
+                mask = mask_next*cur_mask
+            except IndexError:
+                # IndexError if we are dealing with last step, in case just apply cur mask
+                mask = cur_mask
+
+            # compute correct, masking all outputs that are padding or eos, or are not followed by padding or eos
+            correct = cur_step_output.view(-1).eq(target).masked_select(mask).sum().data[0]
+
+            self.target_match += correct
+
 class SequenceAccuracy(Metric):
     """
     Batch average of word accuracy.
@@ -136,7 +195,7 @@ class SequenceAccuracy(Metric):
 
             non_padding = target.ne(self.ignore_index)
 
-            correct_per_seq = (outputs[step].view(-1).eq(target).data + non_padding.data).eq(2)
+            correct_per_seq = (outputs[step].view(-1).eq(target)*non_padding).data
             match_per_seq += correct_per_seq.type(torch.FloatTensor)
             total_per_seq += non_padding.type(torch.FloatTensor).data
 

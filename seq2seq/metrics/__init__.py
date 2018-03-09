@@ -1,1 +1,1 @@
-from .metrics import WordAccuracy, SequenceAccuracy
+from .metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
