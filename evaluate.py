@@ -10,6 +10,7 @@ from seq2seq.loss import Perplexity
 from seq2seq.dataset import SourceField, TargetField
 from seq2seq.evaluator import Evaluator
 from seq2seq.util.checkpoint import Checkpoint
+from seq2seq.trainer import SupervisedTrainer
 
 try:
     raw_input          # Python 2
