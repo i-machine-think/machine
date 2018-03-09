@@ -115,16 +115,10 @@ if opt.load_checkpoint is not None:
     output_vocab = checkpoint.output_vocab
     src.vocab = input_vocab
     tgt.vocab = output_vocab
-    if opt.ignore_eos:
-        assert output_vocab.stoi[tgt.pad_token] == output_vocab.stoi[tgt.eos_token], "train_model.py was called with flag ignore_eos, but eos token is not equal to padding in inputted model"
-
 else:
     # build vocabulary
     src.build_vocab(train, max_size=opt.src_vocab)
     tgt.build_vocab(train, max_size=opt.tgt_vocab)
-    # if <eos> should be ignored, set eos equal to pad token
-    if opt.ignore_eos:
-        tgt.vocab.stoi[tgt.eos_token] = tgt.vocab.stoi[tgt.pad_token]
     input_vocab = src.vocab
     output_vocab = tgt.vocab
 
