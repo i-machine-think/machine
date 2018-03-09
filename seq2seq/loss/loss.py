@@ -130,7 +130,7 @@ class NLLLoss(Loss):
     _INPUTS = "decoder_output"
     _TARGETS = "decoder_output"
 
-    def __init__(self, ignore_index=-100, size_average=True):
+    def __init__(self, ignore_index=-1, size_average=True):
         self.ignore_index = ignore_index
         self.size_average = size_average
 
@@ -198,11 +198,11 @@ class AttentionLoss(NLLLoss):
     _INPUTS = "attention_score"
     _TARGETS = "attention_target"
 
-    def __init__(self, ignore_index=-100):
+    def __init__(self, ignore_index=-1):
         super(AttentionLoss, self).__init__(ignore_index=ignore_index, size_average=True)
 
-    def eval_step(self, step_outputs, target):
-        batch_size = target.size(0)
+    def eval_step(self, step_outputs, step_target):
+        batch_size = step_target.size(0)
         outputs = torch.log(step_outputs.contiguous().view(batch_size, -1))
-        self.acc_loss += self.criterion(outputs, target)
+        self.acc_loss += self.criterion(outputs, step_target)
         self.norm_term += 1
