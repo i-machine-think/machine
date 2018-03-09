@@ -140,7 +140,7 @@ class FinalTargetAccuracy(Metric):
             # compute whether next step is <eos> or pad
             try:
                 target_next = targets[:, step + 2]
-                mask_next = target_next.eq(self.ignore_index)+target_next.ne(self.eos)
+                mask_next = target_next.eq(self.ignore_index)+target_next.eq(self.eos)
                 mask = mask_next*cur_mask
             except IndexError:
                 # IndexError if we are dealing with last step, in case just apply cur mask
