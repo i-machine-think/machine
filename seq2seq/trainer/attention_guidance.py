@@ -149,10 +149,12 @@ class LookupTablePonderer(PonderGenerator):
 
         # for seq i in the batch, target is decoder_outputs[input_lengths[i]-1][i]
         last_step = torch.zeros_like(decoder_outputs[0])
+        eos_step = torch.zeros_like(decoder_outputs[0])
         for i, l in enumerate(input_lengths):
             last_step[i] = decoder_outputs[l-1][i,:]
+            eos_step[i] = decoder_outputs[l][i, :]
 
-        decoder_outputs_non_silent = [first_step, last_step]
+        decoder_outputs_non_silent = [first_step, last_step, eos_step]
 
         return decoder_outputs_non_silent
 
@@ -168,10 +170,11 @@ class LookupTablePonderer(PonderGenerator):
             outputs (torch.Tensor): a tensor containing the last step, the final target for every input sequence
         """
         # take first and second decoder output
-        targets_non_silent = decoder_targets[:,0:3].clone()
+        targets_non_silent = decoder_targets[:,0:4].clone()
 
         # for seq i in the batch, final target is decoder_target[i][input_lengths[i]]
         for i, l in enumerate(input_lengths):
             targets_non_silent[i,2] = decoder_targets[i][l]
+            targets_non_silent[i, 3] = decoder_targets[i][l+1]
 
         return targets_non_silent
