@@ -29,6 +29,7 @@ class TestSupervisedTrainer(unittest.TestCase):
 
         trainer = SupervisedTrainer(batch_size=16)
         trainer.optimizer = mock_optim
+        trainer.ponderer = None
         n_epoches = 1
         start_epoch = 1
         steps_per_epoch = 7
@@ -45,6 +46,7 @@ class TestSupervisedTrainer(unittest.TestCase):
 
         trainer = SupervisedTrainer(batch_size=16)
         trainer.optimizer = mock_optim
+        trainer.ponderer = None
         n_epoches = 1
         start_epoch = 1
         step = 7
