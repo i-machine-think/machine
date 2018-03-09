@@ -11,7 +11,7 @@ import random
 import seq2seq
 from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, AttentionTrainer, LookupTablePonderer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
-from seq2seq.loss import Perplexity, AttentionLoss
+from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy
 from seq2seq.optim import Optimizer
 from seq2seq.dataset import SourceField, TargetField
@@ -150,7 +150,7 @@ input_vocabulary = input_vocab.itos
 output_vocabulary = output_vocab.itos
 
 # random.seed(3)
-
+# 
 # print "Input vocabulary:"
 # for i, word in enumerate(input_vocabulary):
 #     print i, word
@@ -166,7 +166,7 @@ output_vocabulary = output_vocab.itos
 
 # Prepare loss and metrics
 pad = output_vocab.stoi[tgt.pad_token]
-loss = [Perplexity(ignore_index=pad)]
+loss = [NLLLoss(ignore_index=pad)]
 loss_weights = [1.]
 
 if opt.use_attention_loss:
