@@ -12,7 +12,7 @@ EMB_SIZE=2
 H_SIZE=4
 CELL='lstm'
 CELL2='gru'
-EPOCH=3
+EPOCH=2
 CP_EVERY=3
 
 EX=0
@@ -23,13 +23,9 @@ echo "Test training"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY --batch_size 6
 ERR=$((ERR+$?)); EX=$((EX+1))
 
-echo "\n\nTest ponderer"
-python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --pondering --epoch $EPOCH --save_every $CP_EVERY --batch_size 6
-ERR=$((ERR+$?)); EX=$((EX+1))
-
 # Resume training
 echo "\n\nTest resume training"
-python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --resume --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --load_checkpoint $(ls -t $EXPT_DIR | head -1) --save_every $CP_EVERY --optim rmsprop
+python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --resume --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --load_checkpoint $(ls -t $EXPT_DIR | head -1) --save_every $CP_EVERY --optim rmsprop --batch_size 6
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest train from checkpoint"
@@ -52,6 +48,10 @@ ERR=$((ERR+$?)); EX=$((EX+1))
 echo "\n\nTest train from checkpoint without dev set"
 # Load checkpoint
 python train_model.py --train $TRAIN_PATH --output_dir $EXPT_DIR --print_every 50 --epoch $EPOCH --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --load_checkpoint $(ls -t test_exp/ | head -1) --save_every $CP_EVERY --optim sgd
+ERR=$((ERR+$?)); EX=$((EX+1))
+
+echo "\n\nTest ponderer"
+python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --pondering --epoch $EPOCH --save_every $CP_EVERY --batch_size 6
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test with attention

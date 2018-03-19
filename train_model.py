@@ -115,6 +115,8 @@ if opt.load_checkpoint is not None:
     output_vocab = checkpoint.output_vocab
     src.vocab = input_vocab
     tgt.vocab = output_vocab
+    tgt.eos_id = tgt.vocab.stoi[tgt.SYM_EOS]
+    tgt.sos_id = tgt.vocab.stoi[tgt.SYM_SOS]
 else:
     # build vocabulary
     src.build_vocab(train, max_size=opt.src_vocab)
@@ -151,7 +153,7 @@ input_vocabulary = input_vocab.itos
 output_vocabulary = output_vocab.itos
 
 # random.seed(3)
-# 
+
 # print "Input vocabulary:"
 # for i, word in enumerate(input_vocabulary):
 #     print i, word
@@ -161,6 +163,7 @@ output_vocabulary = output_vocab.itos
 #     print i, word
 # 
 # raw_input()
+# 
 
 ##############################################################################
 # train model
@@ -174,7 +177,7 @@ if opt.use_attention_loss:
     loss.append(AttentionLoss(ignore_index=IGNORE_INDEX))
     loss_weights.append(opt.scale_attention_loss)
 
-metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad), FinalTargetAccuracy(ignore_index=pad, eos_token=tgt.eos_id)]
+metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad), FinalTargetAccuracy(ignore_index=pad, eos_id=tgt.eos_id)]
 if torch.cuda.is_available():
     for loss_func in loss:
         loss_func.cuda()

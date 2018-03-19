@@ -104,9 +104,9 @@ class FinalTargetAccuracy(Metric):
     _SHORTNAME = "target_acc"
     _INPUT = "sequence"
 
-    def __init__(self, ignore_index=None, eos_token=2):
+    def __init__(self, ignore_index=None, eos_id=2):
         self.ignore_index = ignore_index
-        self.eos = eos_token
+        self.eos = eos_id
         self.word_match = 0
         self.word_total = 0
 
