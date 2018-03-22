@@ -60,13 +60,17 @@ class Attention(nn.Module):
 
         # compute mask
         mask = encoder_states.eq(0.)[:,:,:1].transpose(1,2).data
-        self.set_mask(mask)
 
         # compute attention vals
         attn = self.method(decoder_states, encoder_states)
+        attn_before = attn.data.clone()
 
         if self.mask is not None:
             attn.data.masked_fill_(self.mask, -float('inf'))
+
+        # apply local mask
+        attn.data.masked_fill_(mask, -float('inf'))
+
         attn = F.softmax(attn.view(-1, input_size), dim=1).view(batch_size, -1, input_size)
 
         # (batch, out_len, in_len) * (batch, in_len, dim) -> (batch, out_len, dim)
