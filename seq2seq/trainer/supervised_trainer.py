@@ -30,8 +30,8 @@ class SupervisedTrainer(object):
         checkpoint_every (int, optional): number of epochs to checkpoint after, (default: 100)
         print_every (int, optional): number of iterations to print after, (default: 100)
     """
-    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None,
-                 metrics=[], batch_size=64, random_seed=None,
+    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None, metrics=[], batch_size=64, eval_batch_size=128,
+                 random_seed=None,
                  checkpoint_every=100, print_every=100):
         self._trainer = "Simple Trainer"
         self.random_seed = random_seed
@@ -42,7 +42,7 @@ class SupervisedTrainer(object):
         self.loss = loss
         self.metrics = metrics
         self.loss_weights = loss_weights or len(loss)*[1.]
-        self.evaluator = Evaluator(loss=self.loss, metrics=self.metrics, batch_size=batch_size)
+        self.evaluator = Evaluator(loss=self.loss, metrics=self.metrics, batch_size=eval_batch_size)
         self.optimizer = None
         self.checkpoint_every = checkpoint_every
         self.print_every = print_every

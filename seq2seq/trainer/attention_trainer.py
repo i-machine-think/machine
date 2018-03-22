@@ -30,8 +30,8 @@ class AttentionTrainer(SupervisedTrainer):
         print_every (int, optional): number of iterations to print after, (default: 100)
     """
     def __init__(self, expt_dir='experiment', loss=[NLLLoss(), AttentionLoss()],
-                 loss_weights=None, metrics=[], batch_size=64, random_seed=None,
-                 checkpoint_every=100, print_every=100):
+                 loss_weights=None, metrics=[], batch_size=64, eval_batch_size=128,
+                 random_seed=None, checkpoint_every=100, print_every=100):
         self._trainer = "Attention Trainer"
         super(AttentionTrainer, self).__init__(expt_dir=expt_dir, loss=loss, loss_weights=loss_weights, metrics=metrics, batch_size=batch_size, random_seed=random_seed, checkpoint_every=checkpoint_every, print_every=print_every)
         
