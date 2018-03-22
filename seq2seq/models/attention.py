@@ -58,6 +58,10 @@ class Attention(nn.Module):
         decoder_states_size = decoder_states.size(2)
         input_size = encoder_states.size(1)
 
+        # compute mask
+        mask = encoder_states.eq(0.)[:,:,:1].transpose(1,2).data
+        self.set_mask(mask)
+
         # compute attention vals
         attn = self.method(decoder_states, encoder_states)
 
