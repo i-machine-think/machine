@@ -24,6 +24,7 @@ parser.add_argument('--test_data', help='Path to test data')
 parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
 parser.add_argument('--max_len', type=int, help='Maximum sequence length', default=50)
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
+parser.add_argument('--use_input_eos', action='store_true', help='EOS symbol in input sequences is not used by default. Use this flag to enable.')
 
 opt = parser.parse_args()
 
@@ -42,7 +43,7 @@ output_vocab = checkpoint.output_vocab
 
 ############################################################################
 # Prepare dataset and loss
-src = SourceField()
+src = SourceField(opt.use_input_eos)
 tgt = TargetField()
 src.vocab = input_vocab
 tgt.vocab = output_vocab

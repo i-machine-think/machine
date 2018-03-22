@@ -48,6 +48,7 @@ parser.add_argument('--scale_attention_loss', type=float, default=1.)
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
 parser.add_argument('--eval_batch_size', type=int, help='Batch size', default=128)
 parser.add_argument('--lr', type=float, help='Learning rate, recommended settings.\nrecommended settings: adam=0.001 adadelta=1.0 adamax=0.002 rmsprop=0.01 sgd=0.1', default=0.001)
+parser.add_argument('--use_input_eos', action='store_true', help='EOS symbol in input sequences is not used by default. Use this flag to enable.')
 
 parser.add_argument('--load_checkpoint', help='The name of the checkpoint to load, usually an encoded time string')
 parser.add_argument('--save_every', type=int, help='Every how many batches the model should be saved', default=100)
@@ -55,7 +56,7 @@ parser.add_argument('--print_every', type=int, help='Every how many batches to p
 parser.add_argument('--resume', action='store_true', help='Indicates if training has to be resumed from the latest checkpoint')
 parser.add_argument('--log-level', default='info', help='Logging level.')
 parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
-parser.add_argument('--ignore_eos', action='store_true', help='Ignore end of sequence value during trainng and evaluation')
+parser.add_argument('--ignore_eos', action='store_true', help='Ignore end of sequence value during training and evaluation')
 
 opt = parser.parse_args()
 
@@ -77,11 +78,12 @@ if torch.cuda.is_available():
 
 if opt.attention:
     if not opt.attention_method:
+        print("No attention method provided. Using DOT method.")
         opt.attention_method = 'dot'
 
 ############################################################################
 # Prepare dataset
-src = SourceField()
+src = SourceField(use_input_eos=opt.use_input_eos)
 tgt = TargetField()
 max_len = opt.max_len
 
@@ -112,12 +114,16 @@ if opt.load_checkpoint is not None:
     checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint)
     checkpoint = Checkpoint.load(checkpoint_path)
     seq2seq = checkpoint.model
+
     input_vocab = checkpoint.input_vocab
-    output_vocab = checkpoint.output_vocab
     src.vocab = input_vocab
+    src.eos_id = src.vocab.stoi[src.SYM_EOS]
+
+    output_vocab = checkpoint.output_vocab
     tgt.vocab = output_vocab
     tgt.eos_id = tgt.vocab.stoi[tgt.SYM_EOS]
     tgt.sos_id = tgt.vocab.stoi[tgt.SYM_SOS]
+
 else:
     # build vocabulary
     src.build_vocab(train, max_size=opt.src_vocab)
@@ -187,9 +193,9 @@ checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resum
 
 ponderer = None
 if opt.pondering:
-    ponderer = LookupTablePonderer()
+    ponderer = LookupTablePonderer(input_eos_used=opt.use_input_eos)
 if opt.use_attention_loss:
-    attention_function = LookupTableAttention(pad_value=IGNORE_INDEX)
+    attention_function = LookupTableAttention(input_eos_used=opt.use_input_eos, pad_value=IGNORE_INDEX)
 
 # create trainer
 if not opt.use_attention_loss:
