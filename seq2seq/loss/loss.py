@@ -203,6 +203,6 @@ class AttentionLoss(NLLLoss):
 
     def eval_step(self, step_outputs, step_target):
         batch_size = step_target.size(0)
-        outputs = torch.log(step_outputs.contiguous().view(batch_size, -1))
+        outputs = torch.log(step_outputs.contiguous().view(batch_size, -1).clamp(min=1e-20))
         self.acc_loss += self.criterion(outputs, step_target)
         self.norm_term += 1
