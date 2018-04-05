@@ -107,22 +107,29 @@ class Concat(nn.Module):
     def forward(self, decoder_states, encoder_states):
         # apply mlp to all encoder states for current decoder
 
-        # decoder_states --> (batch, 1, hl_size)
-        # encoder_states --> (batch, seqlen, hl_size)
-        batch_size, seqlen, hl_size = encoder_states.size()
+        # decoder_states --> (batch, dec_seqlen, hl_size)
+        # encoder_states --> (batch, enc_seqlen, hl_size)
+        batch_size, enc_seqlen, hl_size = encoder_states.size()
+        _, dec_seqlen, _                = decoder_states.size()
 
-        # expand decoder states and transpose
-        decoder_states_exp = decoder_states.expand(batch_size, seqlen, hl_size)
+        # (batch, enc_seqlen, hl_size) -> (batch, dec_seqlen, enc_seqlen, hl_size)
+        encoder_states_exp = encoder_states.unsqueeze(1)
+        encoder_states_exp = encoder_states_exp.expand(batch_size, dec_seqlen, enc_seqlen, hl_size)
+
+        # (batch, dec_seqlen, hl_size) -> (batch, dec_seqlen, enc_seqlen, hl_size)
+        decoder_states_exp = decoder_states.unsqueeze(2)
+        decoder_states_exp = decoder_states_exp.expand(batch_size, dec_seqlen, enc_seqlen, hl_size)
+
+        # reshape encoder and decoder states to allow batchwise computation. We will have
+        # batch_size x enc_seqlen x dec_seqlen batches. So we apply the Linear layer for each of them
         decoder_states_tr = decoder_states_exp.contiguous().view(-1, hl_size)
-
-        # reshape encoder states to allow batchwise computation
-        encoder_states_tr = encoder_states.contiguous().view(-1, hl_size)
+        encoder_states_tr = encoder_states_exp.contiguous().view(-1, hl_size)
 
         mlp_input = torch.cat((encoder_states_tr, decoder_states_tr), dim=1)
 
         # apply mlp and respape to get in correct form
         mlp_output = self.mlp(mlp_input)
-        attn = mlp_output.view(batch_size, seqlen)
+        attn = mlp_output.view(batch_size, dec_seqlen, enc_seqlen)
 
         return attn
 
@@ -146,16 +153,23 @@ class MLP(nn.Module):
     def forward(self, decoder_states, encoder_states):
         # apply mlp to all encoder states for current decoder
 
-        # decoder_states --> (batch, 1, hl_size)
-        # encoder_states --> (batch, seqlen, hl_size)
-        batch_size, seqlen, hl_size = encoder_states.size()
+        # decoder_states --> (batch, dec_seqlen, hl_size)
+        # encoder_states --> (batch, enc_seqlen, hl_size)
+        batch_size, enc_seqlen, hl_size = encoder_states.size()
+        _, dec_seqlen, _                = decoder_states.size()
 
-        # expand decoder states and transpose
-        decoder_states_exp = decoder_states.expand(batch_size, seqlen, hl_size)
+        # (batch, enc_seqlen, hl_size) -> (batch, dec_seqlen, enc_seqlen, hl_size)
+        encoder_states_exp = encoder_states.unsqueeze(1)
+        encoder_states_exp = encoder_states_exp.expand(batch_size, dec_seqlen, enc_seqlen, hl_size)
+
+        # (batch, dec_seqlen, hl_size) -> (batch, dec_seqlen, enc_seqlen, hl_size)
+        decoder_states_exp = decoder_states.unsqueeze(2)
+        decoder_states_exp = decoder_states_exp.expand(batch_size, dec_seqlen, enc_seqlen, hl_size)
+
+        # reshape encoder and decoder states to allow batchwise computation. We will have
+        # batch_size x enc_seqlen x dec_seqlen batches. So we apply the Linear layer for each of them
         decoder_states_tr = decoder_states_exp.contiguous().view(-1, hl_size)
-
-        # reshape encoder states to allow batchwise computation
-        encoder_states_tr = encoder_states.contiguous().view(-1, hl_size)
+        encoder_states_tr = encoder_states_exp.contiguous().view(-1, hl_size)
 
         mlp_input = torch.cat((encoder_states_tr, decoder_states_tr), dim=1)
 
@@ -163,6 +177,6 @@ class MLP(nn.Module):
         mlp_output = self.mlp(mlp_input)
         mlp_output = self.activation(mlp_output)
         out = self.out(mlp_output)
-        attn = out.view(batch_size, seqlen)
+        attn = out.view(batch_size, dec_seqlen, enc_seqlen)
 
         return attn
