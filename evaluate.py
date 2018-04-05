@@ -6,9 +6,11 @@ import torch
 import torchtext
 
 import seq2seq
-from seq2seq.loss import Perplexity
+from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
+from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
 from seq2seq.dataset import SourceField, TargetField
 from seq2seq.evaluator import Evaluator
+from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, LookupTablePonderer
 from seq2seq.util.checkpoint import Checkpoint
 from seq2seq.trainer import SupervisedTrainer
 
@@ -24,9 +26,19 @@ parser.add_argument('--test_data', help='Path to test data')
 parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
 parser.add_argument('--max_len', type=int, help='Maximum sequence length', default=50)
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
+
+parser.add_argument('--pondering', action='store_true')
+
+parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
+parser.add_argument('--attention_method', choices=['dot', 'mlp'], default=None)
+parser.add_argument('--use_attention_loss', action='store_true')
+parser.add_argument('--scale_attention_loss', type=float, default=1.)
+
 parser.add_argument('--use_input_eos', action='store_true', help='EOS symbol in input sequences is not used by default. Use this flag to enable.')
 
 opt = parser.parse_args()
+
+IGNORE_INDEX=-1
 
 if torch.cuda.is_available():
         print("Cuda device set to %i" % opt.cuda_device)
@@ -47,6 +59,9 @@ src = SourceField(opt.use_input_eos)
 tgt = TargetField()
 src.vocab = input_vocab
 tgt.vocab = output_vocab
+tgt.eos_id = tgt.vocab.stoi[tgt.SYM_EOS]
+tgt.sos_id = tgt.vocab.stoi[tgt.SYM_SOS]
+src.eos_id = src.vocab.stoi[src.SYM_EOS]
 max_len = opt.max_len
 
 def len_filter(example):
@@ -59,18 +74,33 @@ test = torchtext.data.TabularDataset(
     filter_pred=len_filter
 )
 
-# Prepare loss
-weight = torch.ones(len(output_vocab))
+# Prepare loss and metrics
 pad = output_vocab.stoi[tgt.pad_token]
-loss = Perplexity(weight, pad)
+losses = [NLLLoss(ignore_index=pad)]
+loss_weights = [1.]
+
+if opt.use_attention_loss:
+    losses.append(AttentionLoss(ignore_index=IGNORE_INDEX))
+    loss_weights.append(opt.scale_attention_loss)
+
+metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad), FinalTargetAccuracy(ignore_index=pad, eos_id=tgt.eos_id)]
 if torch.cuda.is_available():
-    loss.cuda()
+    for loss in losses:
+        loss.cuda()
+
+# Initialize ponderer and attention guidance
+ponderer = None
+if opt.pondering:
+    ponderer = LookupTablePonderer(pad_token=pad)
+attention_function = None
+if opt.use_attention_loss:
+    attention_function = LookupTableAttention(pad_value=IGNORE_INDEX)
 
 #################################################################################
 # Evaluate model on test set
 
-evaluator = Evaluator(loss=loss, batch_size=opt.batch_size)
-losses, metrics = evaluator.evaluate(seq2seq, test)
+evaluator = Evaluator(batch_size=opt.batch_size, losses=losses, metrics=metrics)
+losses, metrics = evaluator.evaluate(model=seq2seq, data=test, ponderer=ponderer, attention_function=attention_function)
 
 total_loss, log_msg, _ = SupervisedTrainer.print_eval(losses, metrics, 0)
 
