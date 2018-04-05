@@ -90,17 +90,19 @@ if torch.cuda.is_available():
 
 # Initialize ponderer and attention guidance
 ponderer = None
+data_func = SupervisedTrainer.get_batch_data
 if opt.pondering:
     ponderer = LookupTablePonderer(pad_token=pad)
 attention_function = None
 if opt.use_attention_loss:
     attention_function = LookupTableAttention(pad_value=IGNORE_INDEX)
+    data_func = AttentionTrainer.get_batch_data
 
 #################################################################################
 # Evaluate model on test set
 
 evaluator = Evaluator(batch_size=opt.batch_size, losses=losses, metrics=metrics)
-losses, metrics = evaluator.evaluate(model=seq2seq, data=test, ponderer=ponderer, attention_function=attention_function)
+losses, metrics = evaluator.evaluate(model=seq2seq, data=test, get_batch_data=data_func, ponderer=ponderer)
 
 total_loss, log_msg, _ = SupervisedTrainer.print_eval(losses, metrics, 0)
 
