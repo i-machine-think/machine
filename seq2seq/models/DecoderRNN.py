@@ -163,12 +163,40 @@ class DecoderRNN(BaseRNN):
                 lengths[update_idx] = len(sequence_symbols)
             return symbols
 
-        # Manual unrolling is used to support random teacher forcing.
-        # If teacher_forcing_ratio is True or False instead of a probability, the unrolling can be done in graph
-        if use_teacher_forcing and self.use_attention == 'post-rnn':
+        # When we use pre-rnn attention we must unroll the decoder. We need to calculate the attention based on
+        # the previous hidden state, before we can calculate the next hidden state.
+        # We also need to unroll when we don't use teacher forcing. We need perform the decoder steps
+        # one-by-one since the output needs to be copied to the input of the next step.
+        if self.use_attention == 'pre-rnn' or not use_teacher_forcing:
+            unrolling = True
+        else:
+            unrolling = False
+
+        if unrolling:
+            symbols = None
+            for di in range(max_length):
+                # We always start with the SOS symbol as input. We need to add extra dimension of length 1 for the number of decoder steps (1 in this case)
+                # When we use teacher forcing, we always use the target input.
+                if di == 0 or use_teacher_forcing:
+                    decoder_input = inputs[:, di].unsqueeze(1)
+                # If we don't use teacher forcing (and we are beyond the first SOS step), we use the last output as new input
+                else:
+                    decoder_input = symbols
+
+                # Perform one forward step
+                decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
+                                                                         function=function)
+                # Remove the unnecessary dimension.
+                step_output = decoder_output.squeeze(1)
+                # Get the actual symbol
+                symbols = decode(di, step_output, step_attn)
+
+        else:
+            # Remove EOS token of the longest output target in the batch. We don't have to run the last decoder step where the teacher forcing input is EOS
+            # It still is run for shorter output targets in the batch
             decoder_input = inputs[:, :-1]
-            decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
-                                                                     function=function)
+            # Forward step without unrolling
+            decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs, function=function)
 
             for di in range(decoder_output.size(1)):
                 step_output = decoder_output[:, di, :]
@@ -177,24 +205,6 @@ class DecoderRNN(BaseRNN):
                 else:
                     step_attn = None
                 decode(di, step_output, step_attn)
-
-        elif use_teacher_forcing and self.use_attention == 'pre-rnn':
-            # unroll computation to apply attention before rnn layer
-            for di in range(inputs.size(1)-1):
-                decoder_input = inputs[:, di].unsqueeze(1)
-                decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
-                                                                         function=function)
-                step_output = decoder_output.squeeze(1)
-                decode(di, step_output, step_attn)
-
-        else:
-            decoder_input = inputs[:, 0].unsqueeze(1)
-            for di in range(max_length):
-                decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
-                                                                         function=function)
-                step_output = decoder_output.squeeze(1)
-                symbols = decode(di, step_output, step_attn)
-                decoder_input = symbols
 
         ret_dict[DecoderRNN.KEY_SEQUENCE] = sequence_symbols
         ret_dict[DecoderRNN.KEY_LENGTH] = lengths.tolist()
