@@ -10,7 +10,7 @@ from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
 from seq2seq.dataset import SourceField, TargetField
 from seq2seq.evaluator import Evaluator
-from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, LookupTablePonderer
+from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, LookupTablePonderer, AttentionTrainer
 from seq2seq.util.checkpoint import Checkpoint
 from seq2seq.trainer import SupervisedTrainer
 
@@ -101,7 +101,7 @@ if opt.use_attention_loss:
 #################################################################################
 # Evaluate model on test set
 
-evaluator = Evaluator(batch_size=opt.batch_size, losses=losses, metrics=metrics)
+evaluator = Evaluator(batch_size=opt.batch_size, loss=losses, metrics=metrics)
 losses, metrics = evaluator.evaluate(model=seq2seq, data=test, get_batch_data=data_func, ponderer=ponderer)
 
 total_loss, log_msg, _ = SupervisedTrainer.print_eval(losses, metrics, 0)

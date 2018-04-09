@@ -30,8 +30,12 @@ ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest train from checkpoint"
 # Load checkpoint
-python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --epoch $EPOCH --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --load_checkpoint $(ls -t test_exp/ | head -1) --save_every $CP_EVERY
+python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --epoch $EPOCH --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --load_checkpoint $(ls -t $EXPT_DIR/ | head -1) --save_every $CP_EVERY
 ERR=$((ERR+$?)); EX=$((EX+1))
+
+# evaluate.py
+echo "\n\nTest evaluator"
+python evaluate.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) --test_data $DEV_PATH --batch_size 15
 
 # test training without dev set
 echo "\n\nTest training without dev set"
