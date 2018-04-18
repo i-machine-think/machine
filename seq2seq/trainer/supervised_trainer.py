@@ -167,7 +167,7 @@ class SupervisedTrainer(object):
                             if best_checkpoints[index_max] is not None:
                                 shutil.rmtree(os.path.join(self.expt_dir, best_checkpoints[index_max]))
                             best_checkpoints[index_max] = model_name
-                            loss_best[index_max] = loss
+                            loss_best[index_max] = total_loss
 
                             # save model
                             Checkpoint(model=model,
