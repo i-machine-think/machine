@@ -147,7 +147,7 @@ class FinalTargetAccuracy(Metric):
                 mask = cur_mask
 
             # compute correct, masking all outputs that are padding or eos, or are not followed by padding or eos
-            correct = cur_step_output.view(-1).eq(target).masked_select(mask).sum().sum().data[0]
+            correct = cur_step_output.view(-1).eq(target).masked_select(mask).long().sum().data[0]
 
             self.target_match += correct
 
