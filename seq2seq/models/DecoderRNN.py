@@ -32,6 +32,7 @@ class DecoderRNN(BaseRNN):
         input_dropout_p (float, optional): dropout probability for the input sequence (default: 0)
         dropout_p (float, optional): dropout probability for the output sequence (default: 0)
         use_attention(bool, optional): flag indication whether to use attention mechanism or not (default: false)
+        full_focus(bool, optional): flag indication whether to use full attention mechanism or not (default: false)
 
     Attributes:
         KEY_ATTN_SCORE (str): key used to indicate attention weights in `ret_dict`
@@ -68,7 +69,7 @@ class DecoderRNN(BaseRNN):
     def __init__(self, vocab_size, max_len, hidden_size,
             sos_id, eos_id,
             n_layers=1, rnn_cell='gru', bidirectional=False,
-            input_dropout_p=0, dropout_p=0, use_attention=False, attention_method=None):
+            input_dropout_p=0, dropout_p=0, use_attention=False, attention_method=None, full_focus=False):
         super(DecoderRNN, self).__init__(vocab_size, max_len, hidden_size,
                 input_dropout_p, dropout_p,
                 n_layers, rnn_cell)
@@ -80,9 +81,10 @@ class DecoderRNN(BaseRNN):
                 raise ValueError("Method for computing attention should be provided")
 
         self.attention_method = attention_method
+        self.full_focus = full_focus
 
         # increase input size decoder if attention is applied before decoder rnn
-        if use_attention == 'pre-rnn':
+        if use_attention == 'pre-rnn' and not full_focus:
             input_size*=2
 
         self.rnn = self.rnn_cell(input_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
@@ -103,6 +105,8 @@ class DecoderRNN(BaseRNN):
             self.out = nn.Linear(2*self.hidden_size, self.output_size)
         else:
             self.out = nn.Linear(self.hidden_size, self.output_size)
+            if self.full_focus:
+                self.ffocus_merge = nn.Linear(2*self.hidden_size, hidden_size)
 
     def forward_step(self, input_var, hidden, encoder_outputs, function):
 
@@ -117,6 +121,9 @@ class DecoderRNN(BaseRNN):
                 h, c = hidden
             context, attn = self.attention(h[-1:].transpose(0,1), encoder_outputs) # transpose to get batch at the second index
             combined_input = torch.cat((context, embedded), dim=2)
+            if self.full_focus:
+                merged_input = F.relu(self.ffocus_merge(combined_input))
+                combined_input = torch.mul(context, merged_input)
             output, hidden = self.rnn(combined_input, hidden)
 
         elif self.use_attention == 'post-rnn':
