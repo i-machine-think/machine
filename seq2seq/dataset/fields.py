@@ -81,3 +81,44 @@ class TargetField(torchtext.data.Field):
         super(TargetField, self).build_vocab(*args, **kwargs)
         self.sos_id = self.vocab.stoi[self.SYM_SOS]
         self.eos_id = self.vocab.stoi[self.SYM_EOS]
+
+class AttentionField(torchtext.data.Field):
+    """ Wrapper class of torchtext.data.Field that forces batch_first to be True, use_vocab to be false, and applies postprocessing to integers
+    Since we already define the attention vectors with integers in the data set, we don't need a vocabulary. Instead, we directly use the provided integers
+    """
+
+    def __init__(self, **kwargs):
+        logger = logging.getLogger(__name__)
+
+        if kwargs.get('batch_first') == False:
+            logger.warning("Option batch_first has to be set to use pytorch-seq2seq.  Changed to True.")
+        kwargs['batch_first'] = True
+
+        if kwargs.get('use_vocab') == True:
+            logger.warning("Option use_vocab has to be set to False for the attention field. Changed to False")
+        kwargs['use_vocab'] = False
+
+        if kwargs.get('preprocessing') is not None:
+            logger.error("No pre-processing allowed for the attention field")
+
+        if kwargs.get('postprocessing') is not None:
+            logger.error("No post-processing allowed for the attention field")
+
+        # Post-processing function receives batch and positional arguments(?).
+        # Batch is a 2D list with batch examples in dim-0 and sequences in dim-1
+        # For each element in each example we convert from unicode string to integer.
+        # PAD is converted to -1
+        def postprocess(batch, _, __):
+            def safe_cast(cast_func, x, default):
+                try:
+                    return cast_func(x)
+                except (ValueError, TypeError):
+                    return default
+
+            return [[safe_cast(int, item, self.pad_token) for item in example] for example in batch]
+        
+        kwargs['postprocessing'] = postprocess
+
+        super(AttentionField, self).__init__(**kwargs)
+
+        self.pad_token = -1

@@ -8,7 +8,7 @@ import torchtext
 import seq2seq
 from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
-from seq2seq.dataset import SourceField, TargetField
+from seq2seq.dataset import SourceField, TargetField, AttentionField
 from seq2seq.evaluator import Evaluator
 from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, LookupTablePonderer, AttentionTrainer
 from seq2seq.util.checkpoint import Checkpoint
@@ -30,7 +30,7 @@ parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
 parser.add_argument('--pondering', action='store_true')
 
 parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
-parser.add_argument('--attention_method', choices=['dot', 'mlp'], default=None)
+parser.add_argument('--attention_method', choices=['dot', 'mlp', 'hard'], default=None)
 parser.add_argument('--use_attention_loss', action='store_true')
 parser.add_argument('--scale_attention_loss', type=float, default=1.)
 
@@ -59,6 +59,13 @@ output_vocab = checkpoint.output_vocab
 # Prepare dataset and loss
 src = SourceField(opt.use_input_eos)
 tgt = TargetField(output_eos_used)
+
+tabular_data_fields = [('src', src), ('tgt', tgt)]
+
+if opt.attention_method == 'hard':
+  attn = AttentionField(use_vocab=False)
+  tabular_data_fields.append(('attn', attn))
+
 src.vocab = input_vocab
 tgt.vocab = output_vocab
 tgt.eos_id = tgt.vocab.stoi[tgt.SYM_EOS]
@@ -72,7 +79,7 @@ def len_filter(example):
 # generate test set
 test = torchtext.data.TabularDataset(
     path=opt.test_data, format='tsv',
-    fields=[('src', src), ('tgt', tgt)],
+    fields=tabular_data_fields,
     filter_pred=len_filter
 )
 

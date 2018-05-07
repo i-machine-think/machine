@@ -3,6 +3,7 @@
 TRAIN_PATH=test/test_data/train_small.txt
 DEV_PATH=test/test_data/dev_small.txt
 LOOKUP=test/test_data/lookup_small.txt
+LOOKUP_HARD_ATTN=test/test_data/lookup_small_attn.txt
 EXPT_DIR=test_exp
 
 mkdir $EXPT_DIR
@@ -64,6 +65,14 @@ ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest training with pre-rnn attention and GRU cell method mlp"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'pre-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'dot'
+ERR=$((ERR+$?)); EX=$((EX+1))
+
+echo "\n\nTest training with pre-rnn hard attention"
+python train_model.py --train $LOOKUP_HARD_ATTN --dev $LOOKUP_HARD_ATTN --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'pre-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'hard'
+ERR=$((ERR+$?)); EX=$((EX+1))
+
+echo "\n\nTest training with post-rnn hard attention"
+python train_model.py --train $LOOKUP_HARD_ATTN --dev $LOOKUP_HARD_ATTN --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'post-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'hard'
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest training with post-rnn attention and LSTM cell"

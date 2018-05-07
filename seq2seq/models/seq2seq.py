@@ -44,11 +44,16 @@ class Seq2seq(nn.Module):
         self.decoder.rnn.flatten_parameters()
 
     def forward(self, input_variable, input_lengths=None, target_variable=None,
-                teacher_forcing_ratio=0):
+                teacher_forcing_ratio=0, **kwargs):
+        
+        # Add input lenghths also to attention method kwargs, in case it needs it.
+        kwargs['input_lengths'] = input_lengths
+
         encoder_outputs, encoder_hidden = self.encoder(input_variable, input_lengths)
         result = self.decoder(inputs=target_variable,
                               encoder_hidden=encoder_hidden,
                               encoder_outputs=encoder_outputs,
                               function=self.decode_function,
-                              teacher_forcing_ratio=teacher_forcing_ratio)
+                              teacher_forcing_ratio=teacher_forcing_ratio,
+                              **kwargs)
         return result

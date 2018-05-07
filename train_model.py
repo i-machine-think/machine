@@ -17,7 +17,7 @@ from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
 from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
 from seq2seq.optim import Optimizer
-from seq2seq.dataset import SourceField, TargetField
+from seq2seq.dataset import SourceField, TargetField, AttentionField
 from seq2seq.evaluator import Predictor, Evaluator
 from seq2seq.util.checkpoint import Checkpoint
 
@@ -46,7 +46,7 @@ parser.add_argument('--dropout_p_decoder', type=float, help='Dropout probability
 parser.add_argument('--teacher_forcing_ratio', type=float, help='Teacher forcing ratio', default=0.2)
 parser.add_argument('--pondering', action='store_true')
 parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
-parser.add_argument('--attention_method', choices=['dot', 'mlp', 'concat'], default=None)
+parser.add_argument('--attention_method', choices=['dot', 'mlp', 'concat', 'hard'], default=None)
 parser.add_argument('--use_attention_loss', action='store_true')
 parser.add_argument('--scale_attention_loss', type=float, default=1.)
 parser.add_argument('--full_focus', action='store_true')
@@ -74,6 +74,9 @@ if opt.resume and not opt.load_checkpoint:
 if opt.use_attention_loss and not opt.attention:
     parser.error('Specify attention type to use attention loss')
 
+if opt.use_attention_loss and opt.attention_method == 'hard':
+    parser.error("Attention loss cannot be used in combination with hard attentive guidance")
+
 LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
 logging.info(opt)
@@ -92,6 +95,13 @@ if opt.attention:
 use_output_eos = not opt.ignore_output_eos
 src = SourceField(use_input_eos=opt.use_input_eos)
 tgt = TargetField(include_eos=use_output_eos)
+
+tabular_data_fields = [('src', src), ('tgt', tgt)]
+
+if opt.attention_method == 'hard':
+  attn = AttentionField(use_vocab=False)
+  tabular_data_fields.append(('attn', attn))
+
 max_len = opt.max_len
 
 def len_filter(example):
@@ -100,14 +110,14 @@ def len_filter(example):
 # generate training and testing data
 train = torchtext.data.TabularDataset(
     path=opt.train, format='tsv',
-    fields=[('src', src), ('tgt', tgt)],
+    fields=tabular_data_fields,
     filter_pred=len_filter
 )
 
 if opt.dev:
     dev = torchtext.data.TabularDataset(
         path=opt.dev, format='tsv',
-        fields=[('src', src), ('tgt', tgt)],
+        fields=tabular_data_fields,
         filter_pred=len_filter
     )
 else:

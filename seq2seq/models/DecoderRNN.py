@@ -108,18 +108,42 @@ class DecoderRNN(BaseRNN):
             if self.full_focus:
                 self.ffocus_merge = nn.Linear(2*self.hidden_size, hidden_size)
 
-    def forward_step(self, input_var, hidden, encoder_outputs, function):
-
+    def forward_step(self, input_var, hidden, encoder_outputs, function, **kwargs):
+        """
+        Performs one or multiple forward decoder steps.
+        
+        Args:
+            input_var (torch.autograd.Variable): Variable containing the input(s) to the decoder RNN
+            hidden (torch.autograd.Variable): Variable containing the previous decoder hidden state.
+            encoder_outputs (torch.autograd.Variable): Variable containing the target outputs of the decoder RNN
+            function (torch.autograd.Variable): Activation function over the last output of the decoder RNN at every time step.
+        
+        Returns:
+            predicted_softmax: The output softmax distribution at every time step of the decoder RNN
+            hidden: The hidden state at every time step of the decoder RNN
+            attn: The attention distribution at every time step of the decoder RNN
+        """
         batch_size = input_var.size(0)
         output_size = input_var.size(1)
         embedded = self.embedding(input_var)
         embedded = self.input_dropout(embedded)
 
+        # Prepare the extra arguments for the attention method
+        if self.attention_method == 'hard':
+            attention_method_kwargs = {
+                'step': kwargs['step'],
+                'provided_attention': kwargs['provided_attention'],
+                'input_lengths': kwargs['input_lengths']
+            }
+        else:
+            attention_method_kwargs = {}
+
         if self.use_attention == 'pre-rnn':
             h = hidden
             if isinstance(hidden, tuple):
                 h, c = hidden
-            context, attn = self.attention(h[-1:].transpose(0,1), encoder_outputs) # transpose to get batch at the second index
+            # Apply the attention method to get the attention vector and weighted context vector. Provide decoder step for hard attention
+            context, attn = self.attention(h[-1:].transpose(0,1), encoder_outputs, **attention_method_kwargs) # transpose to get batch at the second index
             combined_input = torch.cat((context, embedded), dim=2)
             if self.full_focus:
                 merged_input = F.relu(self.ffocus_merge(combined_input))
@@ -127,8 +151,9 @@ class DecoderRNN(BaseRNN):
             output, hidden = self.rnn(combined_input, hidden)
 
         elif self.use_attention == 'post-rnn':
-            output, hidden = self.rnn(embedded, hidden) # for GRU hidden=h, for LSTM (h, c)
-            context, attn = self.attention(output, encoder_outputs)
+            output, hidden = self.rnn(embedded, hidden)
+            # Apply the attention method to get the attention vector and weighted context vector. Provide decoder step for hard attention
+            context, attn = self.attention(output, encoder_outputs, **attention_method_kwargs)
             output = torch.cat((context, output), dim=2)
 
         elif not self.use_attention:
@@ -140,7 +165,8 @@ class DecoderRNN(BaseRNN):
         return predicted_softmax, hidden, attn
 
     def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None,
-                    function=F.log_softmax, teacher_forcing_ratio=0):
+                    function=F.log_softmax, teacher_forcing_ratio=0, **kwargs):
+
         ret_dict = dict()
         if self.use_attention:
             ret_dict[DecoderRNN.KEY_ATTN_SCORE] = list()
@@ -191,8 +217,9 @@ class DecoderRNN(BaseRNN):
                     decoder_input = symbols
 
                 # Perform one forward step
+                kwargs['step'] = di
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
-                                                                         function=function)
+                                                                         function=function, **kwargs)
                 # Remove the unnecessary dimension.
                 step_output = decoder_output.squeeze(1)
                 # Get the actual symbol
@@ -203,7 +230,8 @@ class DecoderRNN(BaseRNN):
             # It still is run for shorter output targets in the batch
             decoder_input = inputs[:, :-1]
             # Forward step without unrolling
-            decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs, function=function)
+            kwargs['step'] = -1
+            decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs, function=function, **kwargs)
 
             for di in range(decoder_output.size(1)):
                 step_output = decoder_output[:, di, :]
