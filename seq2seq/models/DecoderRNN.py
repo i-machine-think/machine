@@ -84,7 +84,7 @@ class DecoderRNN(BaseRNN):
         self.full_focus = full_focus
 
         # increase input size decoder if attention is applied before decoder rnn
-        if use_attention == 'pre-rnn' and not full_focus:
+        if use_attention == 'pre-rnn' and not full_focus == True:
             input_size*=2
 
         self.rnn = self.rnn_cell(input_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
@@ -121,7 +121,7 @@ class DecoderRNN(BaseRNN):
                 h, c = hidden
             context, attn = self.attention(h[-1:].transpose(0,1), encoder_outputs) # transpose to get batch at the second index
             combined_input = torch.cat((context, embedded), dim=2)
-            if self.full_focus:
+            if self.full_focus==True:
                 merged_input = F.relu(self.ffocus_merge(combined_input))
                 combined_input = torch.mul(context, merged_input)
             output, hidden = self.rnn(combined_input, hidden)
