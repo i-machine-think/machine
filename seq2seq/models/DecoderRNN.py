@@ -122,7 +122,6 @@ class DecoderRNN(BaseRNN):
             context, attn = self.attention(h[-1:].transpose(0,1), encoder_outputs) # transpose to get batch at the second index
             combined_input = torch.cat((context, embedded), dim=2)
             if self.full_focus:
-                print('here')
                 merged_input = F.relu(self.ffocus_merge(combined_input))
                 combined_input = torch.mul(context, merged_input)
             output, hidden = self.rnn(combined_input, hidden)
