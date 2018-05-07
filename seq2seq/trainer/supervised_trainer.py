@@ -160,9 +160,9 @@ class SupervisedTrainer(object):
                     for m_data in monitor_data:
                         losses, metrics = self.evaluator.evaluate(model, monitor_data[m_data], self.get_batch_data, ponderer=self.ponderer)
                         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
-                        m_logs[m_data] = ' '.join(['%s: %.4f' % (loss.log_name, loss.get_loss()) for loss in losses])
+                        m_logs[m_data] = log_msg
 
-                    all_losses = ' '.join(['%s %s' % (name, m_logs[name]) for name in m_logs])
+                    all_losses = ' '.join(['%s: \t %s \n' % (os.path.basename(name), m_logs[name]) for name in m_logs])
 
                     log_msg = 'Progress %d%%, Train %s, %s' % (
                             step / total_steps * 100,
