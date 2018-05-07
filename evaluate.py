@@ -104,6 +104,6 @@ if opt.use_attention_loss:
 evaluator = Evaluator(batch_size=opt.batch_size, loss=losses, metrics=metrics)
 losses, metrics = evaluator.evaluate(model=seq2seq, data=test, get_batch_data=data_func, ponderer=ponderer)
 
-total_loss, log_msg, _ = SupervisedTrainer.print_eval(losses, metrics, 0)
+total_loss, log_msg, _ = SupervisedTrainer.get_losses(losses, metrics, 0)
 
 print(log_msg)

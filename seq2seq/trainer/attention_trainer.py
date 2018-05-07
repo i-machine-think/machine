@@ -36,7 +36,7 @@ class AttentionTrainer(SupervisedTrainer):
         super(AttentionTrainer, self).__init__(expt_dir=expt_dir, loss=loss, loss_weights=loss_weights, metrics=metrics, batch_size=batch_size, random_seed=random_seed, checkpoint_every=checkpoint_every, print_every=print_every)
         
     def train(self, model, data, num_epochs=5,
-              resume=False, dev_data=None,
+              resume=False, dev_data=None, monitor_data={},
               attention_function=None, ponderer=None,
               optimizer=None, teacher_forcing_ratio=0,
               learning_rate=0.001, checkpoint_path=None, top_k=5):
@@ -49,7 +49,8 @@ class AttentionTrainer(SupervisedTrainer):
                 model=model, data=data, 
                 ponderer=ponderer,
                 num_epochs=num_epochs, resume=resume,
-                dev_data=dev_data, optimizer=optimizer,
+                dev_data=dev_data, monitor_data=monitor_data,
+                optimizer=optimizer,
                 teacher_forcing_ratio=teacher_forcing_ratio,
                 learning_rate=learning_rate, checkpoint_path=checkpoint_path,
                 top_k=top_k)

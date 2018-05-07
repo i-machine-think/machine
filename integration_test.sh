@@ -20,7 +20,7 @@ ERR=0
 
 # Start training
 echo "Test training"
-python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY --batch_size 6
+python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --monitor $DEV_PATH $TRAIN_PATH --output_dir $EXPT_DIR --print_every 30 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY --batch_size 6
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # Resume training
@@ -74,7 +74,7 @@ ERR=$((ERR+$?)); EX=$((EX+1))
 # test attention loss
 echo "\n\nTest training with attention loss"
 python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7
-R=$((ERR+$?)); EX=$((EX+1))
+ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test attention loss and pondering
 echo "\n\nTest training with attention loss and ponderer"
@@ -84,7 +84,7 @@ ERR=$((ERR+$?)); EX=$((EX+1))
 # test full focus
 echo "\n\nTest training with full focus"
 python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7 --full_focus True
-R=$((ERR+$?)); EX=$((EX+1))
+ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test bidirectional
 echo "\n\nTest bidirectional model"

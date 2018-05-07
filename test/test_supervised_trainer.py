@@ -20,7 +20,7 @@ class TestSupervisedTrainer(unittest.TestCase):
         src.build_vocab(self.dataset)
         tgt.build_vocab(self.dataset)
 
-    @mock.patch('seq2seq.trainer.SupervisedTrainer._train_batch', return_value=0)
+    @mock.patch('seq2seq.trainer.SupervisedTrainer._train_batch', return_value=[])
     @mock.patch('seq2seq.util.checkpoint.Checkpoint.save')
     @mock.patch('seq2seq.evaluator.Evaluator.evaluate', return_value=([],[]))
     def test_batch_num_when_resuming(self, mock_evaluator, mock_checkpoint, mock_func):
