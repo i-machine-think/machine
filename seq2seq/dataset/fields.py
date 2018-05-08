@@ -51,11 +51,11 @@ class TargetField(torchtext.data.Field):
 
     SYM_SOS = '<sos>'
     SYM_EOS = '<eos>'
-    include_output_eos = True
+    include_eos = True
 
-    def __init__(self, include_output_eos=True, **kwargs):
+    def __init__(self, include_eos=True, **kwargs):
         logger = logging.getLogger(__name__)
-        self.include_output_eos = include_output_eos
+        self.include_eos = include_eos
 
         if kwargs.get('batch_first') == False:
             logger.warning("Option batch_first has to be set to use pytorch-seq2seq.  Changed to True.")
@@ -66,7 +66,7 @@ class TargetField(torchtext.data.Field):
         else:
             func = kwargs['preprocessing']
 
-        if self.include_output_eos:
+        if self.include_eos:
             kwargs['preprocessing'] = lambda seq: [self.SYM_SOS] + seq + [self.SYM_EOS]
         else:
             kwargs['preprocessing'] = lambda seq: [self.SYM_SOS] + seq
