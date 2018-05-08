@@ -74,28 +74,32 @@ python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test attention loss
-echo "\n\nTest training with attention loss"
-python train_model.py --train $LOOKUP --dev $LOOKUP --monitor $LOOKUP --output_dir $EXPT_DIR --print_every 1 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7
+echo "\n\nTest training with attention loss without input and output eos"
+python train_model.py --train $LOOKUP --dev $LOOKUP --monitor $LOOKUP --output_dir $EXPT_DIR --print_every 1 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7 --ignore_output_eos
+ERR=$((ERR+$?)); EX=$((EX+1))
+
+echo "\n\nTest training with attention loss with input and output eos"
+python train_model.py --train $LOOKUP --dev $LOOKUP --monitor $LOOKUP --output_dir $EXPT_DIR --print_every 1 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7 --use_input_eos
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test attention loss and pondering
 echo "\n\nTest training with attention loss and ponderer"
-python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --pondering --batch_size=6
+python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --pondering --batch_size=6 --ignore_output_eos
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test full focus
 echo "\n\nTest training with full focus"
-python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7 --full_focus
+python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7 --full_focus --ignore_output_eos
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test bidirectional
 echo "\n\nTest bidirectional model"
-python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --bidirectional --epoch $EPOCH --save_every $CP_EVERY
+python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --bidirectional --epoch $EPOCH --save_every $CP_EVERY --ignore_output_eos
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test bidirectional with attention at timestep t
 echo "\n\nTest bidirectional model with attention at timestep t"
-python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'post-rnn' --attention_method 'dot' --bidirectional --epoch $EPOCH --save_every $CP_EVERY
+python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'post-rnn' --attention_method 'dot' --bidirectional --epoch $EPOCH --save_every $CP_EVERY --ignore_output_eos
 ERR=$((ERR+$?)); EX=$((EX+1))
  
 # test bidirectional with attention at timestep t-1
