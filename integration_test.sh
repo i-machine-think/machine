@@ -83,8 +83,8 @@ echo "\n\nTest training with attention loss with input and output eos"
 python train_model.py --train $LOOKUP --dev $LOOKUP --monitor $LOOKUP --output_dir $EXPT_DIR --print_every 1 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7 --use_input_eos
 ERR=$((ERR+$?)); EX=$((EX+1))
 
-echo "\n\nTest evaluate model trained with attention loss with input and output eos"
-python evaluate.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) --test_data $LOOKUP --batch_size 15 --use_input_eos --use_attention_loss
+echo "\n\nTest training with attention loss with input and output eos"
+python train_model.py --train $LOOKUP --dev $LOOKUP --monitor $LOOKUP --output_dir $EXPT_DIR --print_every 1 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --use_attention_loss --batch_size=7 --use_input_eos
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test attention loss and pondering
