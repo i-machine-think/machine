@@ -67,9 +67,11 @@ class TargetField(torchtext.data.Field):
             func = kwargs['preprocessing']
 
         if self.include_eos:
-            kwargs['preprocessing'] = lambda seq: [self.SYM_SOS] + seq + [self.SYM_EOS]
+            app_eos = [self.SYM_EOS]
         else:
-            kwargs['preprocessing'] = lambda seq: [self.SYM_SOS] + seq
+            app_eos = []
+
+        kwargs['preprocessing'] = lambda seq: [self.SYM_SOS] + func(seq) + app_eos
 
         self.sos_id = None
         self.eos_id = None
