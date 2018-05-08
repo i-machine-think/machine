@@ -129,8 +129,7 @@ class FinalTargetAccuracy(Metric):
 
         self.target_total += batch_size
 
-        for step, next_step_output in enumerate(outputs[1:]):
-            cur_step_output = outputs[step]
+        for step, step_output in enumerate(outputs):
 
             target = targets[:, step + 1]
 
@@ -147,7 +146,7 @@ class FinalTargetAccuracy(Metric):
                 mask = cur_mask
 
             # compute correct, masking all outputs that are padding or eos, or are not followed by padding or eos
-            correct = cur_step_output.view(-1).eq(target).masked_select(mask).long().sum().data[0]
+            correct = step_output.view(-1).eq(target).masked_select(mask).long().sum().data[0]
 
             self.target_match += correct
 
