@@ -94,7 +94,7 @@ class WordAccuracy(Metric):
 
 class FinalTargetAccuracy(Metric):
     """
-    Batch average of the accuracy on the final target (step before <eos>)
+    Batch average of the accuracy on the final target (step before <eos>, if eos is present)
 
     Args:
         ignore_index (int, optional): index of padding
@@ -104,7 +104,7 @@ class FinalTargetAccuracy(Metric):
     _SHORTNAME = "target_acc"
     _INPUT = "sequence"
 
-    def __init__(self, ignore_index=None, eos_id=2):
+    def __init__(self, ignore_index, eos_id):    # TODO check if returns error if default is not given
         self.ignore_index = ignore_index
         self.eos = eos_id
         self.word_match = 0
