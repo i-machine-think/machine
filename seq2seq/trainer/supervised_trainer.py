@@ -111,6 +111,7 @@ class SupervisedTrainer(object):
         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
         print(log_msg)
 
+        logs = defaultdict(lambda: defaultdict(list))
         loss_best = top_k*[total_loss]
         best_checkpoints = top_k*[None]
         best_checkpoints[0] = model_name
@@ -154,7 +155,10 @@ class SupervisedTrainer(object):
                         print_loss_total[name] = 0
 
                     m_logs = {}
-                    train_log_msg = ' '.join(['%s: %.4f' % (loss.log_name, loss.get_loss()) for loss in losses])
+                    train_losses, train_metrics = self.evaluator.evaluate(model, data, self.get_batch_data, ponderer=self.ponderer)
+                    # train_log_msg = ' '.join(['%s: %.4f' % (loss.log_name, loss.get_loss()) for loss in losses])
+                    train_loss, train_log_msg, model_name = self.get_losses(train_losses, train_metrics, step)
+                    self.append_losses(logs, 'Train', train_losses, train_metrics, step)
 
                     m_logs['Train'] = train_log_msg
 
@@ -163,6 +167,7 @@ class SupervisedTrainer(object):
                         losses, metrics = self.evaluator.evaluate(model, monitor_data[m_data], self.get_batch_data, ponderer=self.ponderer)
                         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
                         m_logs[m_data] = log_msg
+                        self.append_losses(logs, m_data, losses, metrics, step)
 
                     all_losses = ' '.join(['%s:\t %s\n' % (os.path.basename(name), m_logs[name]) for name in m_logs])
 
@@ -214,6 +219,8 @@ class SupervisedTrainer(object):
                 self.optimizer.update(epoch_loss_avg, epoch) # TODO check if this makes sense!
 
             log.info(log_msg)
+
+            return logs
 
     def train(self, model, data, ponderer=None, num_epochs=5,
               resume=False, dev_data=None, 
@@ -271,18 +278,33 @@ class SupervisedTrainer(object):
 
         self.ponderer = ponderer
 
-        self._train_epoches(data, model, num_epochs,
+        logs = self._train_epoches(data, model, num_epochs,
                             start_epoch, step, dev_data=dev_data,
                             monitor_data=monitor_data,
                             teacher_forcing_ratio=teacher_forcing_ratio,
                             top_k=top_k)
-        return model
+        return model, logs
 
     @staticmethod
     def get_batch_data(batch):
         input_variables, input_lengths = getattr(batch, seq2seq.src_field_name)
         target_variables = {'decoder_output': getattr(batch, seq2seq.tgt_field_name)}
         return input_variables, input_lengths, target_variables
+
+    @staticmethod
+    def append_losses(loss_dict, dataname, losses, metrics, step):
+        """ Append losses to dictionary """
+        for metric in metrics:
+            val = metric.get_val()
+            loss_dict[dataname][metric.log_name].append(val)
+
+        for loss in losses:
+            val = loss.get_loss()
+            loss_dict[dataname][loss.log_name].append(val)
+
+        loss_dict[dataname]['steps'].append(step)
+
+        return loss_dict
 
     @staticmethod
     def get_losses(losses, metrics, step):

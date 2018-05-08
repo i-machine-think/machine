@@ -45,15 +45,16 @@ class AttentionTrainer(SupervisedTrainer):
         if self.attention_function is None:
             raise ValueError("attention_function cannot be None in attention trainer, provide function to generate attention targets")
 
-        super(AttentionTrainer, self).train(
-                model=model, data=data, 
-                ponderer=ponderer,
-                num_epochs=num_epochs, resume=resume,
-                dev_data=dev_data, monitor_data=monitor_data,
-                optimizer=optimizer,
-                teacher_forcing_ratio=teacher_forcing_ratio,
-                learning_rate=learning_rate, checkpoint_path=checkpoint_path,
-                top_k=top_k)
+        return super(AttentionTrainer, self).train(
+                        model=model, data=data, 
+                        ponderer=ponderer,
+                        num_epochs=num_epochs, resume=resume,
+                        dev_data=dev_data, monitor_data=monitor_data,
+                        optimizer=optimizer,
+                        teacher_forcing_ratio=teacher_forcing_ratio,
+                        learning_rate=learning_rate, 
+                        checkpoint_path=checkpoint_path,
+                        top_k=top_k)
 
     def get_batch_data(self, batch):
         input_variables, input_lengths, target_variables = super(AttentionTrainer, self).get_batch_data(batch)

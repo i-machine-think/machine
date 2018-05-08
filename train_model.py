@@ -219,7 +219,7 @@ if not opt.use_attention_loss:
                           checkpoint_every=opt.save_every,
                           print_every=opt.print_every, expt_dir=opt.output_dir)
 
-    seq2seq = t.train(seq2seq, train, 
+    seq2seq, logs = t.train(seq2seq, train, 
                       num_epochs=opt.epochs, dev_data=dev,
                       monitor_data=monitor_data,
                       ponderer=ponderer,
@@ -230,13 +230,13 @@ if not opt.use_attention_loss:
                       checkpoint_path=checkpoint_path)
 else:
     t = AttentionTrainer(loss=loss, metrics=metrics, 
-                          loss_weights=loss_weights,
-                          batch_size=opt.batch_size,
-                          eval_batch_size=opt.eval_batch_size,
-                          checkpoint_every=opt.save_every,
-                          print_every=opt.print_every, expt_dir=opt.output_dir)
+                         loss_weights=loss_weights,
+                         batch_size=opt.batch_size,
+                         eval_batch_size=opt.eval_batch_size,
+                         checkpoint_every=opt.save_every,
+                         print_every=opt.print_every, expt_dir=opt.output_dir)
 
-    seq2seq = t.train(seq2seq, train, 
+    seq2seq, logs = t.train(seq2seq, train, 
                       num_epochs=opt.epochs, dev_data=dev,
                       monitor_data=monitor_data,
                       attention_function=attention_function,
