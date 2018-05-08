@@ -7,6 +7,7 @@ from torch.optim.lr_scheduler import StepLR
 import torchtext
 
 import random
+import pickle
 
 from collections import OrderedDict
 
@@ -59,6 +60,7 @@ parser.add_argument('--save_every', type=int, help='Every how many batches the m
 parser.add_argument('--print_every', type=int, help='Every how many batches to print results', default=100)
 parser.add_argument('--resume', action='store_true', help='Indicates if training has to be resumed from the latest checkpoint')
 parser.add_argument('--log-level', default='info', help='Logging level.')
+parser.add_argument('--write-logs', help='Specify file to write logs to after training')
 parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
 parser.add_argument('--ignore_eos', action='store_true', help='Ignore end of sequence value during training and evaluation')
 
@@ -246,6 +248,11 @@ else:
                       learning_rate=opt.lr,
                       resume=opt.resume,
                       checkpoint_path=checkpoint_path)
+
+if opt.write_logs:
+    f = open(os.path.join(opt.output_dir, opt.write_logs), 'wb')
+    pickle.dump(logs, f)
+    f.close()
 
 # evaluator = Evaluator(loss=loss, batch_size=opt.batch_size)
 # dev_loss, accuracy = evaluator.evaluate(seq2seq, dev)
