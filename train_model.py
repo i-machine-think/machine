@@ -8,6 +8,8 @@ import torchtext
 
 import random
 
+from collections import OrderedDict
+
 import seq2seq
 from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, AttentionTrainer, LookupTablePonderer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
@@ -108,7 +110,7 @@ if opt.dev:
 else:
     dev = None
 
-monitor_data = {}
+monitor_data = OrderedDict()
 for dataset in opt.monitor:
     m = torchtext.data.TabularDataset(
         path=dataset, format='tsv',

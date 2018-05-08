@@ -153,20 +153,21 @@ class SupervisedTrainer(object):
                         print_loss_avg[name] = print_loss_total[name] / self.print_every
                         print_loss_total[name] = 0
 
+                    m_logs = {}
                     train_log_msg = ' '.join(['%s: %.4f' % (loss.log_name, loss.get_loss()) for loss in losses])
 
-                    m_logs = {}
+                    m_logs['Train'] = train_log_msg
+
                     # compute vals for all monitored sets
                     for m_data in monitor_data:
                         losses, metrics = self.evaluator.evaluate(model, monitor_data[m_data], self.get_batch_data, ponderer=self.ponderer)
                         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
                         m_logs[m_data] = log_msg
 
-                    all_losses = ' '.join(['%s: \t %s \n' % (os.path.basename(name), m_logs[name]) for name in m_logs])
+                    all_losses = ' '.join(['%s:\t %s\n' % (os.path.basename(name), m_logs[name]) for name in m_logs])
 
-                    log_msg = 'Progress %d%%, Train %s, %s' % (
+                    log_msg = 'Progress %d%%, %s' % (
                             step / total_steps * 100,
-                            train_log_msg,
                             all_losses)
 
                     log.info(log_msg)
