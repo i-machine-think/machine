@@ -95,7 +95,7 @@ ponderer = None
 data_func = SupervisedTrainer.get_batch_data
 get_batch_kwargs = {}
 if opt.pondering:
-    ponderer = LookupTablePonderer(pad_token=pad, input_eos_used=opt.use_input_eos, output_eos_used=output_eos_used)
+    ponderer = LookupTablePonderer(input_eos_used=opt.use_input_eos, output_eos_used=output_eos_used)
 attention_function = None
 if opt.use_attention_loss:
     attention_function = LookupTableAttention(pad_value=IGNORE_INDEX, input_eos_used=opt.use_input_eos, output_eos_used=output_eos_used)

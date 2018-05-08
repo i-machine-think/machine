@@ -151,11 +151,14 @@ class LookupTablePonderer(PonderGenerator):
     _NAME = "lookup_table"
     _KEY = "attention_target"
 
-    def __init__(self, input_eos_used, output_eos_used, pad_token=-1):
+    def __init__(self, input_eos_used, output_eos_used):
+
+        if input_eos_used != output_eos_used:
+            raise ValueError("Use input eos either both on source and target or on neither")
+        
         super(LookupTablePonderer, self).__init__(name=self._NAME, key=self._KEY,
                                                   input_eos_used=input_eos_used,
-                                                  output_eos_used=output_eos_used,
-                                                  pad_token=-1)
+                                                  output_eos_used=output_eos_used)
 
     def mask_silent_outputs(self, input_variable, input_lengths, decoder_outputs):
         """ Find the last steps for every output sequence sequence.
