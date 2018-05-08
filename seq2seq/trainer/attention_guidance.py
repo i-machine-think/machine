@@ -22,10 +22,11 @@ class AttentionGenerator(object):
         pad_value (int): target token to use for padding
     """
 
-    def __init__(self, name, key, input_eos_used, pad_value=-1):
+    def __init__(self, name, key, input_eos_used, output_eos_used, pad_value=-1):
         self.name = name
         self.key = key
         self.input_eos_used = input_eos_used
+        self.output_eos_used = output_eos_used
         self.pad_value = pad_value
 
     def add_attention_targets(self, input_variables, input_lengths, target_variables):
@@ -59,30 +60,33 @@ class LookupTableAttention(AttentionGenerator):
     _NAME = "lookup_table"
     _KEY = "attention_target"
 
-    def __init__(self, input_eos_used, pad_value):
-        super(LookupTableAttention, self).__init__(name=self._NAME, key=self._KEY, input_eos_used=input_eos_used, pad_value=pad_value)
+    def __init__(self, input_eos_used, output_eos_used, pad_value):
+
+        if input_eos_used != output_eos_used:
+            raise ValueError("Use input eos either both on source and target or on neither")
+        super(LookupTableAttention, self).__init__(name=self._NAME, key=self._KEY,
+                                                   input_eos_used=input_eos_used,
+                                                   output_eos_used=output_eos_used,
+                                                   pad_value=pad_value)
 
     def add_attention_targets(self, input_variables, input_lengths, target_variables):
-        max_val = max(input_lengths) + 1
+        max_val = max(input_lengths)
         batch_size = input_lengths.size(0)
 
         # get target attentions
-        # The first value is -11, but is anyways always ignored. All values of -1 are also ignored.
-        # If the EOS is used in input we attend the target EOS to the input EOS.
-        if self.input_eos_used:
+        # The first value is -1, but is anyways always ignored. All values of -1 are also ignored.
+        # If the EOS is used in input we attend the target EOS to the input EOS:
             # Example:
             # INPUT:      01 t1 t2 EOS
             # OUTPUT: SOS 01 11 00 EOS
             # ATTN:    -1  0  1  2   3
-            extra_input_eos = 1
-        else:
+        # if EOS isn't used:
             # Example:
             # INPUT:      01 t1 t2
-            # OUTPUT: SOS 01 11 00 EOS
-            # ATTN:    -1  0  1  2  -1
-            extra_input_eos = 0
+            # OUTPUT: SOS 01 11 00
+            # ATTN:    -1  0  1  2
         
-        target_attentions = Variable(torch.cat(tuple([torch.cat((self.pad_value*torch.ones(1), torch.arange(l), self.pad_value*torch.ones(max_val-l-extra_input_eos)), 0) for l in input_lengths]), 0).view(batch_size, max_val+1-extra_input_eos).long())
+        target_attentions = Variable(torch.cat(tuple([torch.cat((self.pad_value*torch.ones(1), torch.arange(l), self.pad_value*torch.ones(max_val-l)), 0) for l in input_lengths]), 0).view(batch_size, max_val+1).long())
 
         if torch.cuda.is_available():
             target_attentions = target_attentions.cuda()
@@ -114,10 +118,11 @@ class PonderGenerator(object):
 
     """
 
-    def __init__(self, name, key, input_eos_used, pad_token=-1):
+    def __init__(self, name, key, input_eos_used, output_eos_used, pad_token=-1):
         self.name = name
         self.key = key
         self.input_eos_used = input_eos_used
+        self.output_eos_used = output_eos_used
         self.pad_token = pad_token
 
     def mask_silent_steps(self, input_variable, input_lengths, decoder_outputs):
@@ -146,8 +151,11 @@ class LookupTablePonderer(PonderGenerator):
     _NAME = "lookup_table"
     _KEY = "attention_target"
 
-    def __init__(self, input_eos_used):
-        super(LookupTablePonderer, self).__init__(name=self._NAME, key=self._KEY, input_eos_used=input_eos_used, pad_token=-1)
+    def __init__(self, input_eos_used, output_eos_used):
+        super(LookupTablePonderer, self).__init__(name=self._NAME, key=self._KEY,
+                                                  input_eos_used=input_eos_used,
+                                                  output_eos_used=output_eos_used,
+                                                  pad_token=-1)
 
     def mask_silent_outputs(self, input_variable, input_lengths, decoder_outputs):
         """ Find the last steps for every output sequence sequence.
@@ -168,17 +176,15 @@ class LookupTablePonderer(PonderGenerator):
         last_step = torch.zeros_like(decoder_outputs[0])
         eos_step = torch.zeros_like(decoder_outputs[0])
 
-        # If the EOS symbol is used in the input sequence, all input_lengths are too long.
-        if self.input_eos_used:
-            input_eos_substraction = 1
-        else:
-            input_eos_substraction = 0
-
         for i, l in enumerate(input_lengths):
-            last_step[i] = decoder_outputs[l - 1 - input_eos_substraction][i,:]
-            eos_step[i]  = decoder_outputs[l - input_eos_substraction][i, :]
+            last_step[i] = decoder_outputs[l - 1 - self.output_eos_used][i,:]
+            if self.output_eos_used:
+                eos_step[i]  = decoder_outputs[l - 1][i, :]
 
-        decoder_outputs_non_silent = [first_step, last_step, eos_step]
+        if self.output_eos_used:
+            decoder_outputs_non_silent = [first_step, last_step, eos_step]
+        else:
+            decoder_outputs_non_silent = [first_step, last_step]
 
         return decoder_outputs_non_silent
 
@@ -193,8 +199,10 @@ class LookupTablePonderer(PonderGenerator):
         Returns:
             outputs (torch.Tensor): a tensor containing the last step, the final target for every input sequence
         """
+        target_length = 3 + self.output_eos_used # sos + copy + target [+ eos]
+
         # take first and second decoder output
-        targets_non_silent = decoder_targets[:,0:4].clone()
+        targets_non_silent = decoder_targets[:,0:target_length].clone()
 
         # If the EOS symbol is used in the input sequence, all input_lengths are too long.
         if self.input_eos_used:
@@ -204,7 +212,8 @@ class LookupTablePonderer(PonderGenerator):
 
         # for seq i in the batch, final target is decoder_target[i][input_lengths[i]]
         for i, l in enumerate(input_lengths):
-            targets_non_silent[i, 2] = decoder_targets[i][l - input_eos_substraction]
-            targets_non_silent[i, 3] = decoder_targets[i][l + 1 - input_eos_substraction]
+            targets_non_silent[i, 2] = decoder_targets[i][l - self.output_eos_used]
+            if self.output_eos_used:
+                targets_non_silent[i, 3] = decoder_targets[i][l]
 
         return targets_non_silent

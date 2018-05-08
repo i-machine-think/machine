@@ -89,9 +89,9 @@ if opt.attention:
 
 ############################################################################
 # Prepare dataset
-include_output_eos = not opt.ignore_output_eos
+use_output_eos = not opt.ignore_output_eos
 src = SourceField(use_input_eos=opt.use_input_eos)
-tgt = TargetField(include_eos=include_output_eos)
+tgt = TargetField(include_eos=use_output_eos)
 max_len = opt.max_len
 
 def len_filter(example):
@@ -209,9 +209,9 @@ checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resum
 
 ponderer = None
 if opt.pondering:
-    ponderer = LookupTablePonderer(input_eos_used=opt.use_input_eos)
+    ponderer = LookupTablePonderer(input_eos_used=opt.use_input_eos, output_eos_used=use_output_eos)
 if opt.use_attention_loss:
-    attention_function = LookupTableAttention(input_eos_used=opt.use_input_eos, pad_value=IGNORE_INDEX)
+    attention_function = LookupTableAttention(input_eos_used=opt.use_input_eos, output_eos_used=use_output_eos, pad_value=IGNORE_INDEX)
 
 # create trainer
 if not opt.use_attention_loss:
