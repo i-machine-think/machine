@@ -151,7 +151,7 @@ class LookupTablePonderer(PonderGenerator):
     _NAME = "lookup_table"
     _KEY = "attention_target"
 
-    def __init__(self, input_eos_used, output_eos_used):
+    def __init__(self, input_eos_used, output_eos_used, pad_token=-1):
         super(LookupTablePonderer, self).__init__(name=self._NAME, key=self._KEY,
                                                   input_eos_used=input_eos_used,
                                                   output_eos_used=output_eos_used,
