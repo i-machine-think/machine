@@ -221,7 +221,7 @@ class SupervisedTrainer(object):
 
             log.info(log_msg)
 
-            return logs
+        return logs
 
     def train(self, model, data, ponderer=None, num_epochs=5,
               resume=False, dev_data=None, 
