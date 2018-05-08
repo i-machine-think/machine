@@ -35,10 +35,12 @@ parser.add_argument('--use_attention_loss', action='store_true')
 parser.add_argument('--scale_attention_loss', type=float, default=1.)
 
 parser.add_argument('--use_input_eos', action='store_true', help='EOS symbol in input sequences is not used by default. Use this flag to enable.')
+parser.add_argument('--ignore_output_eos', action='store_true', help='Ignore end of sequence token during training and evaluation')
 
 opt = parser.parse_args()
 
 IGNORE_INDEX=-1
+output_eos_used= not opt.ignore_output_eos
 
 if torch.cuda.is_available():
         print("Cuda device set to %i" % opt.cuda_device)
@@ -56,7 +58,7 @@ output_vocab = checkpoint.output_vocab
 ############################################################################
 # Prepare dataset and loss
 src = SourceField(opt.use_input_eos)
-tgt = TargetField()
+tgt = TargetField(output_eos_used)
 src.vocab = input_vocab
 tgt.vocab = output_vocab
 tgt.eos_id = tgt.vocab.stoi[tgt.SYM_EOS]
@@ -91,18 +93,21 @@ if torch.cuda.is_available():
 # Initialize ponderer and attention guidance
 ponderer = None
 data_func = SupervisedTrainer.get_batch_data
+get_batch_kwargs = {}
 if opt.pondering:
-    ponderer = LookupTablePonderer(pad_token=pad)
+    ponderer = LookupTablePonderer(pad_token=pad, input_eos_used=opt.use_input_eos, output_eos_used=output_eos_used)
 attention_function = None
 if opt.use_attention_loss:
-    attention_function = LookupTableAttention(pad_value=IGNORE_INDEX)
+    attention_function = LookupTableAttention(pad_value=IGNORE_INDEX, input_eos_used=opt.use_input_eos, output_eos_used=output_eos_used)
     data_func = AttentionTrainer.get_batch_data
+    get_batch_kwargs['attention_function'] = attention_function
+
 
 #################################################################################
 # Evaluate model on test set
 
 evaluator = Evaluator(batch_size=opt.batch_size, loss=losses, metrics=metrics)
-losses, metrics = evaluator.evaluate(model=seq2seq, data=test, get_batch_data=data_func, ponderer=ponderer)
+losses, metrics = evaluator.evaluate(model=seq2seq, data=test, get_batch_data=data_func, ponderer=ponderer, **get_batch_kwargs)
 
 total_loss, log_msg, _ = SupervisedTrainer.get_losses(losses, metrics, 0)
 
