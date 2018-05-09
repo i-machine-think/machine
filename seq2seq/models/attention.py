@@ -62,7 +62,7 @@ class Attention(nn.Module):
         # compute mask
         mask = encoder_states.eq(0.)[:, :, :1].transpose(1, 2).data
 
-        # compute attention vals
+        # Compute attention vals
         attn = self.method(decoder_states, encoder_states, **attention_method_kwargs)
         attn_before = attn.data.clone()
 
@@ -226,7 +226,6 @@ class HardGuidance(nn.Module):
         # In the case of rolled RNN: (batch_size x dec_seqlen) -> (batch_size x dec_seqlen x 1)
         # In the case of unrolled:   (batch_size)              -> (batch_size x 1          x 1)
         attention_indices = attention_indices.contiguous().view(batch_size, -1, 1)
-
         # Initialize attention vectors. These are the pre-softmax scores, so any
         # -inf will become 0 (if there is at least one value not -inf)
         attention_scores = torch.zeros(batch_size, dec_seqlen, enc_seqlen).fill_(-float('inf'))

@@ -74,14 +74,17 @@ if opt.resume and not opt.load_checkpoint:
 if opt.use_attention_loss and not opt.attention:
     parser.error('Specify attention type to use attention loss')
 
-if opt.use_attention_loss and opt.attention_method == 'hard':
-    parser.error("Attention loss cannot be used in combination with hard attentive guidance")
-
 if not opt.attention and opt.attention_method:
     parser.error("Attention method provided, but attention is not turned on")
 
 if opt.attention and not opt.attention_method:
     parser.error("Attention turned on, but no attention method provided")
+
+if opt.attention_method == 'hard' and opt.ignore_output_eos == opt.use_input_eos:
+    parser.error("If using hard attention method, input and output should both have EOS, or neither")
+
+if opt.use_attention_loss and opt.attention_method == 'hard':
+    parser.error("Can't use attention loss in combination with non-differentiable hard attention method.")
 
 LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
@@ -104,8 +107,8 @@ tgt = TargetField(include_eos=use_output_eos)
 
 tabular_data_fields = [('src', src), ('tgt', tgt)]
 
-if opt.attention_method == 'hard':
-  attn = AttentionField(use_vocab=False)
+if opt.use_attention_loss or opt.attention_method == 'hard':
+  attn = AttentionField(use_vocab=False, ignore_index=IGNORE_INDEX)
   tabular_data_fields.append(('attn', attn))
 
 max_len = opt.max_len
@@ -230,41 +233,22 @@ if opt.use_attention_loss:
     attention_function = LookupTableAttention(input_eos_used=opt.use_input_eos, output_eos_used=use_output_eos, pad_value=IGNORE_INDEX)
 
 # create trainer
-if not opt.use_attention_loss:
-    t = SupervisedTrainer(loss=loss, metrics=metrics, 
-                          loss_weights=loss_weights,
-                          batch_size=opt.batch_size,
-                          eval_batch_size=opt.eval_batch_size,
-                          checkpoint_every=opt.save_every,
-                          print_every=opt.print_every, expt_dir=opt.output_dir)
+t = SupervisedTrainer(loss=loss, metrics=metrics, 
+                      loss_weights=loss_weights,
+                      batch_size=opt.batch_size,
+                      eval_batch_size=opt.eval_batch_size,
+                      checkpoint_every=opt.save_every,
+                      print_every=opt.print_every, expt_dir=opt.output_dir)
 
-    seq2seq, logs = t.train(seq2seq, train, 
-                      num_epochs=opt.epochs, dev_data=dev,
-                      monitor_data=monitor_data,
-                      ponderer=ponderer,
-                      optimizer=opt.optim,
-                      teacher_forcing_ratio=opt.teacher_forcing_ratio,
-                      learning_rate=opt.lr,
-                      resume=opt.resume,
-                      checkpoint_path=checkpoint_path)
-else:
-    t = AttentionTrainer(loss=loss, metrics=metrics, 
-                         loss_weights=loss_weights,
-                         batch_size=opt.batch_size,
-                         eval_batch_size=opt.eval_batch_size,
-                         checkpoint_every=opt.save_every,
-                         print_every=opt.print_every, expt_dir=opt.output_dir)
-
-    seq2seq, logs = t.train(seq2seq, train, 
-                      num_epochs=opt.epochs, dev_data=dev,
-                      monitor_data=monitor_data,
-                      attention_function=attention_function,
-                      ponderer=ponderer,
-                      optimizer=opt.optim,
-                      teacher_forcing_ratio=opt.teacher_forcing_ratio,
-                      learning_rate=opt.lr,
-                      resume=opt.resume,
-                      checkpoint_path=checkpoint_path)
+seq2seq, logs = t.train(seq2seq, train, 
+                  num_epochs=opt.epochs, dev_data=dev,
+                  monitor_data=monitor_data,
+                  ponderer=ponderer,
+                  optimizer=opt.optim,
+                  teacher_forcing_ratio=opt.teacher_forcing_ratio,
+                  learning_rate=opt.lr,
+                  resume=opt.resume,
+                  checkpoint_path=checkpoint_path)
 
 if opt.write_logs:
     f = open(os.path.join(opt.output_dir, opt.write_logs), 'wb')
