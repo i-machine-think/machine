@@ -202,7 +202,7 @@ class SupervisedTrainer(object):
 
             if step_elapsed == 0: continue
 
-	    for loss in losses:
+            for loss in losses:
                 epoch_loss_avg[loss.log_name] = epoch_loss_total[loss.log_name] / min(steps_per_epoch, step - start_step)
                 epoch_loss_total[loss.log_name] = 0
 
