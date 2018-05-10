@@ -12,7 +12,7 @@ import pickle
 from collections import OrderedDict
 
 import seq2seq
-from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, AttentionTrainer, LookupTablePonderer
+from seq2seq.trainer import SupervisedTrainer, LookupTablePonderer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
 from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
@@ -229,8 +229,6 @@ checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resum
 ponderer = None
 if opt.pondering:
     ponderer = LookupTablePonderer(input_eos_used=opt.use_input_eos, output_eos_used=use_output_eos)
-if opt.use_attention_loss:
-    attention_function = LookupTableAttention(input_eos_used=opt.use_input_eos, output_eos_used=use_output_eos, pad_value=IGNORE_INDEX)
 
 # create trainer
 t = SupervisedTrainer(loss=loss, metrics=metrics, 
