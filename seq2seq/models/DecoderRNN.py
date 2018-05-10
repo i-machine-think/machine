@@ -108,7 +108,7 @@ class DecoderRNN(BaseRNN):
             if self.full_focus:
                 self.ffocus_merge = nn.Linear(2*self.hidden_size, hidden_size)
 
-    def forward_step(self, input_var, hidden, encoder_outputs, function, **kwargs):
+    def forward_step(self, input_var, hidden, encoder_outputs, function, **attention_method_kwargs):
         """
         Performs one or multiple forward decoder steps.
         
@@ -127,16 +127,6 @@ class DecoderRNN(BaseRNN):
         output_size = input_var.size(1)
         embedded = self.embedding(input_var)
         embedded = self.input_dropout(embedded)
-
-        # Prepare the extra arguments for the attention method
-        if self.attention_method == 'hard':
-            attention_method_kwargs = {
-                'step': kwargs['step'],
-                'provided_attention': kwargs['provided_attention'],
-                'input_lengths': kwargs['input_lengths']
-            }
-        else:
-            attention_method_kwargs = {}
 
         if self.use_attention == 'pre-rnn':
             h = hidden

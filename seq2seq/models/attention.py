@@ -194,7 +194,7 @@ class HardGuidance(nn.Module):
     Attention method / attentive guidance method for data sets that are annotated with attentive guidance.
     """
 
-    def forward(self, decoder_states, encoder_states, step, input_lengths, provided_attention):
+    def forward(self, decoder_states, encoder_states, step, provided_attention):
         """
         Forward method that receives provided attentive guidance indices and returns proper
         attention scores vectors.
@@ -203,7 +203,6 @@ class HardGuidance(nn.Module):
             decoder_states (torch.autograd.Variable): Hidden layer of all decoder states (batch, dec_seqlen, hl_size)
             encoder_states (torch.autograd.Variable): Output layer of all encoder states (batch, dec_seqlen, hl_size)
             step (int): The current decoder step for unrolled RNN. Set to -1 for rolled RNN
-            input_lengths (list(int)): The input length for all elements in the batch
             provided_attention (torch.autograd.Variable): Variable containing the provided attentive guidance indices (batch, max_provided_attention_length)
 
         Returns:
@@ -215,40 +214,18 @@ class HardGuidance(nn.Module):
         batch_size, enc_seqlen, _ = encoder_states.size()
         _,          dec_seqlen, _ = decoder_states.size()
 
-        input_lengths = torch.LongTensor(input_lengths)
-        provided_attention = provided_attention.data
+        attention_indices = provided_attention.data.clone()
+        # If we have shorter examples in a batch, attend the PAD outputs to the first encoder state
+        attention_indices.masked_fill_(attention_indices.eq(-1), 0)
 
-        last_encoder_state_indices = input_lengths - 1
+        # In the case of unrolled RNN, select only one column
+        if step != -1:
+            attention_indices = attention_indices[:, step]
 
-        max_input_length = max(input_lengths)
-        max_provided_attention_length = provided_attention.size(1)
-
-        # In the case of rolled RNN
-        if step == -1:
-            attention_indices = provided_attention.unsqueeze(2)
-
-        # In the case of unrolled RNN
-        else:
-            # If there are more decoder states than attention provided, we always attend to the last
-            # encoder state. In the case that we have input and output EOS, this will make sure that
-            # the output EOS will attend to the input EOS. In other cases, these attentions should be
-            # ignored for loss and metric calculations, if implemented correctly.
-            if step + 1 > max_provided_attention_length:
-                attention_indices = last_encoder_state_indices
-
-            # We attend to the encoder state provided by provided_attention. If some examples in the batch
-            # are shorter, we attend to the last encoder state. These should be ignored however for loss and
-            # metric calculations
-            else:
-                attention_indices = provided_attention[:, step].clone()
-
-                no_attention_provided_mask = provided_attention[:, step].eq(-1)
-
-                attention_indices[no_attention_provided_mask] = last_encoder_state_indices[
-                    no_attention_provided_mask]
-
-            # Add two dimensions
-            attention_indices = attention_indices.unsqueeze(1).unsqueeze(2)
+        # Add a (second and) third dimension
+        # In the case of rolled RNN: (batch_size x dec_seqlen) -> (batch_size x dec_seqlen x 1)
+        # In the case of unrolled:   (batch_size)              -> (batch_size x 1          x 1)
+        attention_indices = attention_indices.contiguous().view(batch_size, -1, 1)
 
         # Initialize attention vectors. These are the pre-softmax scores, so any
         # -inf will become 0 (if there is at least one value not -inf)
