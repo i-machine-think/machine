@@ -47,7 +47,6 @@ class SupervisedTrainer(object):
         self.optimizer = None
         self.checkpoint_every = checkpoint_every
         self.print_every = print_every
-        self.get_batch_kwargs = {}
 
         if not os.path.isabs(expt_dir):
             expt_dir = os.path.join(os.getcwd(), expt_dir)
@@ -105,7 +104,7 @@ class SupervisedTrainer(object):
 
         # store initial model to be sure at least one model is stored
         val_data = dev_data or data
-        losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data, ponderer=self.ponderer, **self.get_batch_kwargs)
+        losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data, ponderer=self.ponderer)
 
         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
         print(log_msg)
@@ -136,7 +135,7 @@ class SupervisedTrainer(object):
                 step += 1
                 step_elapsed += 1
 
-                input_variables, input_lengths, target_variables = self.get_batch_data(batch, **self.get_batch_kwargs)
+                input_variables, input_lengths, target_variables = self.get_batch_data(batch)
 
                 losses = self._train_batch(input_variables, input_lengths.tolist(), target_variables, model, teacher_forcing_ratio)
 
@@ -154,7 +153,7 @@ class SupervisedTrainer(object):
                         print_loss_total[name] = 0
 
                     m_logs = {}
-                    train_losses, train_metrics = self.evaluator.evaluate(model, data, self.get_batch_data, ponderer=self.ponderer, **self.get_batch_kwargs)
+                    train_losses, train_metrics = self.evaluator.evaluate(model, data, self.get_batch_data, ponderer=self.ponderer)
                     # train_log_msg = ' '.join(['%s: %.4f' % (loss.log_name, loss.get_loss()) for loss in losses])
                     train_loss, train_log_msg, model_name = self.get_losses(train_losses, train_metrics, step)
                     self.append_losses(logs, 'Train', train_losses, train_metrics, step)
@@ -163,7 +162,7 @@ class SupervisedTrainer(object):
 
                     # compute vals for all monitored sets
                     for m_data in monitor_data:
-                        losses, metrics = self.evaluator.evaluate(model, monitor_data[m_data], self.get_batch_data, ponderer=self.ponderer, **self.get_batch_kwargs)
+                        losses, metrics = self.evaluator.evaluate(model, monitor_data[m_data], self.get_batch_data, ponderer=self.ponderer)
                         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
                         m_logs[m_data] = log_msg
                         self.append_losses(logs, m_data, losses, metrics, step)
@@ -179,7 +178,7 @@ class SupervisedTrainer(object):
                 # check if new model should be saved
                 if step % self.checkpoint_every == 0 or step == total_steps:
                     # compute dev loss
-                    losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data, ponderer=self.ponderer, **self.get_batch_kwargs)
+                    losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data, ponderer=self.ponderer)
                     total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
 
                     max_eval_loss = max(loss_best)
@@ -208,7 +207,7 @@ class SupervisedTrainer(object):
             log_msg = "Finished epoch %d: Train %s" % (epoch, loss_msg)
 
             if dev_data is not None:
-                losses, metrics = self.evaluator.evaluate(model, dev_data, self.get_batch_data, ponderer=self.ponderer, **self.get_batch_kwargs)
+                losses, metrics = self.evaluator.evaluate(model, dev_data, self.get_batch_data, ponderer=self.ponderer)
                 loss_total, log_, model_name = self.get_losses(losses, metrics, step)
 
                 self.optimizer.update(loss_total, epoch)    # TODO check if this makes sense!
@@ -285,7 +284,7 @@ class SupervisedTrainer(object):
         return model, logs
 
     @staticmethod
-    def get_batch_data(batch, **kwargs):
+    def get_batch_data(batch):
         input_variables, input_lengths = getattr(batch, seq2seq.src_field_name)
         target_variables = {'decoder_output': getattr(batch, seq2seq.tgt_field_name)}
 

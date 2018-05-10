@@ -82,7 +82,7 @@ class Evaluator(object):
 
         return losses
 
-    def evaluate(self, model, data, get_batch_data, ponderer, **get_batch_kwargs):
+    def evaluate(self, model, data, get_batch_data, ponderer):
         """ Evaluate a model on given dataset and return performance.
 
         Args:
@@ -112,7 +112,7 @@ class Evaluator(object):
 
         # loop over batches
         for batch in batch_iterator:
-            input_variable, input_lengths, target_variable = get_batch_data(batch, **get_batch_kwargs)
+            input_variable, input_lengths, target_variable = get_batch_data(batch)
 
             decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths.tolist(), target_variable)
 
