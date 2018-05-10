@@ -77,6 +77,12 @@ if opt.use_attention_loss and not opt.attention:
 if opt.use_attention_loss and opt.attention_method == 'hard':
     parser.error("Attention loss cannot be used in combination with hard attentive guidance")
 
+if not opt.attention and opt.attention_method:
+    parser.error("Attention method provided, but attention is not turned on")
+
+if opt.attention and not opt.attention_method:
+    parser.error("Attention turned on, but no attention method provided")
+
 LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
 logging.info(opt)
