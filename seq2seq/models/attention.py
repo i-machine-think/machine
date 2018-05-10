@@ -243,24 +243,7 @@ class HardGuidance(nn.Module):
 
         # In the case of rolled RNN
         if step == -1:
-            attention_indices = provided_attention
-
-            # If there are more decoder states than attentions provided, we extend the provided attentions.
-            # These states will all attend to the last encoder state.
-            if dec_seqlen > max_provided_attention_length:
-                filler = -1 * torch.ones(batch_size, dec_seqlen -
-                                         max_provided_attention_length).long()
-                attention_indices = torch.cat([attention_indices, filler], dim=1)
-
-                # Replace no_attention_provided spots with last_encoder_state
-                no_attention_provided_mask = attention_indices.eq(-1)
-                # Match dimension of attention_indices and no_attention_provided_mask
-                last_encoder_state_indices = last_encoder_state_indices.unsqueeze(
-                    1).expand(-1, dec_seqlen)
-                attention_indices[no_attention_provided_mask] = last_encoder_state_indices[
-                    no_attention_provided_mask]
-
-            attention_indices = attention_indices.unsqueeze(2)
+            attention_indices = provided_attention.unsqueeze(2)
 
         # In the case of unrolled RNN
         else:
