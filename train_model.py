@@ -12,12 +12,12 @@ import pickle
 from collections import OrderedDict
 
 import seq2seq
-from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, AttentionTrainer, LookupTablePonderer
+from seq2seq.trainer import SupervisedTrainer, LookupTablePonderer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
 from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
 from seq2seq.optim import Optimizer
-from seq2seq.dataset import SourceField, TargetField
+from seq2seq.dataset import SourceField, TargetField, AttentionField
 from seq2seq.evaluator import Predictor, Evaluator
 from seq2seq.util.checkpoint import Checkpoint
 
@@ -46,7 +46,7 @@ parser.add_argument('--dropout_p_decoder', type=float, help='Dropout probability
 parser.add_argument('--teacher_forcing_ratio', type=float, help='Teacher forcing ratio', default=0.2)
 parser.add_argument('--pondering', action='store_true')
 parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
-parser.add_argument('--attention_method', choices=['dot', 'mlp', 'concat'], default=None)
+parser.add_argument('--attention_method', choices=['dot', 'mlp', 'concat', 'hard'], default=None)
 parser.add_argument('--use_attention_loss', action='store_true')
 parser.add_argument('--scale_attention_loss', type=float, default=1.)
 parser.add_argument('--full_focus', action='store_true')
@@ -74,6 +74,18 @@ if opt.resume and not opt.load_checkpoint:
 if opt.use_attention_loss and not opt.attention:
     parser.error('Specify attention type to use attention loss')
 
+if not opt.attention and opt.attention_method:
+    parser.error("Attention method provided, but attention is not turned on")
+
+if opt.attention and not opt.attention_method:
+    parser.error("Attention turned on, but no attention method provided")
+
+if opt.attention_method == 'hard' and opt.ignore_output_eos == opt.use_input_eos:
+    parser.error("If using hard attention method, input and output should both have EOS, or neither")
+
+if opt.use_attention_loss and opt.attention_method == 'hard':
+    parser.error("Can't use attention loss in combination with non-differentiable hard attention method.")
+
 LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
 logging.info(opt)
@@ -92,6 +104,13 @@ if opt.attention:
 use_output_eos = not opt.ignore_output_eos
 src = SourceField(use_input_eos=opt.use_input_eos)
 tgt = TargetField(include_eos=use_output_eos)
+
+tabular_data_fields = [('src', src), ('tgt', tgt)]
+
+if opt.use_attention_loss or opt.attention_method == 'hard':
+  attn = AttentionField(use_vocab=False, ignore_index=IGNORE_INDEX)
+  tabular_data_fields.append(('attn', attn))
+
 max_len = opt.max_len
 
 def len_filter(example):
@@ -100,14 +119,14 @@ def len_filter(example):
 # generate training and testing data
 train = torchtext.data.TabularDataset(
     path=opt.train, format='tsv',
-    fields=[('src', src), ('tgt', tgt)],
+    fields=tabular_data_fields,
     filter_pred=len_filter
 )
 
 if opt.dev:
     dev = torchtext.data.TabularDataset(
         path=opt.dev, format='tsv',
-        fields=[('src', src), ('tgt', tgt)],
+        fields=tabular_data_fields,
         filter_pred=len_filter
     )
 else:
@@ -210,45 +229,24 @@ checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resum
 ponderer = None
 if opt.pondering:
     ponderer = LookupTablePonderer(input_eos_used=opt.use_input_eos, output_eos_used=use_output_eos)
-if opt.use_attention_loss:
-    attention_function = LookupTableAttention(input_eos_used=opt.use_input_eos, output_eos_used=use_output_eos, pad_value=IGNORE_INDEX)
 
 # create trainer
-if not opt.use_attention_loss:
-    t = SupervisedTrainer(loss=loss, metrics=metrics, 
-                          loss_weights=loss_weights,
-                          batch_size=opt.batch_size,
-                          eval_batch_size=opt.eval_batch_size,
-                          checkpoint_every=opt.save_every,
-                          print_every=opt.print_every, expt_dir=opt.output_dir)
+t = SupervisedTrainer(loss=loss, metrics=metrics, 
+                      loss_weights=loss_weights,
+                      batch_size=opt.batch_size,
+                      eval_batch_size=opt.eval_batch_size,
+                      checkpoint_every=opt.save_every,
+                      print_every=opt.print_every, expt_dir=opt.output_dir)
 
-    seq2seq, logs = t.train(seq2seq, train, 
-                      num_epochs=opt.epochs, dev_data=dev,
-                      monitor_data=monitor_data,
-                      ponderer=ponderer,
-                      optimizer=opt.optim,
-                      teacher_forcing_ratio=opt.teacher_forcing_ratio,
-                      learning_rate=opt.lr,
-                      resume=opt.resume,
-                      checkpoint_path=checkpoint_path)
-else:
-    t = AttentionTrainer(loss=loss, metrics=metrics, 
-                         loss_weights=loss_weights,
-                         batch_size=opt.batch_size,
-                         eval_batch_size=opt.eval_batch_size,
-                         checkpoint_every=opt.save_every,
-                         print_every=opt.print_every, expt_dir=opt.output_dir)
-
-    seq2seq, logs = t.train(seq2seq, train, 
-                      num_epochs=opt.epochs, dev_data=dev,
-                      monitor_data=monitor_data,
-                      attention_function=attention_function,
-                      ponderer=ponderer,
-                      optimizer=opt.optim,
-                      teacher_forcing_ratio=opt.teacher_forcing_ratio,
-                      learning_rate=opt.lr,
-                      resume=opt.resume,
-                      checkpoint_path=checkpoint_path)
+seq2seq, logs = t.train(seq2seq, train, 
+                  num_epochs=opt.epochs, dev_data=dev,
+                  monitor_data=monitor_data,
+                  ponderer=ponderer,
+                  optimizer=opt.optim,
+                  teacher_forcing_ratio=opt.teacher_forcing_ratio,
+                  learning_rate=opt.lr,
+                  resume=opt.resume,
+                  checkpoint_path=checkpoint_path)
 
 if opt.write_logs:
     f = open(os.path.join(opt.output_dir, opt.write_logs), 'wb')

@@ -8,7 +8,7 @@ import torchtext
 import seq2seq
 from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
-from seq2seq.dataset import SourceField, TargetField
+from seq2seq.dataset import SourceField, TargetField, AttentionField
 from seq2seq.evaluator import Evaluator
 from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, LookupTablePonderer, AttentionTrainer
 from seq2seq.util.checkpoint import Checkpoint
@@ -30,7 +30,7 @@ parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
 parser.add_argument('--pondering', action='store_true')
 
 parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
-parser.add_argument('--attention_method', choices=['dot', 'mlp'], default=None)
+parser.add_argument('--attention_method', choices=['dot', 'mlp', 'hard'], default=None)
 parser.add_argument('--use_attention_loss', action='store_true')
 parser.add_argument('--scale_attention_loss', type=float, default=1.)
 
@@ -38,6 +38,18 @@ parser.add_argument('--use_input_eos', action='store_true', help='EOS symbol in 
 parser.add_argument('--ignore_output_eos', action='store_true', help='Ignore end of sequence token during training and evaluation')
 
 opt = parser.parse_args()
+
+if not opt.attention and opt.attention_method:
+    parser.error("Attention method provided, but attention is not turned on")
+
+if opt.attention and not opt.attention_method:
+    parser.error("Attention turned on, but no attention method provided")
+
+if opt.attention_method == 'hard' and opt.ignore_output_eos == opt.use_input_eos:
+    parser.error("If using hard attention method, input and output should both have EOS, or neither")
+
+if opt.use_attention_loss and opt.attention_method == 'hard':
+    parser.warning("Did you mean to use attention loss in combination with hard attention method?")
 
 IGNORE_INDEX=-1
 output_eos_used= not opt.ignore_output_eos
@@ -59,6 +71,13 @@ output_vocab = checkpoint.output_vocab
 # Prepare dataset and loss
 src = SourceField(opt.use_input_eos)
 tgt = TargetField(output_eos_used)
+
+tabular_data_fields = [('src', src), ('tgt', tgt)]
+
+if opt.use_attention_loss or opt.attention_method == 'hard':
+  attn = AttentionField(use_vocab=False, ignore_index=IGNORE_INDEX)
+  tabular_data_fields.append(('attn', attn))
+
 src.vocab = input_vocab
 tgt.vocab = output_vocab
 tgt.eos_id = tgt.vocab.stoi[tgt.SYM_EOS]
@@ -72,7 +91,7 @@ def len_filter(example):
 # generate test set
 test = torchtext.data.TabularDataset(
     path=opt.test_data, format='tsv',
-    fields=[('src', src), ('tgt', tgt)],
+    fields=tabular_data_fields,
     filter_pred=len_filter
 )
 

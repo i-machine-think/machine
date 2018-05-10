@@ -114,7 +114,7 @@ class Evaluator(object):
         for batch in batch_iterator:
             input_variable, input_lengths, target_variable = get_batch_data(batch, **get_batch_kwargs)
 
-            decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths.tolist(), target_variable['decoder_output'])
+            decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths.tolist(), target_variable)
 
             # apply metrics over entire sequence
             metrics = self.update_batch_metrics(metrics, other, target_variable)
