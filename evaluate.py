@@ -10,7 +10,7 @@ from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
 from seq2seq.dataset import SourceField, TargetField, AttentionField
 from seq2seq.evaluator import Evaluator
-from seq2seq.trainer import SupervisedTrainer, LookupTableAttention, LookupTablePonderer, AttentionTrainer
+from seq2seq.trainer import SupervisedTrainer, LookupTablePonderer
 from seq2seq.util.checkpoint import Checkpoint
 from seq2seq.trainer import SupervisedTrainer
 
