@@ -100,6 +100,8 @@ class DecoderRNN(BaseRNN):
         self.embedding = nn.Embedding(self.output_size, self.hidden_size)
         if use_attention:
             self.attention = Attention(self.hidden_size, self.attention_method)
+        else:
+            self.attention = None
 
         if use_attention == 'post-rnn':
             self.out = nn.Linear(2*self.hidden_size, self.output_size)
@@ -188,7 +190,7 @@ class DecoderRNN(BaseRNN):
 
         # Prepare extra arguments for attention method
         attention_method_kwargs = {}
-        if isinstance(self.attention, HardGuidance):
+        if self.attention and isinstance(self.attention.method, HardGuidance):
             attention_method_kwargs['provided_attention'] = provided_attention
 
         # When we use pre-rnn attention we must unroll the decoder. We need to calculate the attention based on
@@ -212,7 +214,7 @@ class DecoderRNN(BaseRNN):
                     decoder_input = symbols
 
                 # Perform one forward step
-                if isinstance(self.attention, HardGuidance):
+                if self.attention and isinstance(self.attention.method, HardGuidance):
                     attention_method_kwargs['step'] = di
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs,
                                                                          function=function, **attention_method_kwargs)
@@ -226,7 +228,7 @@ class DecoderRNN(BaseRNN):
             # It still is run for shorter output targets in the batch
             decoder_input = inputs[:, :-1]
             # Forward step without unrolling
-            if isinstance(self.attention, HardGuidance):
+            if self.attention and isinstance(self.attention.method, HardGuidance):
                 attention_method_kwargs['step'] = -1
             decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs, function=function, **attention_method_kwargs)
 
