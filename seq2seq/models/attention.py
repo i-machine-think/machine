@@ -89,7 +89,7 @@ class Attention(nn.Module):
         elif method == 'dot':
             method = Dot()
         else:
-            return ValueError("Unknown attention method")
+            raise ValueError("Unknown attention method")
 
         return method
 
