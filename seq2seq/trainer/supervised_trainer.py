@@ -12,7 +12,6 @@ from torch import optim
 from collections import defaultdict
 
 import seq2seq
-from .attention_guidance import LookupTableAttention
 from seq2seq.evaluator import Evaluator
 from seq2seq.loss import NLLLoss, AttentionLoss
 from seq2seq.metrics import WordAccuracy
