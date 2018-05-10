@@ -46,7 +46,7 @@ class Seq2seq(nn.Module):
     def forward(self, input_variable, input_lengths=None, target_variables=None,
                 teacher_forcing_ratio=0):
         # Unpack target variables
-        target_output = target_variables['decoder_output']
+        target_output = target_variables.get('decoder_output', None)
         # The attention target is preprended with an extra SOS step. We must remove this
         provided_attention = target_variables['attention_target'][:,1:] if 'attention_target' in target_variables else None
 
