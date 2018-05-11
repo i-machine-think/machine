@@ -49,6 +49,7 @@ parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=Fals
 parser.add_argument('--attention_method', choices=['dot', 'mlp', 'concat', 'hard'], default=None)
 parser.add_argument('--use_attention_loss', action='store_true')
 parser.add_argument('--scale_attention_loss', type=float, default=1.)
+parser.add_argument('--xent_loss', type=float, default=1.)
 parser.add_argument('--full_focus', action='store_true')
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
 parser.add_argument('--eval_batch_size', type=int, help='Batch size', default=128)
@@ -108,8 +109,8 @@ tgt = TargetField(include_eos=use_output_eos)
 tabular_data_fields = [('src', src), ('tgt', tgt)]
 
 if opt.use_attention_loss or opt.attention_method == 'hard':
-  attn = AttentionField(use_vocab=False, ignore_index=IGNORE_INDEX)
-  tabular_data_fields.append(('attn', attn))
+    attn = AttentionField(use_vocab=False, ignore_index=IGNORE_INDEX)
+    tabular_data_fields.append(('attn', attn))
 
 max_len = opt.max_len
 
@@ -213,7 +214,9 @@ output_vocabulary = output_vocab.itos
 # Prepare loss and metrics
 pad = output_vocab.stoi[tgt.pad_token]
 loss = [NLLLoss(ignore_index=pad)]
-loss_weights = [1.]
+# loss_weights = [1.]
+loss_weights = [float(opt.xent_loss)]
+
 
 if opt.use_attention_loss:
     loss.append(AttentionLoss(ignore_index=IGNORE_INDEX))
