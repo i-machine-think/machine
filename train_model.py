@@ -137,7 +137,7 @@ monitor_data = OrderedDict()
 for dataset in opt.monitor:
     m = torchtext.data.TabularDataset(
         path=dataset, format='tsv',
-        fields=[('src', src), ('tgt', tgt)],
+        fields=tabular_data_fields,
         filter_pred=len_filter)
     monitor_data[dataset] = m
 
