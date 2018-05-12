@@ -10,6 +10,7 @@ import torchtext
 from torch import optim
 
 from collections import defaultdict
+from functools import partial
 
 import seq2seq
 from seq2seq.evaluator import Evaluator
@@ -109,7 +110,7 @@ class SupervisedTrainer(object):
         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
         print(log_msg)
 
-        logs = defaultdict(lambda: defaultdict(list))
+        logs = defaultdict(partial(defaultdict, list))
         loss_best = top_k*[total_loss]
         best_checkpoints = top_k*[None]
         best_checkpoints[0] = model_name
