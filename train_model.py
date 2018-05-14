@@ -252,9 +252,8 @@ seq2seq, logs = t.train(seq2seq, train,
                   checkpoint_path=checkpoint_path)
 
 if opt.write_logs:
-    f = open(os.path.join(opt.output_dir, opt.write_logs), 'wb')
-    pickle.dump(logs, f)
-    f.close()
+    output_path = os.path.join(opt.output_dir, opt.write_logs)
+    logs.write_to_file(output_path)
 
 # evaluator = Evaluator(loss=loss, batch_size=opt.batch_size)
 # dev_loss, accuracy = evaluator.evaluate(seq2seq, dev)

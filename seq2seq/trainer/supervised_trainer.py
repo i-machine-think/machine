@@ -10,7 +10,6 @@ import torchtext
 from torch import optim
 
 from collections import defaultdict
-from functools import partial
 
 import seq2seq
 from seq2seq.evaluator import Evaluator
@@ -18,6 +17,7 @@ from seq2seq.loss import NLLLoss, AttentionLoss
 from seq2seq.metrics import WordAccuracy
 from seq2seq.optim import Optimizer
 from seq2seq.util.checkpoint import Checkpoint
+from seq2seq.util.log import Log
 
 class SupervisedTrainer(object):
     """ The SupervisedTrainer class helps in setting up a training framework in a
@@ -110,7 +110,7 @@ class SupervisedTrainer(object):
         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
         print(log_msg)
 
-        logs = defaultdict(partial(defaultdict, list))
+        logs = Log()
         loss_best = top_k*[total_loss]
         best_checkpoints = top_k*[None]
         best_checkpoints[0] = model_name
@@ -155,9 +155,9 @@ class SupervisedTrainer(object):
 
                     m_logs = {}
                     train_losses, train_metrics = self.evaluator.evaluate(model, data, self.get_batch_data, ponderer=self.ponderer)
-                    # train_log_msg = ' '.join(['%s: %.4f' % (loss.log_name, loss.get_loss()) for loss in losses])
                     train_loss, train_log_msg, model_name = self.get_losses(train_losses, train_metrics, step)
-                    self.append_losses(logs, 'Train', train_losses, train_metrics, step)
+                    logs.write_to_log('Train', train_losses, train_metrics, step)
+                    logs.update_step(step)
 
                     m_logs['Train'] = train_log_msg
 
@@ -166,7 +166,7 @@ class SupervisedTrainer(object):
                         losses, metrics = self.evaluator.evaluate(model, monitor_data[m_data], self.get_batch_data, ponderer=self.ponderer)
                         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
                         m_logs[m_data] = log_msg
-                        self.append_losses(logs, m_data, losses, metrics, step)
+                        logs.write_to_log(m_data, losses, metrics, step)
 
                     all_losses = ' '.join(['%s:\t %s\n' % (os.path.basename(name), m_logs[name]) for name in m_logs])
 
@@ -295,21 +295,6 @@ class SupervisedTrainer(object):
             target_variables['attention_target'] = attention_target
 
         return input_variables, input_lengths, target_variables
-
-    @staticmethod
-    def append_losses(loss_dict, dataname, losses, metrics, step):
-        """ Append losses to dictionary """
-        for metric in metrics:
-            val = metric.get_val()
-            loss_dict[dataname][metric.log_name].append(val)
-
-        for loss in losses:
-            val = loss.get_loss()
-            loss_dict[dataname][loss.log_name].append(val)
-
-        loss_dict[dataname]['steps'].append(step)
-
-        return loss_dict
 
     @staticmethod
     def get_losses(losses, metrics, step):
