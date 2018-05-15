@@ -1,6 +1,9 @@
 from __future__ import print_function
 
 import torch
+import os
+
+import matplotlib.pyplot as plt
 
 from collections import defaultdict
 
@@ -12,7 +15,7 @@ class Log(object):
 
     def __init__(self, path=None):
         self.steps = []
-        self.log = defaultdict(lambda: defaultdict(list))
+        self.data = defaultdict(lambda: defaultdict(list))
 
         if path is not None:
             self.read_from_file(path)
@@ -23,11 +26,11 @@ class Log(object):
         """
         for metric in metrics:
             val = metric.get_val()
-            self.log[dataname][metric.log_name].append(val)
+            self.data[dataname][metric.log_name].append(val)
 
         for loss in losses:
             val = loss.get_loss()
-            self.log[dataname][loss.log_name].append(val)
+            self.data[dataname][loss.log_name].append(val)
 
     def update_step(self, step):
         self.steps.append(step)
@@ -52,11 +55,11 @@ class Log(object):
         f.write(steps.encode())
 
         # write logs
-        for dataset in self.log.keys():
+        for dataset in self.data.keys():
             f.write(dataset.encode()+b'\n')
-            for metric in self.log[dataset]:
-                log = "\t%s %s\n" % (metric, ' '.join([str(v) for v in self.log[dataset][metric]]))
-                f.write(log.encode())
+            for metric in self.data[dataset]:
+                data = "\t%s %s\n" % (metric, ' '.join([str(v) for v in self.data[dataset][metric]]))
+                f.write(data.encode())
 
         f.close()
 
@@ -85,10 +88,70 @@ class Log(object):
                 cur_set = l_list[0].decode()
             else:
                 data = [float(i) for i in l_list[1:]]
-                self.log[cur_set][l_list[0].decode()] = data
+                self.data[cur_set][l_list[0].decode()] = data
 
     def get_logs(self):
-        return self.log
+        return self.data
 
     def get_steps(self):
         return self.steps
+
+class LogCollection(object):
+
+    def __init__(self):
+        self.logs = []
+        self.log_names = []
+
+    def add_log_from_file(self, path):
+        self.logs.append(Log(path))
+        self.log_names.append(path)
+
+    def add_log_from_folder(self, folder_path, ext='', name_parser=None):
+        """
+        Recursively loop through a folder and add all its 
+        the files with appropriate extension to self.logs.
+        """
+
+        for subdir, dirs, files in os.walk(folder_path):
+            for fname in files:
+                f = os.path.join(subdir, fname)
+
+                if name_parser: log_name = name_parser(f)
+                else: log_name = f
+
+                if f.endswith(ext):
+                    self.logs.append(Log(f))
+                    self.log_names.append(log_name)
+
+    def plot_metric(self, metric_name, restrict_model=lambda x: True, 
+                          restrict_data=lambda x: True,
+                          data_name_parser=None,
+                          color_group=False):
+
+        """
+        Plot all values for a specific metrics. A function restrict can be
+        inputted to restrict the set of models being plotted. A function group
+        can be used to group the results colour-wise.
+
+        Args
+            restrict (func):
+            group (func):
+        """
+        for i, name in enumerate(self.log_names):
+            if restrict_model(name):
+                label = name+' '
+                log = self.logs[i]
+                for dataset in log.data.keys():
+                    if restrict_data(dataset):
+                        label_name = data_name_parser(dataset) if data_name_parser else dataset
+                        line = color_group(name)
+
+                        plt.plot(log.steps, log.data[dataset][metric_name], line, 
+                                 label=label+label_name)
+                        plt.xlabel("Iterations")
+                        plt.ylabel(metric_name)
+
+        plt.legend()
+        plt.show()
+
+
