@@ -1,7 +1,8 @@
 from seq2seq.util.log import LogCollection
 
-def name_parser(filename):
-    return filename.split('/')[-2]
+def name_parser(filename, subdir):
+    splits = filename.split('/')
+    return splits[1]+'_'+splits[-2]
 
 log = LogCollection()
 log.add_log_from_folder('dumps', ext='.dump', name_parser=name_parser)
@@ -13,8 +14,8 @@ def func(input_str):
         return True
     return False
 
-def f128_256(input_str):
-    if 'E64xH128' in input_str:
+def f64_256(input_str):
+    if 'E64xH128' in input_str and 'run_1' in input_str:
         return True
     return False
 
@@ -23,7 +24,7 @@ def data_name_parser(input_str):
 
 
 def func2(input_str):
-    if 'new_compositions' in input_str:
+    if 'longer_compositions' in input_str:
         return True
     return False
 
@@ -44,4 +45,4 @@ def color_group(input_str):
 
     return c+l
 
-log.plot_metric('acc', restrict_model=f128_256, restrict_data=func2, data_name_parser=data_name_parser, color_group=color_group)
+log.plot_metric('acc', restrict_model=f64_256, restrict_data=func2, data_name_parser=data_name_parser, color_group=color_group)

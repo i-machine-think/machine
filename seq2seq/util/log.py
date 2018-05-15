@@ -116,7 +116,7 @@ class LogCollection(object):
             for fname in files:
                 f = os.path.join(subdir, fname)
 
-                if name_parser: log_name = name_parser(f)
+                if name_parser: log_name = name_parser(f, subdir)
                 else: log_name = f
 
                 if f.endswith(ext):
