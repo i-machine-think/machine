@@ -4,6 +4,7 @@ import torch
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 
 from collections import defaultdict
 
@@ -116,17 +117,20 @@ class LogCollection(object):
             for fname in files:
                 f = os.path.join(subdir, fname)
 
-                if name_parser: log_name = name_parser(f, subdir)
-                else: log_name = f
-
                 if f.endswith(ext):
+                    if name_parser: log_name = name_parser(f, subdir)
+                    else: log_name = f
+
                     self.logs.append(Log(f))
                     self.log_names.append(log_name)
+
+
 
     def plot_metric(self, metric_name, restrict_model=lambda x: True, 
                           restrict_data=lambda x: True,
                           data_name_parser=None,
-                          color_group=False):
+                          color_group=False,
+                          title='', eor=-1):
 
         """
         Plot all values for a specific metrics. A function restrict can be
@@ -137,21 +141,93 @@ class LogCollection(object):
             restrict (func):
             group (func):
         """
+
+        # import numpy as np
+
+        # colormap = plt.get_cmap('plasma')(np.linspace(0,1, 25))
+        fig, ax = plt.subplots(figsize=(12,10))
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        # ax.spines['bottom'].set_visible(False)
+        # ax.spines['left'].set_visible(False)
+        # ax.set_color_cycle(colormap)
+
         for i, name in enumerate(self.log_names):
             if restrict_model(name):
                 label = name+' '
                 log = self.logs[i]
                 for dataset in log.data.keys():
                     if restrict_data(dataset):
-                        label_name = data_name_parser(dataset) if data_name_parser else dataset
-                        line = color_group(name)
+                        label_name = data_name_parser(dataset, name) if data_name_parser else dataset
+                        steps = [step/float(232) for step in log.steps[:eor]]
+                        if color_group:
+                            ax.plot(steps,
+                                    log.data[dataset][metric_name][:eor],
+                                     color_group(name, dataset),
+                                     label=label+label_name, linewidth=3.0)
+                        else:
+                            ax.plot(steps,
+                                     log.data[dataset][metric_name][:eor],
+                                     label=label+label_name)
+                        ax.tick_params(axis='both', which='major', labelsize=18)
+                        plt.xlabel("Epochs", fontsize=18)
+                        plt.ylabel("Sequence Accuracy", fontsize=18)
+                        plt.title(title)
 
-                        plt.plot(log.steps, log.data[dataset][metric_name], line, 
-                                 label=label+label_name)
-                        plt.xlabel("Iterations")
-                        plt.ylabel(metric_name)
+        k_line  = mlines.Line2D([], [], color='black', linestyle='--', label='Baseline, training loss', linewidth=3)
+        k_line2 = mlines.Line2D([], [], color='black', label='Attention Guidance, training loss', linewidth=3)
+        m_line  = mlines.Line2D([], [], color='m', label='Baseline, test loss', linewidth=3)
+        g_line  = mlines.Line2D([], [], color='g', label='Attention Guidance, test loss', linewidth=3)
 
-        plt.legend()
+        baseline = mlines.Line2D([], [], color='black', linewidth=3.0, label='Baseline')
+        guided = mlines.Line2D([], [], color='g', linewidth=3.0, label='Guided')
+
+        # plt.legend([k_line, k_line2, m_line, g_line], ['Baseline training', 'Guided, training', 'Baseline, test', 'Guided, test'], fontsize=20) 
+        plt.legend([baseline, guided], ['Baseline', 'Guided'], fontsize=20)
         plt.show()
 
+        return fig
 
+    def find_highest_average(self, metric_name, find_basename,
+                             restrict_model=lambda x: True,
+                             restrict_data=lambda x: True,
+                             find_data_name=lambda x: x):
+        """
+        Find the highest average over runs, things that have the same
+        basename (as returned by 'find_basename') will be averaged.
+        """
+
+        data = dict()
+        counts = dict() 
+
+        for i, name in enumerate(self.log_names):
+            if restrict_model(name):
+                log = self.logs[i]
+                basename = find_basename(name)
+                for dataset in log.data.keys():
+                    dataname = find_data_name(dataset)
+                    if restrict_data(dataset):
+                        log_max = max(log.data[dataset][metric_name])
+                        if basename in data:
+                            if dataname in data[basename]:
+                                data[basename][dataname]+=log_max
+                                counts[basename][dataname]+=1
+                            else:
+                                data[basename][dataname]=log_max
+                                counts[basename][dataname]=1
+                        else:
+                            data[basename] = dict()
+                            data[basename][dataname]=log_max
+                            counts[basename] = dict()
+                            counts[basename][dataname]=1
+
+        # find max
+        max_scores = {}
+        for basename, datasets in data.items():
+            max_scores[basename] = dict()
+            for dataset in datasets:
+                c = counts[basename][dataset]
+                max_av = data[basename][dataset]/c
+                max_scores[basename][dataset] = max_av
+
+        return max_scores
