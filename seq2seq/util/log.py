@@ -145,7 +145,7 @@ class LogCollection(object):
         # import numpy as np
 
         # colormap = plt.get_cmap('plasma')(np.linspace(0,1, 25))
-        fig, ax = plt.subplots(figsize=(12,10))
+        fig, ax = plt.subplots(figsize=(13,11))
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         # ax.spines['bottom'].set_visible(False)
@@ -161,17 +161,17 @@ class LogCollection(object):
                         label_name = data_name_parser(dataset, name) if data_name_parser else dataset
                         steps = [step/float(232) for step in log.steps[:eor]]
                         if color_group:
-                            ax.plot(steps,
-                                    log.data[dataset][metric_name][:eor],
+                            steps, data = self.prune_data(steps, log.data[dataset][metric_name][:eor])
+                            ax.plot(steps, data,
                                      color_group(name, dataset),
                                      label=label+label_name, linewidth=3.0)
                         else:
                             ax.plot(steps,
                                      log.data[dataset][metric_name][:eor],
                                      label=label+label_name)
-                        ax.tick_params(axis='both', which='major', labelsize=18)
-                        plt.xlabel("Epochs", fontsize=18)
-                        plt.ylabel("Sequence Accuracy", fontsize=18)
+                        ax.tick_params(axis='both', which='major', labelsize=20)
+                        plt.xlabel("Epochs", fontsize=24)
+                        plt.ylabel("Sequence Accuracy", fontsize=24)
                         plt.title(title)
 
         k_line  = mlines.Line2D([], [], color='black', linestyle='--', label='Baseline, training loss', linewidth=3)
@@ -179,11 +179,11 @@ class LogCollection(object):
         m_line  = mlines.Line2D([], [], color='m', label='Baseline, test loss', linewidth=3)
         g_line  = mlines.Line2D([], [], color='g', label='Attention Guidance, test loss', linewidth=3)
 
-        baseline = mlines.Line2D([], [], color='black', linewidth=3.0, label='Baseline')
+        baseline = mlines.Line2D([], [], color='m', linewidth=3.0, label='Baseline')
         guided = mlines.Line2D([], [], color='g', linewidth=3.0, label='Guided')
 
-        # plt.legend([k_line, k_line2, m_line, g_line], ['Baseline training', 'Guided, training', 'Baseline, test', 'Guided, test'], fontsize=20) 
-        plt.legend([baseline, guided], ['Baseline', 'Guided'], fontsize=20)
+        # plt.legend([k_line, k_line2, m_line, g_line], ['Baseline training', 'Guided, training', 'Baseline, test', 'Guided, test'], fontsize=24) 
+        plt.legend([baseline, guided], ['Baseline', 'Guided'], fontsize=24)
         plt.show()
 
         return fig
@@ -231,3 +231,78 @@ class LogCollection(object):
                 max_scores[basename][dataset] = max_av
 
         return max_scores
+
+    def group_data(self, metric_name, find_basename,
+                   restrict_model=lambda x: True,
+                   restrict_data=lambda x: True,
+                   find_data_name=lambda x: x):
+
+        group_data = defaultdict(lambda: defaultdict(list))
+
+        for i, name in enumerate(self.log_names):
+            if not restrict_model(name):
+                continue
+
+            log = self.logs[i]
+
+            basename = find_basename(name)
+            for dataset in log.data.keys():
+                if not restrict_data(dataset):
+                    continue
+
+                dataname = find_data_name(dataset)
+                group_data[basename][dataname].append(log.data[dataset][metric_name])
+
+        return group_data
+
+    def plot_groups(self, metric_name, find_basename,
+                   restrict_model=lambda x: True,
+                   restrict_data=lambda x: True,
+                   find_data_name=lambda x: x,
+                   color_group=False, eor=-1):
+
+        import numpy as np
+
+        fig, ax = plt.subplots(figsize=(13,11))
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+        group_data = self.group_data(metric_name=metric_name,
+                                     restrict_model=restrict_model, 
+                                     find_basename=find_basename, 
+                                     find_data_name=find_data_name,
+                                     restrict_data=restrict_data)
+
+        steps = [step/float(232) for step in self.logs[0].steps[:eor]]
+        for model, data in group_data.items():
+            for dataset in data:
+                av = np.mean(data[dataset], axis=0)[:eor]
+                if color_group:
+                    print(dataset, model, color_group(model, dataset))
+                    ax.plot(steps, av, color_group(model, dataset), label=model+dataset, linewidth=3.0)
+                else:
+                    ax.plot(steps, av, dataset, label=model+dataset)
+
+
+        ax.tick_params(axis='both', which='major', labelsize=20)
+        plt.xlabel("Epochs", fontsize=24)
+        plt.ylabel("Loss", fontsize=24)
+        plt.legend()
+        plt.show()
+
+        return fig
+
+    def prune_data(self, steps, data):
+        return steps, data
+
+        i = 1
+        while i < len(data):
+            d1, d2 = data[i-1], data[i]
+            if d1-d2 > 1:
+                del steps[i]
+                del data[i]
+                continue
+
+            i+=1
+
+        return steps, data

@@ -5,8 +5,6 @@ def name_parser(filename, subdir):
     splits = filename.split('/')
     return splits[1]+'_'+splits[-2]
 
-log = LogCollection()
-log.add_log_from_folder('chosens_dump', ext='.dump', name_parser=name_parser)
 
 ############################
 # helper funcs
@@ -40,8 +38,14 @@ def full_focus(input_str):
         return True
     return False
 
+def pre_ff_baseline(input_str):
+    if 'hard' not in input_str:
+        return True
+    return False
+
 def ff_and_baseline(input_str):
-    if ('full_focus' in input_str or 'baseline' in input_str):
+    if ('focus' in input_str and 'baseline' in input_str) or \
+            ('focus' in input_str and 'hard' not in input_str):
         return True
     return False
 
@@ -65,7 +69,7 @@ def hard(input_str):
     return False
 
 def baseline(model):
-    if 'baseline' in model and 'full_focus' in model:
+    if 'baseline' in model and 'pre_rnn' in model:
             # and ('E16xH256' in model or 'E62xH256'  in model or 'E64xH512' in model):
         return True
     return False
@@ -86,6 +90,16 @@ def data_name_parser(data_name, model_name):
 
 def heldout_tables(input_str):
     if 'heldout_tables' in input_str:
+        return True
+    return False
+
+def heldout_inputs(input_str):
+    if 'heldout_inputs' in input_str:
+        return True
+    return False
+
+def heldout_compositions(input_str):
+    if 'heldout_compositions' in input_str:
         return True
     return False
 
@@ -111,7 +125,7 @@ def color_train(model_name, data_name):
 
     return c
 
-def color_group(model_name, data_name):
+def color_groups(model_name, data_name):
     if 'baseline' in model_name:
         c = 'b'
     elif 'hard' in model_name:
@@ -145,34 +159,85 @@ def find_data_name(dataset):
     return dataname
 
 def color_baseline(model_name, data_name):
-    print model_name
     if 'baseline' in model_name:
-        c = 'k'
+        c = 'm'
     else:
         c = 'g'
     return c
 
-max_averages = log.find_highest_average('seq_acc', find_basename=no_basename, find_data_name=find_data_name, restrict_data=not_longer)
+def color_conditions(model_name, data_name):
+    if 'baseline' in model_name:
+        c = 'm'
+    elif 'focus' in model_name:
+        c = 'b'
 
-for model in natural_sort(max_averages):
-    datadict = max_averages[model]
-    print('%s:\t%s' % (model, '\t'.join(['%s %.2f' % (d, datadict[d]) for d in datadict])))
+    if 'Train' in data_name:
+        c = 'k'
+        l = '-'
+    elif 'inputs' in data_name:
+        l = '-'
+    elif 'tables' in data_name:
+        l = '--'
+    elif 'compositions' in data_name and 'heldout' in data_name:
+        l = '-.'
+    elif 'new' in data_name:
+        l = ':'
 
-exit()
+    return c+l
 
+def color_size(model_name, data_name):
+    if 'H16' in model_name:
+        c = 'b'
+    elif 'H32' in model_name:
+        c = 'g'
+    elif 'H64' in model_name:
+        c = 'k'
+    elif 'H128' in model_name:
+        c = 'r'
+    elif 'H256' in model_name:
+        c = 'm'
+    elif 'H512' in model_name:
+        c = 'c'
+    return c
+
+
+# max_averages = log.find_highest_average('seq_acc', find_basename=no_basename, find_data_name=find_data_name, restrict_data=not_longer, restrict_model=baseline)
+# 
+# for model in natural_sort(max_averages):
+#     datadict = max_averages[model]
+#     print('%s:\t%s' % (model, '\t'.join(['%s %.2f' % (d, datadict[d]) for d in datadict])))
+# 
 # log.plot_metric('seq_acc', restrict_model=full_focus, restrict_data=not_longer)
+
+def plot_size_correlation():
+    fig = log.plot_metric('seq_acc', restrict_model=baseline, restrict_data=heldout_tables, data_name_parser=data_name_parser, color_group=color_size, eor=400)
+
 
 def plot_pre_and_baseline():
     # plot accuracy of all validation sets for best configuration for learned
     # attention (pre) and baseline models to show overfitting
-    fig = log.plot_metric('nll_loss', restrict_model=best_pre_and_baseline, restrict_data=not_longer, data_name_parser=data_name_parser, color_group=color_train, eor=300)
+    fig = log.plot_metric('nll_loss', restrict_model=best_pre_and_baseline, restrict_data=not_longer, data_name_parser=data_name_parser, color_group=color_train, eor=-165)
     fig.savefig('/home/dieuwke/Documents/papers/AttentionGuidance/figures/best_config_all_sets_loss.png')
+
+def plot_val_loss():
+    # plot accuracy of all validation sets for best configuration for learned
+    # attention (pre) and baseline models to show overfitting
+    fig = log.plot_metric('nll_loss', restrict_model=best_pre_and_baseline, restrict_data=heldout_tables, data_name_parser=data_name_parser, color_group=color_train)
+    # fig.savefig('/home/dieuwke/Documents/papers/AttentionGuidance/figures/best_config_all_sets_loss.png')
 
 def plot_heldout_tables_all():
     # all_models_heldout_tables
-    fig = log.plot_metric('seq_acc', restrict_model=pre_and_baseline, restrict_data=heldout_tables, color_group=color_baseline, eor=300)
+    fig = log.plot_metric('seq_acc', restrict_model=pre_and_baseline, restrict_data=heldout_tables, color_group=color_baseline, eor=-165)
     fig.savefig('/home/dieuwke/Documents/papers/AttentionGuidance/figures/all_models_heldout_tables.png')
 
 
+log = LogCollection()
+log.add_log_from_folder('chosens_dump', ext='.dump', name_parser=name_parser)
+
+fig = log.plot_groups('nll_loss', restrict_model=ff_and_baseline, find_basename=find_basename, find_data_name=find_data_name, restrict_data=not_longer, color_group=color_conditions, eor=-135)
+fig.savefig('/home/dieuwke/Documents/papers/AttentionGuidance/figures/lookup_loss_convergence.png')
 # plot_pre_and_baseline()
-plot_heldout_tables_all()
+
+# plot_heldout_tables_all()
+# plot_size_correlation()
+# plot_val_loss()
