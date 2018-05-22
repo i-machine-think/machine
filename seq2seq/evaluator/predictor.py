@@ -1,5 +1,4 @@
 import torch
-from torch.autograd import Variable
 
 class Predictor(object):
 
@@ -31,8 +30,7 @@ class Predictor(object):
             tgt_seq (list): list of tokens in target language as predicted
             by the pre-trained model
         """
-        src_id_seq = Variable(torch.LongTensor([self.src_vocab.stoi[tok] for tok in src_seq]),
-                              volatile=True).view(1, -1)
+        src_id_seq = torch.LongTensor([self.src_vocab.stoi[tok] for tok in src_seq]).view(1, -1)
         if torch.cuda.is_available():
             src_id_seq = src_id_seq.cuda()
 

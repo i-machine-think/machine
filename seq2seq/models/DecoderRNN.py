@@ -4,7 +4,6 @@ import numpy as np
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.nn.functional as F
 
 from .attention import Attention, HardGuidance
@@ -115,10 +114,10 @@ class DecoderRNN(BaseRNN):
         Performs one or multiple forward decoder steps.
         
         Args:
-            input_var (torch.autograd.Variable): Variable containing the input(s) to the decoder RNN
-            hidden (torch.autograd.Variable): Variable containing the previous decoder hidden state.
-            encoder_outputs (torch.autograd.Variable): Variable containing the target outputs of the decoder RNN
-            function (torch.autograd.Variable): Activation function over the last output of the decoder RNN at every time step.
+            input_var (torch.tensor): Variable containing the input(s) to the decoder RNN
+            hidden (torch.tensor): Variable containing the previous decoder hidden state.
+            encoder_outputs (torch.tensor): Variable containing the target outputs of the decoder RNN
+            function (torch.tensor): Activation function over the last output of the decoder RNN at every time step.
         
         Returns:
             predicted_softmax: The output softmax distribution at every time step of the decoder RNN
@@ -284,8 +283,7 @@ class DecoderRNN(BaseRNN):
         if inputs is None:
             if teacher_forcing_ratio > 0:
                 raise ValueError("Teacher forcing has to be disabled (set 0) when no inputs is provided.")
-            inputs = Variable(torch.LongTensor([self.sos_id] * batch_size),
-                                    volatile=True).view(batch_size, 1)
+            inputs = torch.LongTensor([self.sos_id] * batch_size).view(batch_size, 1)
             if torch.cuda.is_available():
                 inputs = inputs.cuda()
             max_length = self.max_length

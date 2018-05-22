@@ -2,7 +2,6 @@ import os
 import unittest
 
 import torch
-from torch.autograd import Variable
 from seq2seq.models.EncoderRNN import EncoderRNN
 
 class TestEncoderRNN(unittest.TestCase):
@@ -10,7 +9,7 @@ class TestEncoderRNN(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.vocab_size = 100
-        self.input_var = Variable(torch.randperm(self.vocab_size).view(10, 10))
+        self.input_var = torch.randperm(self.vocab_size).view(10, 10)
         self.lengths = [10] * 10
 
     def test_input_dropout_WITH_PROB_ZERO(self):

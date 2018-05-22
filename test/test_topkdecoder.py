@@ -69,7 +69,7 @@ class TestDecoderRNN(unittest.TestCase):
                 param.data.uniform_(-1, 1)
             topk_decoder = TopKDecoder(decoder, beam_size)
 
-            encoder_hidden = torch.autograd.Variable(torch.randn(1, batch_size, hidden_size))
+            encoder_hidden = torch.randn(1, batch_size, hidden_size)
             _, _, other_topk = topk_decoder(encoder_hidden=encoder_hidden)
 
             # Queue state:
@@ -90,7 +90,7 @@ class TestDecoderRNN(unittest.TestCase):
                         if inputs == eos:
                             batch_finished_seqs[b].append(time_batch_queue[t][b][k])
                             continue
-                        inputs = torch.autograd.Variable(torch.LongTensor([[inputs]]))
+                        inputs = torch.LongTensor([[inputs]])
                         decoder_outputs, hidden, _ = decoder.forward_step(inputs, hidden, None, F.log_softmax)
                         topk_score, topk = decoder_outputs[0].data.topk(beam_size)
                         for score, sym in zip(topk_score.tolist()[0], topk.tolist()[0]):
