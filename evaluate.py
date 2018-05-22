@@ -10,7 +10,7 @@ from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
 from seq2seq.dataset import SourceField, TargetField, AttentionField
 from seq2seq.evaluator import Evaluator
-from seq2seq.trainer import SupervisedTrainer, LookupTablePonderer
+from seq2seq.trainer import SupervisedTrainer
 from seq2seq.util.checkpoint import Checkpoint
 from seq2seq.trainer import SupervisedTrainer
 
@@ -26,8 +26,6 @@ parser.add_argument('--test_data', help='Path to test data')
 parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
 parser.add_argument('--max_len', type=int, help='Maximum sequence length', default=50)
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
-
-parser.add_argument('--pondering', action='store_true')
 
 parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
 parser.add_argument('--attention_method', choices=['dot', 'mlp', 'hard'], default=None)
@@ -109,17 +107,13 @@ if torch.cuda.is_available():
     for loss in losses:
         loss.cuda()
 
-# Initialize ponderer and attention guidance
-ponderer = None
 data_func = SupervisedTrainer.get_batch_data
-if opt.pondering:
-    ponderer = LookupTablePonderer(input_eos_used=opt.use_input_eos, output_eos_used=output_eos_used)
 
 #################################################################################
 # Evaluate model on test set
 
 evaluator = Evaluator(batch_size=opt.batch_size, loss=losses, metrics=metrics)
-losses, metrics = evaluator.evaluate(model=seq2seq, data=test, get_batch_data=data_func, ponderer=ponderer)
+losses, metrics = evaluator.evaluate(model=seq2seq, data=test, get_batch_data=data_func)
 
 total_loss, log_msg, _ = SupervisedTrainer.get_losses(losses, metrics, 0)
 

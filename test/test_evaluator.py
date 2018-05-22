@@ -46,7 +46,7 @@ class TestPredictor(unittest.TestCase):
              patch('seq2seq.metrics.WordAccuracy.eval_batch', return_value=None), \
              patch('seq2seq.metrics.WordAccuracy.eval_batch', return_value=None), \
              patch('seq2seq.loss.NLLLoss.eval_batch', return_value=None):
-            evaluator.evaluate(self.seq2seq, self.dataset, trainer.get_batch_data, ponderer=None)
+            evaluator.evaluate(self.seq2seq, self.dataset, trainer.get_batch_data)
 
         num_batches = int(math.ceil(len(self.dataset) / evaluator.batch_size))
         expected_calls = [call.eval()] + num_batches * [call.call(ANY, ANY, ANY)]

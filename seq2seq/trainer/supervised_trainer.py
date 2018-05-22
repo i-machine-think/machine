@@ -64,11 +64,6 @@ class SupervisedTrainer(object):
         # Forward propagation
         decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths, target_variable, teacher_forcing_ratio=teacher_forcing_ratio)
 
-        if self.ponderer is not None:
-            decoder_outputs = self.ponderer.mask_silent_outputs(input_variable, input_lengths, decoder_outputs)
-            decoder_targets = self.ponderer.mask_silent_targets(input_variable, input_lengths, target_variable['decoder_output'])
-            target_variable['decoder_output'] = decoder_targets
-
         losses = self.evaluator.compute_batch_loss(decoder_outputs, decoder_hidden, other, target_variable)
         
         # Backward propagation
@@ -105,7 +100,7 @@ class SupervisedTrainer(object):
 
         # store initial model to be sure at least one model is stored
         val_data = dev_data or data
-        losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data, ponderer=self.ponderer)
+        losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data)
 
         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
         print(log_msg)
@@ -154,7 +149,7 @@ class SupervisedTrainer(object):
                         print_loss_total[name] = 0
 
                     m_logs = {}
-                    train_losses, train_metrics = self.evaluator.evaluate(model, data, self.get_batch_data, ponderer=self.ponderer)
+                    train_losses, train_metrics = self.evaluator.evaluate(model, data, self.get_batch_data)
                     train_loss, train_log_msg, model_name = self.get_losses(train_losses, train_metrics, step)
                     logs.write_to_log('Train', train_losses, train_metrics, step)
                     logs.update_step(step)
@@ -163,7 +158,7 @@ class SupervisedTrainer(object):
 
                     # compute vals for all monitored sets
                     for m_data in monitor_data:
-                        losses, metrics = self.evaluator.evaluate(model, monitor_data[m_data], self.get_batch_data, ponderer=self.ponderer)
+                        losses, metrics = self.evaluator.evaluate(model, monitor_data[m_data], self.get_batch_data)
                         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
                         m_logs[m_data] = log_msg
                         logs.write_to_log(m_data, losses, metrics, step)
@@ -179,7 +174,7 @@ class SupervisedTrainer(object):
                 # check if new model should be saved
                 if step % self.checkpoint_every == 0 or step == total_steps:
                     # compute dev loss
-                    losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data, ponderer=self.ponderer)
+                    losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data)
                     total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
 
                     max_eval_loss = max(loss_best)
@@ -208,7 +203,7 @@ class SupervisedTrainer(object):
             log_msg = "Finished epoch %d: Train %s" % (epoch, loss_msg)
 
             if dev_data is not None:
-                losses, metrics = self.evaluator.evaluate(model, dev_data, self.get_batch_data, ponderer=self.ponderer)
+                losses, metrics = self.evaluator.evaluate(model, dev_data, self.get_batch_data)
                 loss_total, log_, model_name = self.get_losses(losses, metrics, step)
 
                 self.optimizer.update(loss_total, epoch)    # TODO check if this makes sense!
@@ -221,7 +216,7 @@ class SupervisedTrainer(object):
 
         return logs
 
-    def train(self, model, data, ponderer=None, num_epochs=5,
+    def train(self, model, data, num_epochs=5,
               resume=False, dev_data=None, 
               monitor_data={}, optimizer=None,
               teacher_forcing_ratio=0,
@@ -274,8 +269,6 @@ class SupervisedTrainer(object):
                                        max_grad_norm=5)
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))
-
-        self.ponderer = ponderer
 
         logs = self._train_epoches(data, model, num_epochs,
                             start_epoch, step, dev_data=dev_data,

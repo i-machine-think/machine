@@ -12,7 +12,7 @@ import pickle
 from collections import OrderedDict
 
 import seq2seq
-from seq2seq.trainer import SupervisedTrainer, LookupTablePonderer
+from seq2seq.trainer import SupervisedTrainer
 from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
 from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
 from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
@@ -44,7 +44,6 @@ parser.add_argument('--tgt_vocab', type=int, help='target vocabulary size', defa
 parser.add_argument('--dropout_p_encoder', type=float, help='Dropout probability for the encoder', default=0.2)
 parser.add_argument('--dropout_p_decoder', type=float, help='Dropout probability for the decoder', default=0.2)
 parser.add_argument('--teacher_forcing_ratio', type=float, help='Teacher forcing ratio', default=0.2)
-parser.add_argument('--pondering', action='store_true')
 parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
 parser.add_argument('--attention_method', choices=['dot', 'mlp', 'concat', 'hard'], default=None)
 parser.add_argument('--use_attention_loss', action='store_true')
@@ -229,10 +228,6 @@ if torch.cuda.is_available():
 
 checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resume else None
 
-ponderer = None
-if opt.pondering:
-    ponderer = LookupTablePonderer(input_eos_used=opt.use_input_eos, output_eos_used=use_output_eos)
-
 # create trainer
 t = SupervisedTrainer(loss=loss, metrics=metrics, 
                       loss_weights=loss_weights,
@@ -244,7 +239,6 @@ t = SupervisedTrainer(loss=loss, metrics=metrics,
 seq2seq, logs = t.train(seq2seq, train, 
                   num_epochs=opt.epochs, dev_data=dev,
                   monitor_data=monitor_data,
-                  ponderer=ponderer,
                   optimizer=opt.optim,
                   teacher_forcing_ratio=opt.teacher_forcing_ratio,
                   learning_rate=opt.lr,

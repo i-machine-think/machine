@@ -82,7 +82,7 @@ class Evaluator(object):
 
         return losses
 
-    def evaluate(self, model, data, get_batch_data, ponderer):
+    def evaluate(self, model, data, get_batch_data):
         """ Evaluate a model on given dataset and return performance.
 
         Args:
@@ -118,12 +118,6 @@ class Evaluator(object):
 
             # apply metrics over entire sequence
             metrics = self.update_batch_metrics(metrics, other, target_variable)
-
-            # mask out silent steps in case of pondering
-            if ponderer is not None:
-                decoder_outputs = ponderer.mask_silent_outputs(input_variable, input_lengths, decoder_outputs)
-                decoder_targets = ponderer.mask_silent_targets(input_variable, input_lengths, target_variable['decoder_output'])
-                target_variable['decoder_output'] = decoder_targets
 
             losses = self.update_loss(losses, decoder_outputs, decoder_hidden, other, target_variable)
 

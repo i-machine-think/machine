@@ -47,18 +47,6 @@ echo "\n\nTest training without dev set"
 python train_model.py --train $TRAIN_PATH --output_dir $EXPT_DIR --print_every 10 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY
 ERR=$((ERR+$?)); EX=$((EX+1))
 
-echo "\n\nTest ponderer"
-python train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --pondering --epoch $EPOCH --save_every $CP_EVERY --batch_size 6 --ignore_output_eos
-ERR=$((ERR+$?)); EX=$((EX+1))
-
-echo "\n\nTest evaluate from ponderer without ponderer"
-python evaluate.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) --test_data $LOOKUP --batch_size 15 --ignore_output_eos
-ERR=$((ERR+$?)); EX=$((EX+1))
-
-echo "\n\nTest evaluate from ponderer with ponderer"
-python evaluate.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) --test_data $LOOKUP --batch_size 15 --pondering --ignore_output_eos
-ERR=$((ERR+$?)); EX=$((EX+1))
-
 # test with attention
 echo "\n\nTest training with pre_rnn attention and LSTM cell"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'dot' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 1
