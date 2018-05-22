@@ -32,7 +32,6 @@ parser.add_argument('--attention_method', choices=['dot', 'mlp', 'hard'], defaul
 parser.add_argument('--use_attention_loss', action='store_true')
 parser.add_argument('--scale_attention_loss', type=float, default=1.)
 
-parser.add_argument('--use_input_eos', action='store_true', help='EOS symbol in input sequences is not used by default. Use this flag to enable.')
 parser.add_argument('--ignore_output_eos', action='store_true', help='Ignore end of sequence token during training and evaluation')
 
 opt = parser.parse_args()
@@ -42,9 +41,6 @@ if not opt.attention and opt.attention_method:
 
 if opt.attention and not opt.attention_method:
     parser.error("Attention turned on, but no attention method provided")
-
-if opt.attention_method == 'hard' and opt.ignore_output_eos == opt.use_input_eos:
-    parser.error("If using hard attention method, input and output should both have EOS, or neither")
 
 if opt.use_attention_loss and opt.attention_method == 'hard':
     parser.warning("Did you mean to use attention loss in combination with hard attention method?")
@@ -67,7 +63,7 @@ output_vocab = checkpoint.output_vocab
 
 ############################################################################
 # Prepare dataset and loss
-src = SourceField(opt.use_input_eos)
+src = SourceField()
 tgt = TargetField(output_eos_used)
 
 tabular_data_fields = [('src', src), ('tgt', tgt)]
@@ -80,7 +76,6 @@ src.vocab = input_vocab
 tgt.vocab = output_vocab
 tgt.eos_id = tgt.vocab.stoi[tgt.SYM_EOS]
 tgt.sos_id = tgt.vocab.stoi[tgt.SYM_SOS]
-src.eos_id = src.vocab.stoi[src.SYM_EOS]
 max_len = opt.max_len
 
 def len_filter(example):

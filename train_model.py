@@ -53,7 +53,6 @@ parser.add_argument('--full_focus', action='store_true')
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
 parser.add_argument('--eval_batch_size', type=int, help='Batch size', default=128)
 parser.add_argument('--lr', type=float, help='Learning rate, recommended settings.\nrecommended settings: adam=0.001 adadelta=1.0 adamax=0.002 rmsprop=0.01 sgd=0.1', default=0.001)
-parser.add_argument('--use_input_eos', action='store_true', help='EOS symbol in input sequences is not used by default. Use this flag to enable.')
 parser.add_argument('--ignore_output_eos', action='store_true', help='Ignore end of sequence token during training and evaluation')
 
 parser.add_argument('--load_checkpoint', help='The name of the checkpoint to load, usually an encoded time string')
@@ -80,9 +79,6 @@ if not opt.attention and opt.attention_method:
 if opt.attention and not opt.attention_method:
     parser.error("Attention turned on, but no attention method provided")
 
-if opt.attention_method == 'hard' and opt.ignore_output_eos == opt.use_input_eos:
-    parser.error("If using hard attention method, input and output should both have EOS, or neither")
-
 if opt.use_attention_loss and opt.attention_method == 'hard':
     parser.error("Can't use attention loss in combination with non-differentiable hard attention method.")
 
@@ -102,7 +98,7 @@ if opt.attention:
 ############################################################################
 # Prepare dataset
 use_output_eos = not opt.ignore_output_eos
-src = SourceField(use_input_eos=opt.use_input_eos)
+src = SourceField()
 tgt = TargetField(include_eos=use_output_eos)
 
 tabular_data_fields = [('src', src), ('tgt', tgt)]
@@ -151,7 +147,6 @@ if opt.load_checkpoint is not None:
 
     input_vocab = checkpoint.input_vocab
     src.vocab = input_vocab
-    src.eos_id = src.vocab.stoi[src.SYM_EOS]
 
     output_vocab = checkpoint.output_vocab
     tgt.vocab = output_vocab

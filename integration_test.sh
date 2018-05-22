@@ -57,11 +57,11 @@ python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest training with pre-rnn hard attention with EOS"
-python train_model.py --train $LOOKUP_HARD_ATTN_WITH_EOS --dev $LOOKUP_HARD_ATTN_WITH_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'pre-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'hard' --use_input_eos
+python train_model.py --train $LOOKUP_HARD_ATTN_WITH_EOS --dev $LOOKUP_HARD_ATTN_WITH_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'pre-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'hard'
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest training with post-rnn hard attention with EOS"
-python train_model.py --train $LOOKUP_HARD_ATTN_WITH_EOS --dev $LOOKUP_HARD_ATTN_WITH_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'post-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'hard'  --use_input_eos
+python train_model.py --train $LOOKUP_HARD_ATTN_WITH_EOS --dev $LOOKUP_HARD_ATTN_WITH_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'post-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'hard'
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest training with hard attention without EOS"
@@ -69,11 +69,11 @@ python train_model.py --train $LOOKUP_HARD_ATTN_WITHOUT_EOS --dev $LOOKUP_HARD_A
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest training with pre-rnn learned hard attention with EOS"
-python train_model.py --train $LOOKUP_HARD_ATTN_WITH_EOS --dev $LOOKUP_HARD_ATTN_WITH_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'pre-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'mlp'  --use_input_eos --use_attention_loss --scale_attention_loss 1
+python train_model.py --train $LOOKUP_HARD_ATTN_WITH_EOS --dev $LOOKUP_HARD_ATTN_WITH_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'pre-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'mlp' --use_attention_loss --scale_attention_loss 1
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest training with post-rnn learned hard attention with EOS"
-python train_model.py --train $LOOKUP_HARD_ATTN_WITH_EOS --dev $LOOKUP_HARD_ATTN_WITH_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'post-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'mlp'  --use_input_eos --use_attention_loss --scale_attention_loss 1
+python train_model.py --train $LOOKUP_HARD_ATTN_WITH_EOS --dev $LOOKUP_HARD_ATTN_WITH_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'post-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'mlp' --use_attention_loss --scale_attention_loss 1
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest training with learned hard attention without EOS"
