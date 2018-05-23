@@ -16,7 +16,8 @@ except NameError:
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--checkpoint_path', help='Give the checkpoint path from which to load the model')
-parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
+parser.add_argument('--cuda_device', default=0, type=int, help='Set cuda device to use')
+parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
 
 opt = parser.parse_args()
 
@@ -37,6 +38,9 @@ output_vocab = checkpoint.output_vocab
 # Generate predictor
 
 predictor = Predictor(seq2seq, input_vocab, output_vocab)
+
+if opt.debug:
+    exit()
 
 while True:
         seq_str = raw_input("Type in a source sequence:")
