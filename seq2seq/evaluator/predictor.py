@@ -1,5 +1,7 @@
 import torch
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 class Predictor(object):
 
     def __init__(self, model, src_vocab, tgt_vocab):
@@ -11,10 +13,8 @@ class Predictor(object):
             src_vocab (seq2seq.dataset.vocabulary.Vocabulary): source sequence vocabulary
             tgt_vocab (seq2seq.dataset.vocabulary.Vocabulary): target sequence vocabulary
         """
-        if torch.cuda.is_available():
-            self.model = model.cuda()
-        else:
-            self.model = model.cpu()
+        self.model = model.to(device)
+
         self.model.eval()
         self.src_vocab = src_vocab
         self.tgt_vocab = tgt_vocab
@@ -30,9 +30,7 @@ class Predictor(object):
             tgt_seq (list): list of tokens in target language as predicted
             by the pre-trained model
         """
-        src_id_seq = torch.LongTensor([self.src_vocab.stoi[tok] for tok in src_seq]).view(1, -1)
-        if torch.cuda.is_available():
-            src_id_seq = src_id_seq.cuda()
+        src_id_seq = torch.tensor([self.src_vocab.stoi[tok] for tok in src_seq], dtype=torch.long, device=device).view(1, -1)
 
         softmax_list, _, other = self.model(src_id_seq, [len(src_seq)])
         length = other['length'][0]

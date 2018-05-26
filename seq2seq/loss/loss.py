@@ -104,6 +104,9 @@ class Loss(object):
     def cuda(self):
         self.criterion.cuda()
 
+    def to(self, device):
+        self.criterion.to(device)
+
     def backward(self, retain_graph=False):
         """ Backpropagate the computed loss.
         """

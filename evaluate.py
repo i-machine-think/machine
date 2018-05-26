@@ -14,6 +14,8 @@ from seq2seq.trainer import SupervisedTrainer
 from seq2seq.util.checkpoint import Checkpoint
 from seq2seq.trainer import SupervisedTrainer
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 try:
     raw_input          # Python 2
 except NameError:
@@ -55,8 +57,8 @@ if opt.use_attention_loss and opt.attention_method == 'hard':
     parser.warning("Did you mean to use attention loss in combination with hard attention method?")
 
 if torch.cuda.is_available():
-        logging.info("Cuda device set to %i" % opt.cuda_device)
-        torch.cuda.set_device(opt.cuda_device)
+    logging.info("Cuda device set to %i" % opt.cuda_device)
+    torch.cuda.set_device(opt.cuda_device)
 
 #################################################################################
 # load model
@@ -103,9 +105,8 @@ if opt.use_attention_loss:
     losses.append(AttentionLoss(ignore_index=IGNORE_INDEX))
     loss_weights.append(opt.scale_attention_loss)
 
-if torch.cuda.is_available():
-    for loss in losses:
-        loss.cuda()
+for loss in losses:
+    loss.to(device)
 
 metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad), FinalTargetAccuracy(ignore_index=pad, eos_id=tgt.eos_id)]
 # Since we need the actual tokens to determine k-grammar accuracy,

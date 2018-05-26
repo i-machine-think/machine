@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 class Metric(object):
     """ Base class for encapsulation of the metrics functions.
 
@@ -186,8 +188,8 @@ class SequenceAccuracy(Metric):
         batch_size = targets.size(0)
 
         # compute sequence accuracy over batch
-        match_per_seq = torch.zeros(batch_size).type(torch.FloatTensor)
-        total_per_seq = torch.zeros(batch_size).type(torch.FloatTensor)
+        match_per_seq = torch.zeros(batch_size, dtype=torch.float, device=device)
+        total_per_seq = torch.zeros(batch_size, dtype=torch.float, device=device)
 
         for step, step_output in enumerate(outputs):
             target = targets[:, step + 1]
@@ -196,8 +198,8 @@ class SequenceAccuracy(Metric):
 
             correct_per_seq = (outputs[step].view(-1).eq(target)*non_padding)
             # correct_per_seq = (outputs[step].view(-1).eq(target)*non_padding).data
-            match_per_seq += correct_per_seq.type(torch.FloatTensor)
-            total_per_seq += non_padding.type(torch.FloatTensor)
+            match_per_seq += correct_per_seq.float()
+            total_per_seq += non_padding.float()
 
         self.seq_match += match_per_seq.eq(total_per_seq).long().sum()
         self.seq_total += total_per_seq.shape[0]

@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def _inflate(tensor, times, dim):
         """
         Given a tensor, 'inflates' it along the given dimension by replicating each slice specified number of times (in-place)
@@ -88,7 +90,7 @@ class TopKDecoder(torch.nn.Module):
         inputs, batch_size, max_length = self.rnn._validate_args(inputs, encoder_hidden, encoder_outputs,
                                                                  function, teacher_forcing_ratio)
 
-        self.pos_index = (torch.LongTensor(range(batch_size)) * self.k).view(-1, 1)
+        self.pos_index = (torch.tensor(range(batch_size), dtype=torch.long, device=device) * self.k).view(-1, 1)
 
         # Inflate the initial hidden states to be of size: b*k x h
         encoder_hidden = self.rnn._init_state(encoder_hidden)
@@ -108,13 +110,12 @@ class TopKDecoder(torch.nn.Module):
 
         # Initialize the scores; for the first step,
         # ignore the inflated copies to avoid duplicate entries in the top k
-        sequence_scores = torch.Tensor(batch_size * self.k, 1)
-        sequence_scores.fill_(-float('Inf'))
-        sequence_scores.index_fill_(0, torch.LongTensor([i * self.k for i in range(0, batch_size)]), 0.0)
+        sequence_scores = torch.full([batch_size * self.k, 1], fill_value=-float('inf'), device=device)
+        sequence_scores.index_fill_(0, torch.tensor([i * self.k for i in range(0, batch_size)], dtype=torch.long, device=device), 0.0)
         sequence_scores = sequence_scores
 
         # Initialize the input vector
-        input_var = torch.transpose(torch.LongTensor([[self.SOS] * batch_size * self.k]), 0, 1)
+        input_var = torch.transpose(torch.tensor([[self.SOS] * batch_size * self.k], dtype=torch.long, device=device), 0, 1)
 
         # Store decisions for backtracking
         stored_outputs = list()
@@ -222,9 +223,9 @@ class TopKDecoder(torch.nn.Module):
         # the last hidden state of decoding.
         if lstm:
             state_size = nw_hidden[0][0].size()
-            h_n = tuple([torch.zeros(state_size), torch.zeros(state_size)])
+            h_n = tuple([torch.zeros(state_size, device=device), torch.zeros(state_size, device=device)])
         else:
-            h_n = torch.zeros(nw_hidden[0].size())
+            h_n = torch.zeros(nw_hidden[0].size(), device=device)
         l = [[self.rnn.max_length] * self.k for _ in range(b)]  # Placeholder for lengths of top-k sequences
                                                                 # Similar to `h_n`
 

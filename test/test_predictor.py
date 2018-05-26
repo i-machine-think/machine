@@ -1,6 +1,7 @@
 import os
 import unittest
 
+import torch
 import torchtext
 
 from seq2seq.evaluator import Predictor

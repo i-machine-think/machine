@@ -9,11 +9,7 @@ import torch.nn.functional as F
 from .attention import Attention, HardGuidance
 from .baseRNN import BaseRNN
 
-if torch.cuda.is_available():
-    import torch.cuda as device
-else:
-    import torch as device
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class DecoderRNN(BaseRNN):
     """
@@ -284,9 +280,8 @@ class DecoderRNN(BaseRNN):
         if inputs is None:
             if teacher_forcing_ratio > 0:
                 raise ValueError("Teacher forcing has to be disabled (set 0) when no inputs is provided.")
-            inputs = torch.LongTensor([self.sos_id] * batch_size).view(batch_size, 1)
-            if torch.cuda.is_available():
-                inputs = inputs.cuda()
+            inputs = torch.tensor([self.sos_id] * batch_size, dtype=torch.long, device=device).view(batch_size, 1)
+
             max_length = self.max_length
         else:
             max_length = inputs.size(1) - 1 # minus the start of sequence symbol
