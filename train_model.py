@@ -207,13 +207,13 @@ output_vocabulary = output_vocab.itos
 
 # Prepare loss and metrics
 pad = output_vocab.stoi[tgt.pad_token]
-loss = [NLLLoss(ignore_index=pad)]
+losses = [NLLLoss(ignore_index=pad)]
 # loss_weights = [1.]
 loss_weights = [float(opt.xent_loss)]
 
 
 if opt.use_attention_loss:
-    loss.append(AttentionLoss(ignore_index=IGNORE_INDEX))
+    losses.append(AttentionLoss(ignore_index=IGNORE_INDEX))
     loss_weights.append(opt.scale_attention_loss)
 
 if torch.cuda.is_available():
@@ -236,7 +236,7 @@ metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad), F
 checkpoint_path = os.path.join(opt.output_dir, opt.load_checkpoint) if opt.resume else None
 
 # create trainer
-t = SupervisedTrainer(loss=loss, metrics=metrics, 
+t = SupervisedTrainer(loss=losses, metrics=metrics, 
                       loss_weights=loss_weights,
                       batch_size=opt.batch_size,
                       eval_batch_size=opt.eval_batch_size,
