@@ -60,17 +60,16 @@ class Attention(nn.Module):
         input_size = encoder_states.size(1)
 
         # compute mask
-        mask = encoder_states.eq(0.)[:, :, :1].transpose(1, 2).data
+        mask = encoder_states.eq(0.)[:, :, :1].transpose(1, 2)
 
         # Compute attention vals
         attn = self.method(decoder_states, encoder_states, **attention_method_kwargs)
-        attn_before = attn.data.clone()
 
         if self.mask is not None:
-            attn.data.masked_fill_(self.mask, -float('inf'))
+            attn.masked_fill_(self.mask, -float('inf'))
 
         # apply local mask
-        attn.data.masked_fill_(mask, -float('inf'))
+        attn.masked_fill_(mask, -float('inf'))
 
         attn = F.softmax(attn.view(-1, input_size), dim=1).view(batch_size, -1, input_size)
 
@@ -214,7 +213,7 @@ class HardGuidance(nn.Module):
         batch_size, enc_seqlen, _ = encoder_states.size()
         _,          dec_seqlen, _ = decoder_states.size()
 
-        attention_indices = provided_attention.data.clone()
+        attention_indices = provided_attention.detach()
         # If we have shorter examples in a batch, attend the PAD outputs to the first encoder state
         attention_indices.masked_fill_(attention_indices.eq(-1), 0)
 
