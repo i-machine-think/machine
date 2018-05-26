@@ -286,6 +286,15 @@ class SupervisedTrainer(object):
         # If available, also get provided attentive guidance data
         if hasattr(batch, seq2seq.attn_field_name):
             attention_target = getattr(batch, seq2seq.attn_field_name)
+
+            # When we ignore output EOS, the seqeunce target will not contain the EOS, but if present
+            # in the data, the attention indices might still. We should remove this.
+            target_length = target_variables['decoder_output'].size(1)
+            attn_length = attention_target.size(1)
+
+            if attn_length == target_length + 1:
+                attention_target = attention_target[:, :-1]
+
             target_variables['attention_target'] = attention_target
 
         return input_variables, input_lengths, target_variables

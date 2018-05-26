@@ -223,9 +223,10 @@ class DecoderRNN(BaseRNN):
                 symbols = decode(di, step_output, step_attn)
 
         else:
-            # Remove EOS token of the longest output target in the batch. We don't have to run the last decoder step where the teacher forcing input is EOS
+            # Remove last token of the longest output target in the batch. We don't have to run the last decoder step where the teacher forcing input is EOS (or the last output)
             # It still is run for shorter output targets in the batch
             decoder_input = inputs[:, :-1]
+
             # Forward step without unrolling
             if self.attention and isinstance(self.attention.method, HardGuidance):
                 attention_method_kwargs['step'] = -1
