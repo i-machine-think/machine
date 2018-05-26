@@ -80,6 +80,10 @@ echo "\n\nTest training with learned hard attention without EOS"
 python train_model.py --train $LOOKUP_HARD_ATTN_WITHOUT_EOS --dev $LOOKUP_HARD_ATTN_WITHOUT_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'pre-rnn' --epoch $EPOCH --save_every $CP_EVERY --attention_method 'mlp'  --ignore_output_eos --use_attention_loss --scale_attention_loss 1
 ERR=$((ERR+$?)); EX=$((EX+1))
 
+echo "\n\nTest training with hard attention, and rolled RNN with EOS in data, but EOS ignored"
+python train_model.py --train $LOOKUP_HARD_ATTN_WITH_EOS --dev $LOOKUP_HARD_ATTN_WITH_EOS --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL2 --attention 'post-rnn' --teacher_forcing_ratio 1 --epoch $EPOCH --save_every $CP_EVERY --attention_method 'hard'  --ignore_output_eos
+ERR=$((ERR+$?)); EX=$((EX+1))
+
 echo "\n\nTest training with post-rnn attention and LSTM cell"
 python train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'post-rnn' --attention_method 'dot' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5
 ERR=$((ERR+$?)); EX=$((EX+1))
