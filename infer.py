@@ -18,11 +18,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--checkpoint_path', help='Give the checkpoint path from which to load the model')
 parser.add_argument('--cuda_device', default=0, type=int, help='Set cuda device to use')
 parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('--log-level', default='info', help='Logging level.')
 
 opt = parser.parse_args()
 
+LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
+logging.info(opt)
+
+
 if torch.cuda.is_available():
-        print("Cuda device set to %i" % opt.cuda_device)
+        logging.info("Cuda device set to %i" % opt.cuda_device)
         torch.cuda.set_device(opt.cuda_device)
 
 #################################################################################

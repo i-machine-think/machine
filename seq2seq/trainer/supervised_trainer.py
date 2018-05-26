@@ -103,7 +103,7 @@ class SupervisedTrainer(object):
         losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data)
 
         total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
-        print(log_msg)
+        log.info(log_msg)
 
         logs = Log()
         loss_best = top_k*[total_loss]
@@ -118,7 +118,7 @@ class SupervisedTrainer(object):
 
 
         for epoch in range(start_epoch, n_epochs + 1):
-            log.debug("Epoch: %d, Step: %d" % (epoch, step))
+            log.info("Epoch: %d, Step: %d" % (epoch, step))
 
             batch_generator = batch_iterator.__iter__()
 

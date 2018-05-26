@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import time
 import shutil
+import logging
 
 import torch
 import dill
@@ -90,7 +91,9 @@ class Checkpoint(object):
         Returns:
             checkpoint (Checkpoint): checkpoint object with fields copied from those stored on disk
         """
-        print("Loading checkpoints from {}".format(path))
+        logger = logging.getLogger(__name__)
+        logger.info("Loading checkpoints from {}".format(path))
+        
         if torch.cuda.is_available():
             resume_checkpoint = torch.load(os.path.join(path, cls.TRAINER_STATE_NAME))
             model = torch.load(os.path.join(path, cls.MODEL_NAME))

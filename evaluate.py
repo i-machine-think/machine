@@ -26,6 +26,7 @@ parser.add_argument('--test_data', help='Path to test data')
 parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
 parser.add_argument('--max_len', type=int, help='Maximum sequence length', default=50)
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
+parser.add_argument('--log-level', default='info', help='Logging level.')
 
 parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
 parser.add_argument('--attention_method', choices=['dot', 'mlp', 'hard'], default=None)
@@ -36,6 +37,14 @@ parser.add_argument('--ignore_output_eos', action='store_true', help='Ignore end
 
 opt = parser.parse_args()
 
+LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
+logging.info(opt)
+
+IGNORE_INDEX=-1
+output_eos_used= not opt.ignore_output_eos
+
+
 if not opt.attention and opt.attention_method:
     parser.error("Attention method provided, but attention is not turned on")
 
@@ -45,11 +54,8 @@ if opt.attention and not opt.attention_method:
 if opt.use_attention_loss and opt.attention_method == 'hard':
     parser.warning("Did you mean to use attention loss in combination with hard attention method?")
 
-IGNORE_INDEX=-1
-output_eos_used= not opt.ignore_output_eos
-
 if torch.cuda.is_available():
-        print("Cuda device set to %i" % opt.cuda_device)
+        logging.info("Cuda device set to %i" % opt.cuda_device)
         torch.cuda.set_device(opt.cuda_device)
 
 #################################################################################
@@ -124,4 +130,4 @@ losses, metrics = evaluator.evaluate(model=seq2seq, data=test, get_batch_data=da
 
 total_loss, log_msg, _ = SupervisedTrainer.get_losses(losses, metrics, 0)
 
-print(log_msg)
+logging.info(log_msg)

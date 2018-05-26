@@ -64,8 +64,13 @@ parser.add_argument('--write-logs', help='Specify file to write logs to after tr
 parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
 
 opt = parser.parse_args()
-
 IGNORE_INDEX=-1
+use_output_eos = not opt.ignore_output_eos
+
+LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
+logging.info(opt)
+
 
 if opt.resume and not opt.load_checkpoint:
     parser.error('load_checkpoint argument is required to resume training from checkpoint')
@@ -82,22 +87,17 @@ if opt.attention and not opt.attention_method:
 if opt.use_attention_loss and opt.attention_method == 'hard':
     parser.error("Can't use attention loss in combination with non-differentiable hard attention method.")
 
-LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
-logging.info(opt)
-
 if torch.cuda.is_available():
-        print("Cuda device set to %i" % opt.cuda_device)
+        logging.info("Cuda device set to %i" % opt.cuda_device)
         torch.cuda.set_device(opt.cuda_device)
 
 if opt.attention:
     if not opt.attention_method:
-        print("No attention method provided. Using DOT method.")
+        logging.info("No attention method provided. Using DOT method.")
         opt.attention_method = 'dot'
 
 ############################################################################
 # Prepare dataset
-use_output_eos = not opt.ignore_output_eos
 src = SourceField()
 tgt = TargetField(include_eos=use_output_eos)
 
