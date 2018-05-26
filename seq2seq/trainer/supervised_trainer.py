@@ -280,7 +280,8 @@ class SupervisedTrainer(object):
     @staticmethod
     def get_batch_data(batch):
         input_variables, input_lengths = getattr(batch, seq2seq.src_field_name)
-        target_variables = {'decoder_output': getattr(batch, seq2seq.tgt_field_name)}
+        target_variables = {'decoder_output': getattr(batch, seq2seq.tgt_field_name),
+                            'encoder_input': input_variables}  # The k-grammar metric needs to have access to the inputs
 
         # If available, also get provided attentive guidance data
         if hasattr(batch, seq2seq.attn_field_name):

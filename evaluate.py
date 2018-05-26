@@ -7,7 +7,7 @@ import torchtext
 
 import seq2seq
 from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
-from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy
+from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy, SymbolRewritingAccuracy
 from seq2seq.dataset import SourceField, TargetField, AttentionField
 from seq2seq.evaluator import Evaluator
 from seq2seq.trainer import SupervisedTrainer
@@ -97,10 +97,22 @@ if opt.use_attention_loss:
     losses.append(AttentionLoss(ignore_index=IGNORE_INDEX))
     loss_weights.append(opt.scale_attention_loss)
 
-metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad), FinalTargetAccuracy(ignore_index=pad, eos_id=tgt.eos_id)]
 if torch.cuda.is_available():
     for loss in losses:
         loss.cuda()
+
+metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad), FinalTargetAccuracy(ignore_index=pad, eos_id=tgt.eos_id)]
+# Since we need the actual tokens to determine k-grammar accuracy,
+# we also provide the input and output vocab and relevant special symbols
+# metrics.append(SymbolRewritingAccuracy(
+#     input_vocab=input_vocab,
+#     output_vocab=output_vocab,
+#     use_output_eos=output_eos_used,
+#     input_pad_symbol=src.pad_token,
+#     output_sos_symbol=tgt.SYM_SOS,
+#     output_pad_symbol=tgt.pad_token,
+#     output_eos_symbol=tgt.SYM_EOS,
+#     output_unk_symbol=tgt.unk_token))
 
 data_func = SupervisedTrainer.get_batch_data
 
