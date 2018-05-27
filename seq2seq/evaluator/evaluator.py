@@ -93,6 +93,9 @@ class Evaluator(object):
             loss (float): loss of the given model on the given dataset
             accuracy (float): accuracy of the given model on the given dataset
         """
+        # If the model was in train mode before this method was called, we make sure it still is
+        # after this method.
+        previous_train_mode = model.training
         model.eval()
 
         losses = self.losses
@@ -122,5 +125,7 @@ class Evaluator(object):
                 
                 # Compute loss(es) over one batch
                 losses = self.update_loss(losses, decoder_outputs, decoder_hidden, other, target_variable)
+
+        model.train(previous_train_mode)
 
         return losses, metrics
