@@ -49,6 +49,8 @@ if opt.debug:
     exit()
 
 while True:
-        seq_str = raw_input("Type in a source sequence:")
+        seq_str = raw_input("\n\nType in a source sequence: ")
+        if seq_str == 'q':
+            exit()
         seq = seq_str.strip().split()
         print(predictor.predict(seq))

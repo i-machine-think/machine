@@ -8,7 +8,7 @@ This is a pytorch implementation of a sequence to sequence learning toolkit for 
 
 # Requirements
 
-This library runs with PyTorch 0.3.0. We refer to the [PyTorch website](http://pytorch.org/) to install the right version for your environment.
+This library runs with PyTorch 0.4.0. We refer to the [PyTorch website](http://pytorch.org/) to install the right version for your environment.
 To install additional requirements (including numpy and torchtext), run:
 
 `pip install -r requirements.txt`
@@ -29,6 +29,7 @@ The script `train_model.py` can be used to train a new model, resume the trainin
     `python train_model.py --train $train_path --dev $dev_path --output_dir $expt_dir  --embedding_size 128 --hidden_size 256 --rnn_cell gru --epoch 20 
 
 Several options are available from the command line, including changing the optimizer, batch size, using attention/bidirectionality and using teacher forcing. 
+Additionally, models can be trained using *attentive guidance* [1](https://arxiv.org/abs/1805.09657), which can be provided in the training file.
 For a complete overview, use the *help* function of the script.
 
 ## Evaluation and inference
@@ -50,6 +51,7 @@ Once training is complete, you will be prompted to enter a new sequence to trans
     Input:  1 3 5 7 9
 	Expected output: 9 7 5 3 1 EOS
 
+Additional example scripts, as well as different datasets can be found in our auxiliary repository [machine-tasks](https://github.com/i-machine-think/machine-tasks).
 
 ## Checkpoints
 
