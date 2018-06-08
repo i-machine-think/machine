@@ -96,6 +96,17 @@ test = torchtext.data.TabularDataset(
     filter_pred=len_filter
 )
 
+# When chosen to use attentive guidance, check whether the data is correct for the first
+# example in the data set. We can assume that the other examples are then also correct.
+if opt.use_attention_loss or opt.attention_method == 'hard':
+    if len(test) > 0:
+        if 'attn' not in vars(test[0]):
+            raise Exception("AttentionField not found in test data")
+        tgt_len = len(vars(test[0])['tgt']) - 1 # -1 for SOS
+        attn_len = len(vars(test[0])['attn']) - 1 # -1 for preprended ignore_index
+        if attn_len != tgt_len:
+            raise Exception("Length of output sequence does not equal length of attention sequence in test data.")
+
 # Prepare loss and metrics
 pad = output_vocab.stoi[tgt.pad_token]
 losses = [NLLLoss(ignore_index=pad)]
