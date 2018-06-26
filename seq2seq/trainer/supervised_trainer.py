@@ -199,9 +199,6 @@ class SupervisedTrainer(object):
                 epoch_loss_avg[loss.log_name] = epoch_loss_total[loss.log_name] / min(steps_per_epoch, step - start_step)
                 epoch_loss_total[loss.log_name] = 0
 
-            loss_msg = ' '.join(['%s: %.4f' % (loss.log_name, loss.get_loss()) for loss in losses])
-            log_msg = "Finished epoch %d: Train %s" % (epoch, loss_msg)
-
             if dev_data is not None:
                 losses, metrics = self.evaluator.evaluate(model, dev_data, self.get_batch_data)
                 loss_total, log_, model_name = self.get_losses(losses, metrics, step)
