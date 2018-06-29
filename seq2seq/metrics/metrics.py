@@ -328,8 +328,8 @@ class SymbolRewritingAccuracy(Metric):
 
             # Convert indices to strings
             # Remove all padding from the grammar.
-            grammar = [self.input_vocab.itos[token] for token in grammar if token !=
-                       self.input_vocab.itos[token] != self.input_pad_symbol]
+            grammar = [self.input_vocab.itos[token] for token in grammar
+                       if self.input_vocab.itos[token] != self.input_pad_symbol]
             prediction = [self.output_vocab.itos[token] for token in prediction]
 
             # Each input symbol has to produce exactly three outputs
