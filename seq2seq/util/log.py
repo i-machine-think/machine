@@ -1,7 +1,15 @@
 from __future__ import print_function
 
-import torch
 import os
+import matplotlib
+if os.environ.get('DISPLAY','') == '':
+        print('no display found. Using non-interactive Agg backend')
+        matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
+
+import torch
 
 from collections import defaultdict
 
@@ -139,10 +147,6 @@ class LogCollection(object):
             group (func):
         """
 
-        # import numpy as np
-        import matplotlib.pyplot as plt
-        import matplotlib.lines as mlines
-
         # colormap = plt.get_cmap('plasma')(np.linspace(0,1, 25))
         fig, ax = plt.subplots(figsize=(13,11))
         ax.spines['top'].set_visible(False)
@@ -261,8 +265,6 @@ class LogCollection(object):
                    color_group=False, eor=-1):
 
         import numpy as np
-        import matplotlib.pyplot as plt
-        import matplotlib.lines as mlines
 
         fig, ax = plt.subplots(figsize=(13,11))
         ax.spines['top'].set_visible(False)
