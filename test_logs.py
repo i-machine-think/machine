@@ -75,9 +75,6 @@ def baseline(model):
     return False
 
 def data_name_parser(data_name, model_name):
-    return input_str.split('/')[-1].split('.')[0]
-
-def data_name_parser(data_name, model_name):
     if 'Train' in data_name and 'baseline' in model_name:
         label = 'Baseline, training loss'
     elif 'Train' in model_name:
