@@ -5,17 +5,6 @@ import os
 
 from collections import defaultdict
 
-# change backend when matplotlib is 
-# imported
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.lines as mlines
-except:
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    import matplotlib.lines as mlines
-
 class Log(object):
     """
     The Log can be used to store logs during training, write the to a file
@@ -151,6 +140,8 @@ class LogCollection(object):
         """
 
         # import numpy as np
+        import matplotlib.pyplot as plt
+        import matplotlib.lines as mlines
 
         # colormap = plt.get_cmap('plasma')(np.linspace(0,1, 25))
         fig, ax = plt.subplots(figsize=(13,11))
@@ -270,6 +261,8 @@ class LogCollection(object):
                    color_group=False, eor=-1):
 
         import numpy as np
+        import matplotlib.pyplot as plt
+        import matplotlib.lines as mlines
 
         fig, ax = plt.subplots(figsize=(13,11))
         ax.spines['top'].set_visible(False)
