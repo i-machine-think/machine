@@ -1,6 +1,9 @@
 from seq2seq.util.log import LogCollection
 import re
 
+#######################################################
+# Example file that illustrates the use of log plotting
+
 def name_parser(filename, subdir):
     splits = filename.split('/')
     return splits[1]+'_'+splits[-2]
