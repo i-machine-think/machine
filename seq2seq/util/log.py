@@ -3,10 +3,18 @@ from __future__ import print_function
 import torch
 import os
 
-import matplotlib.pyplot as plt
-import matplotlib.lines as mlines
-
 from collections import defaultdict
+
+# change backend when matplotlib is 
+# imported
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.lines as mlines
+except:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import matplotlib.lines as mlines
 
 class Log(object):
     """
