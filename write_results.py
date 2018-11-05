@@ -1,4 +1,4 @@
-from seq2seq.util.log import LogCollection
+from machine.util.log import LogCollection
 from get_iterations import find_best_its
 
 import numpy as np

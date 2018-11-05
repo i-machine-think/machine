@@ -5,8 +5,8 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from seq2seq.loss.loss import Loss
-from seq2seq.loss import NLLLoss, Perplexity
+from machine.loss.loss import Loss
+from machine.loss import NLLLoss, Perplexity
 
 class TestLoss(unittest.TestCase):
     @classmethod

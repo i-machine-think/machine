@@ -3,7 +3,7 @@ import unittest
 
 import torchtext
 
-from seq2seq.dataset import SourceField, TargetField
+from machine.dataset import SourceField, TargetField
 
 class TestField(unittest.TestCase):
 

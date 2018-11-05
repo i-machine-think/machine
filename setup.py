@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='seq2seq',
+    name='machine',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -21,7 +21,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    # url='https://github.com/IBM/pytorch-seq2seq',
+    # url='https://github.com/i-machine-think/machine',
 
     # Choose your license
     license='Apache License 2.0',
@@ -62,7 +62,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy', 'torch', 'torchtext'],
+    install_requires=['numpy', 'torch', 'torchtext', 'six', 'dill'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

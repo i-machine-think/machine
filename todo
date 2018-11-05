@@ -1,7 +1,0 @@
-- create script to evaluate or predict
-- extend unit tests:
-    - check if right src/target vocabulary is used when model is downloaded from checkpoint and whether an error is raised if this is not the case (maybe at the beginning of train? test whether model and data and dev_data have the same in and output vocabulary?)
-    - test model saving (do the right models get saved? with the right names?)
-    - some tests for seq2seq?
-    - other?
-

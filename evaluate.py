@@ -5,14 +5,14 @@ import logging
 import torch
 import torchtext
 
-import seq2seq
-from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
-from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy, SymbolRewritingAccuracy
-from seq2seq.dataset import SourceField, TargetField, AttentionField
-from seq2seq.evaluator import Evaluator
-from seq2seq.trainer import SupervisedTrainer
-from seq2seq.util.checkpoint import Checkpoint
-from seq2seq.trainer import SupervisedTrainer
+import machine
+from machine.loss import Perplexity, AttentionLoss, NLLLoss
+from machine.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy, SymbolRewritingAccuracy
+from machine.dataset import SourceField, TargetField, AttentionField
+from machine.evaluator import Evaluator
+from machine.trainer import SupervisedTrainer
+from machine.util.checkpoint import Checkpoint
+from machine.trainer import SupervisedTrainer
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

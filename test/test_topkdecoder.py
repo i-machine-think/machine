@@ -4,8 +4,8 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-from seq2seq.models.DecoderRNN import DecoderRNN
-from seq2seq.models.TopKDecoder import TopKDecoder
+from machine.models.DecoderRNN import DecoderRNN
+from machine.models.TopKDecoder import TopKDecoder
 
 class TestDecoderRNN(unittest.TestCase):
 

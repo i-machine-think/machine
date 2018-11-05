@@ -3,7 +3,7 @@ import unittest
 
 import torch
 
-from seq2seq.models.DecoderRNN import DecoderRNN
+from machine.models.DecoderRNN import DecoderRNN
 
 class TestDecoderRNN(unittest.TestCase):
 

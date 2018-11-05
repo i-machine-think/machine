@@ -2,7 +2,7 @@ import os
 import unittest
 
 import torch
-from seq2seq.models.EncoderRNN import EncoderRNN
+from machine.models.EncoderRNN import EncoderRNN
 
 class TestEncoderRNN(unittest.TestCase):
 

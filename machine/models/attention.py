@@ -33,7 +33,7 @@ class Attention(nn.Module):
 
     Examples::
 
-         >>> attention = seq2seq.models.Attention(256)
+         >>> attention = machine.models.Attention(256)
          >>> context = torch.randn(5, 3, 256)
          >>> output = torch.randn(5, 5, 256)
          >>> output, attn = attention(output, context)

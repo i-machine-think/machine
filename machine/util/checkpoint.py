@@ -16,7 +16,7 @@ class Checkpoint(object):
     to write parameters to disk.
 
     Args:
-        model (seq2seq): seq2seq model being trained
+        model (machine.Seq2seq): seq2seq model being trained
         optimizer (Optimizer): stores the state of the optimizer
         epoch (int): current epoch (an epoch is a loop through the full training data)
         step (int): number of examples seen within the current epoch

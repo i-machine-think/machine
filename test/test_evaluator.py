@@ -6,12 +6,12 @@ import unittest
 from mock import MagicMock, patch, call, ANY
 import torchtext
 
-from seq2seq.dataset import SourceField, TargetField
-from seq2seq.evaluator import Evaluator
-from seq2seq.models.seq2seq import Seq2seq
-from seq2seq.models.EncoderRNN import EncoderRNN
-from seq2seq.models.DecoderRNN import DecoderRNN
-from seq2seq.trainer.supervised_trainer import SupervisedTrainer as trainer
+from machine.dataset import SourceField, TargetField
+from machine.evaluator import Evaluator
+from machine.models.seq2seq import Seq2seq
+from machine.models.EncoderRNN import EncoderRNN
+from machine.models.DecoderRNN import DecoderRNN
+from machine.trainer.supervised_trainer import SupervisedTrainer as trainer
 
 class TestPredictor(unittest.TestCase):
 
@@ -42,10 +42,10 @@ class TestPredictor(unittest.TestCase):
         mock_mgr.attach_mock(mock_call, 'call')
 
         evaluator = Evaluator(batch_size=64)
-        with patch('seq2seq.evaluator.evaluator.torch.stack', return_value=None), \
-             patch('seq2seq.metrics.WordAccuracy.eval_batch', return_value=None), \
-             patch('seq2seq.metrics.WordAccuracy.eval_batch', return_value=None), \
-             patch('seq2seq.loss.NLLLoss.eval_batch', return_value=None):
+        with patch('machine.evaluator.evaluator.torch.stack', return_value=None), \
+             patch('machine.metrics.WordAccuracy.eval_batch', return_value=None), \
+             patch('machine.metrics.WordAccuracy.eval_batch', return_value=None), \
+             patch('machine.loss.NLLLoss.eval_batch', return_value=None):
             evaluator.evaluate(self.seq2seq, self.dataset, trainer.get_batch_data)
 
         num_batches = int(math.ceil(len(self.dataset) / evaluator.batch_size))

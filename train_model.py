@@ -11,15 +11,15 @@ import pickle
 
 from collections import OrderedDict
 
-import seq2seq
-from seq2seq.trainer import SupervisedTrainer
-from seq2seq.models import EncoderRNN, DecoderRNN, Seq2seq
-from seq2seq.loss import Perplexity, AttentionLoss, NLLLoss
-from seq2seq.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy, SymbolRewritingAccuracy
-from seq2seq.optim import Optimizer
-from seq2seq.dataset import SourceField, TargetField, AttentionField
-from seq2seq.evaluator import Predictor, Evaluator
-from seq2seq.util.checkpoint import Checkpoint
+import machine
+from machine.trainer import SupervisedTrainer
+from machine.models import EncoderRNN, DecoderRNN, Seq2seq
+from machine.loss import Perplexity, AttentionLoss, NLLLoss
+from machine.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy, SymbolRewritingAccuracy
+from machine.optim import Optimizer
+from machine.dataset import SourceField, TargetField, AttentionField
+from machine.evaluator import Predictor, Evaluator
+from machine.util.checkpoint import Checkpoint
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

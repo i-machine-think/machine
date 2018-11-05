@@ -84,7 +84,7 @@ class TopKDecoder(torch.nn.Module):
     def forward(self, inputs=None, encoder_hidden=None, encoder_outputs=None, function=F.log_softmax,
                     teacher_forcing_ratio=0, retain_output_probs=True):
         """
-        Forward rnn for MAX_LENGTH steps.  Look at :func:`seq2seq.models.DecoderRNN.DecoderRNN.forward_rnn` for details.
+        Forward rnn for MAX_LENGTH steps.  Look at :func:`machine.models.DecoderRNN.DecoderRNN.forward_rnn` for details.
         """
 
         inputs, batch_size, max_length = self.rnn._validate_args(inputs, encoder_hidden, encoder_outputs,

@@ -4,8 +4,8 @@ import os
 import mock
 import torchtext
 
-from seq2seq.dataset import SourceField, TargetField
-from seq2seq.trainer import SupervisedTrainer
+from machine.dataset import SourceField, TargetField
+from machine.trainer import SupervisedTrainer
 
 class TestSupervisedTrainer(unittest.TestCase):
 
@@ -20,9 +20,9 @@ class TestSupervisedTrainer(unittest.TestCase):
         src.build_vocab(self.dataset)
         tgt.build_vocab(self.dataset)
 
-    @mock.patch('seq2seq.trainer.SupervisedTrainer._train_batch', return_value=[])
-    @mock.patch('seq2seq.util.checkpoint.Checkpoint.save')
-    @mock.patch('seq2seq.evaluator.Evaluator.evaluate', return_value=([],[]))
+    @mock.patch('machine.trainer.SupervisedTrainer._train_batch', return_value=[])
+    @mock.patch('machine.util.checkpoint.Checkpoint.save')
+    @mock.patch('machine.evaluator.Evaluator.evaluate', return_value=([],[]))
     def test_batch_num_when_resuming(self, mock_evaluator, mock_checkpoint, mock_func):
         mock_model = mock.Mock()
         mock_optim = mock.Mock()
@@ -36,9 +36,9 @@ class TestSupervisedTrainer(unittest.TestCase):
         trainer._train_epoches(self.dataset, mock_model, n_epoches, start_epoch, step)
         self.assertEqual(steps_per_epoch - step, mock_func.call_count)
 
-    @mock.patch('seq2seq.trainer.SupervisedTrainer._train_batch', return_value=0)
-    @mock.patch('seq2seq.util.checkpoint.Checkpoint.save')
-    @mock.patch('seq2seq.evaluator.Evaluator.evaluate', return_value=([],[]))
+    @mock.patch('machine.trainer.SupervisedTrainer._train_batch', return_value=0)
+    @mock.patch('machine.util.checkpoint.Checkpoint.save')
+    @mock.patch('machine.evaluator.Evaluator.evaluate', return_value=([],[]))
     def test_resume_from_multiple_of_epoches(self, mock_evaluator, mock_checkpoint, mock_func):
         mock_model = mock.Mock()
         mock_optim = mock.Mock()
@@ -50,11 +50,11 @@ class TestSupervisedTrainer(unittest.TestCase):
         step = 7
         trainer._train_epoches(self.dataset, mock_model, n_epoches, start_epoch, step, dev_data=self.dataset)
 
-    @mock.patch('seq2seq.util.checkpoint.Checkpoint')
-    @mock.patch('seq2seq.util.checkpoint.Checkpoint.load')
-    @mock.patch('seq2seq.optim.Optimizer')
+    @mock.patch('machine.util.checkpoint.Checkpoint')
+    @mock.patch('machine.util.checkpoint.Checkpoint.load')
+    @mock.patch('machine.optim.Optimizer')
     @mock.patch('torch.optim.SGD')
-    @mock.patch('seq2seq.trainer.SupervisedTrainer._train_epoches')
+    @mock.patch('machine.trainer.SupervisedTrainer._train_epoches')
     def test_loading_optimizer(self, train_func, sgd, optimizer, load_function, checkpoint):
 
         load_function.returnvalue = checkpoint

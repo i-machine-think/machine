@@ -4,9 +4,9 @@ import logging
 
 import torch
 
-import seq2seq
-from seq2seq.evaluator import Predictor
-from seq2seq.util.checkpoint import Checkpoint
+import machine
+from machine.evaluator import Predictor
+from machine.util.checkpoint import Checkpoint
 
 try:
     raw_input          # Python 2

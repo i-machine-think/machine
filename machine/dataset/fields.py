@@ -10,7 +10,7 @@ class SourceField(torchtext.data.Field):
     """
 
     def __init__(self, **kwargs):
-        """Initialize the datafield, but force batch_first and include_lengths to be True, which is required for correct functionality of pytorch-seq2seq.
+        """Initialize the datafield, but force batch_first and include_lengths to be True, which is required for correct functionality of machine.
         Also allow to include SOS and EOS symbols for the source sequence.
         
         Args:
@@ -19,11 +19,11 @@ class SourceField(torchtext.data.Field):
         logger = logging.getLogger(__name__)
 
         if kwargs.get('batch_first') is False:
-            logger.warning("Option batch_first has to be set to use pytorch-seq2seq.  Changed to True.")
+            logger.warning("Option batch_first has to be set to use machine.  Changed to True.")
         kwargs['batch_first'] = True
 
         if kwargs.get('include_lengths') is False:
-            logger.warning("Option include_lengths has to be set to use pytorch-seq2seq.  Changed to True.")
+            logger.warning("Option include_lengths has to be set to use machine.  Changed to True.")
         kwargs['include_lengths'] = True
 
         super(SourceField, self).__init__(**kwargs)
@@ -48,7 +48,7 @@ class TargetField(torchtext.data.Field):
         self.include_eos = include_eos
 
         if kwargs.get('batch_first') == False:
-            logger.warning("Option batch_first has to be set to use pytorch-seq2seq.  Changed to True.")
+            logger.warning("Option batch_first has to be set to use machine.  Changed to True.")
         kwargs['batch_first'] = True
 
         if kwargs.get('preprocessing') is None:
@@ -88,7 +88,7 @@ class AttentionField(torchtext.data.Field):
         logger = logging.getLogger(__name__)
 
         if kwargs.get('batch_first') == False:
-            logger.warning("Option batch_first has to be set to use pytorch-seq2seq. Changed to True.")
+            logger.warning("Option batch_first has to be set to use machine. Changed to True.")
         kwargs['batch_first'] = True
 
         if kwargs.get('use_vocab') == True:

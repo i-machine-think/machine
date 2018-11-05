@@ -5,7 +5,7 @@ import shutil
 import mock
 from mock import ANY
 
-from seq2seq.util.checkpoint import Checkpoint
+from machine.util.checkpoint import Checkpoint
 
 
 class TestCheckpoint(unittest.TestCase):
@@ -21,9 +21,9 @@ class TestCheckpoint(unittest.TestCase):
         ckpt = Checkpoint(None, None, None, None, None, None)
         self.assertRaises(LookupError, lambda: ckpt.path)
 
-    @mock.patch('seq2seq.util.checkpoint.torch')
-    @mock.patch('seq2seq.util.checkpoint.dill')
-    @mock.patch('seq2seq.util.checkpoint.open')
+    @mock.patch('machine.util.checkpoint.torch')
+    @mock.patch('machine.util.checkpoint.dill')
+    @mock.patch('machine.util.checkpoint.open')
     def test_save_checkpoint_calls_torch_save(self, mock_open, mock_dill, mock_torch):
         epoch = 5
         step = 10
@@ -52,9 +52,9 @@ class TestCheckpoint(unittest.TestCase):
         mock_dill.dump.assert_any_call(mock_vocab,
                                        mock_open.return_value.__enter__.return_value)
 
-    @mock.patch('seq2seq.util.checkpoint.torch')
-    @mock.patch('seq2seq.util.checkpoint.dill')
-    @mock.patch('seq2seq.util.checkpoint.open')
+    @mock.patch('machine.util.checkpoint.torch')
+    @mock.patch('machine.util.checkpoint.dill')
+    @mock.patch('machine.util.checkpoint.open')
     def test_load(self, mock_open, mock_dill, mock_torch):
         dummy_vocabulary = mock.Mock()
         mock_optimizer = mock.Mock()

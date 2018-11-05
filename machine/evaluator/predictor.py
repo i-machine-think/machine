@@ -8,10 +8,10 @@ class Predictor(object):
         """
         Predictor class to evaluate for a given model.
         Args:
-            model (seq2seq.models): trained model. This can be loaded from a checkpoint
-                using `seq2seq.util.checkpoint.load`
-            src_vocab (seq2seq.dataset.vocabulary.Vocabulary): source sequence vocabulary
-            tgt_vocab (seq2seq.dataset.vocabulary.Vocabulary): target sequence vocabulary
+            model (machine.models): trained model. This can be loaded from a checkpoint
+                using `machine.util.checkpoint.load`
+            src_vocab (machine.dataset.vocabulary.Vocabulary): source sequence vocabulary
+            tgt_vocab (machine.dataset.vocabulary.Vocabulary): target sequence vocabulary
         """
         self.model = model.to(device)
 
