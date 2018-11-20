@@ -108,17 +108,19 @@ class AttentionField(torchtext.data.Field):
         # Batch is a 2D list with batch examples in dim-0 and sequences in dim-1
         # For each element in each example we convert from unicode string to integer.
         # PAD is converted to -1
-        def postprocess(batch, _, __):
+        def post_process_function(example, __):
             def safe_cast(cast_func, x, default):
                 try:
                     return cast_func(x)
                 except (ValueError, TypeError):
                     return default
 
-            return [[safe_cast(int, item, self.ignore_index) for item in example] for example in batch]
-        
+            return [safe_cast(int, item, self.ignore_index) for item in example]
+
+        post_process_pipeline = torchtext.data.Pipeline(convert_token=post_process_function)
+
         kwargs['preprocessing'] = preprocess
-        kwargs['postprocessing'] = postprocess
+        kwargs['postprocessing'] = post_process_pipeline
 
         super(AttentionField, self).__init__(**kwargs)
 

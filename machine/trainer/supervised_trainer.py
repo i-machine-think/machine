@@ -19,6 +19,9 @@ from machine.optim import Optimizer
 from machine.util.checkpoint import Checkpoint
 from machine.util.log import Log
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
 class SupervisedTrainer(object):
     """ The SupervisedTrainer class helps in setting up a training framework in a
     supervised setting.
@@ -85,12 +88,11 @@ class SupervisedTrainer(object):
         epoch_loss_avg = defaultdict(float)
         print_loss_avg = defaultdict(float)
 
-        iterator_device = torch.cuda.current_device() if torch.cuda.is_available() else -1
         batch_iterator = torchtext.data.BucketIterator(
             dataset=data, batch_size=self.batch_size,
             sort=False, sort_within_batch=True,
             sort_key=lambda x: len(x.src),
-            device=iterator_device, repeat=False)
+            device=device, repeat=False)
 
         steps_per_epoch = len(batch_iterator)
         total_steps = steps_per_epoch * n_epochs
