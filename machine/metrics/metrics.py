@@ -226,18 +226,25 @@ class SymbolRewritingAccuracy(Metric):
     _SHORTNAME = "sym_rwr_acc"
     _INPUT = "seqlist"
 
-    def __init__(self, input_vocab, output_vocab, use_output_eos, input_pad_symbol, output_sos_symbol, output_pad_symbol, output_eos_symbol, output_unk_symbol):
+    def __init__(self, input_vocab, output_vocab, use_output_eos,
+                 output_sos_symbol, output_pad_symbol, output_eos_symbol,
+                 output_unk_symbol):
         self.input_vocab = input_vocab
         self.output_vocab = output_vocab
 
         self.use_output_eos = use_output_eos
 
         # instead of passing all these arguments, we could also hard-code to use <sos>, <pad>, <unk> and <eos>
-        self.input_pad_symbol = input_pad_symbol
         self.output_sos_symbol = output_sos_symbol
         self.output_pad_symbol = output_pad_symbol
         self.output_eos_symbol = output_eos_symbol
         self.output_unk_symbol = output_unk_symbol
+
+        self.grammar_vocab = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+                              'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'T', 'U',
+                              'V', 'W', 'X', 'Y', 'Z', 'AS', 'BS', 'CS', 'DS',
+                              'ES', 'FS', 'GS', 'HS', 'IS', 'JS', 'KS', 'LS',
+                              'MS', 'NS', 'OS']
 
         self.seq_correct = 0
         self.seq_total = 0
@@ -274,16 +281,12 @@ class SymbolRewritingAccuracy(Metric):
         Returns:
             bool: whether the prediction is coming from the grammar
         '''
-
-        grammar_vocab = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'T', 'U',
-                         'V', 'W', 'X', 'Y', 'Z', 'AS', 'BS', 'CS', 'DS', 'ES', 'FS', 'GS', 'HS', 'IS', 'JS', 'KS', 'LS', 'MS', 'NS', 'OS']
-
         all_correct = False
         # Check if the length is correct
         length_check = True if len(prediction) == 3 * len(grammar) else False
         # Check if everything falls in the same bucket, and there are no repeats
         for idx, inp in enumerate(grammar):
-            vocab_idx = grammar_vocab.index(inp) + 1
+            vocab_idx = self.grammar_vocab.index(inp) + 1
             span = prediction[idx * 3:idx * 3 + 3]
 
             span_str = " ".join(span)
@@ -326,10 +329,11 @@ class SymbolRewritingAccuracy(Metric):
             grammar = input_variable[i_batch_element, :].data.cpu().numpy()
             prediction = predictions[i_batch_element, :].data.cpu().numpy()
 
-            # Convert indices to strings
-            # Remove all padding from the grammar.
+            # Convert indices to strings,
+            # Remove all padding from the grammar and possible extra out-of-vocabulary
+            # tokens such as an EOS token.
             grammar = [self.input_vocab.itos[token] for token in grammar
-                       if self.input_vocab.itos[token] != self.input_pad_symbol]
+                       if self.input_vocab.itos[token] in self.grammar_vocab]
             prediction = [self.output_vocab.itos[token] for token in prediction]
 
             # Each input symbol has to produce exactly three outputs
