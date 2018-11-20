@@ -15,7 +15,17 @@ To install additional requirements (including numpy and torchtext), run:
 
 # Quickstart
 
-There are 3 commandline tools available
+To use machine, clone the repository and do an editable install with pip.
+Although machine is compatible with python2.7, we recommend you use python3.
+
+```
+git clone https://github.com/i-machine-think/machine.git $path_to_machine
+pip3 install $path_to_machine
+```
+
+You can then import the classes of the library in your own project.
+For examples of such usage we refer to the [attentive_guidance](https://github.com/i-machine-think/attentive_guidance) and [seq2attn](https://github.com/i-machine-think/seq2attn) project.
+Furthermore, we included 3 commandline tools in the repository that demonstrate the uses of machine:
 
 * `train_model.py`
 * `evaluate.py`
@@ -29,7 +39,6 @@ The script `train_model.py` can be used to train a new model, resume the trainin
     `python train_model.py --train $train_path --dev $dev_path --output_dir $expt_dir  --embedding_size 128 --hidden_size 256 --rnn_cell gru --epoch 20 
 
 Several options are available from the command line, including changing the optimizer, batch size, using attention/bidirectionality and using teacher forcing. 
-Additionally, models can be trained using *attentive guidance* [1](https://arxiv.org/abs/1805.09657), which can be provided in the training file.
 For a complete overview, use the *help* function of the script.
 
 ## Evaluation and inference
