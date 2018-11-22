@@ -43,23 +43,15 @@ class Seq2seq(nn.Module):
         self.encoder.rnn.flatten_parameters()
         self.decoder.rnn.flatten_parameters()
 
-    def forward(self, input_variable, input_lengths=None, target_variables=None,
+    def forward(self, input_variable, input_lengths=None, target_variables={},
                 teacher_forcing_ratio=0):
         # Unpack target variables
-        try:
-            target_output = target_variables.get('decoder_output', None)
-            # The attention target is preprended with an extra SOS step. We must remove this
-            provided_attention = target_variables['attention_target'][:,1:] if 'attention_target' in target_variables else None
-        except AttributeError:
-            target_output = None
-            provided_attention = None
-
+        target_output = target_variables.get('decoder_output', None)
 
         encoder_outputs, encoder_hidden = self.encoder(input_variable, input_lengths)
         result = self.decoder(inputs=target_output,
                               encoder_hidden=encoder_hidden,
                               encoder_outputs=encoder_outputs,
                               function=self.decode_function,
-                              teacher_forcing_ratio=teacher_forcing_ratio,
-                              provided_attention=provided_attention)
+                              teacher_forcing_ratio=teacher_forcing_ratio)
         return result

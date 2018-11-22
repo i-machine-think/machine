@@ -1,1 +1,1 @@
-from .loss import NLLLoss, Perplexity, AttentionLoss
+from .loss import NLLLoss, Perplexity, Loss

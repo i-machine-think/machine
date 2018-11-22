@@ -1,1 +1,1 @@
-from .fields import SourceField, TargetField, AttentionField
+from .fields import SourceField, TargetField
