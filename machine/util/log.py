@@ -1,17 +1,14 @@
 from __future__ import print_function
+from collections import defaultdict
+import matplotlib.lines as mlines
+import matplotlib.pyplot as plt
 
 import os
 import matplotlib
-if os.environ.get('DISPLAY','') == '':
-        print('no display found. Using non-interactive Agg backend')
-        matplotlib.use('Agg')
+if os.environ.get('DISPLAY', '') == '':
+    print('no display found. Using non-interactive Agg backend')
+    matplotlib.use('Agg')
 
-import matplotlib.pyplot as plt
-import matplotlib.lines as mlines
-
-import torch
-
-from collections import defaultdict
 
 class Log(object):
     """
@@ -62,9 +59,10 @@ class Log(object):
 
         # write logs
         for dataset in self.data.keys():
-            f.write(dataset.encode()+b'\n')
+            f.write(dataset.encode() + b'\n')
             for metric in self.data[dataset]:
-                data = "\t%s %s\n" % (metric, ' '.join([str(v) for v in self.data[dataset][metric]]))
+                data = "\t%s %s\n" % (metric, ' '.join(
+                    [str(v) for v in self.data[dataset][metric]]))
                 f.write(data.encode())
 
         f.close()
@@ -102,6 +100,7 @@ class Log(object):
     def get_steps(self):
         return self.steps
 
+
 class LogCollection(object):
 
     def __init__(self):
@@ -114,7 +113,7 @@ class LogCollection(object):
 
     def add_log_from_folder(self, folder_path, ext='', name_parser=None):
         """
-        Recursively loop through a folder and add all its 
+        Recursively loop through a folder and add all its
         the files with appropriate extension to self.logs.
         """
 
@@ -123,20 +122,19 @@ class LogCollection(object):
                 f = os.path.join(subdir, fname)
 
                 if f.endswith(ext):
-                    if name_parser: log_name = name_parser(f, subdir)
-                    else: log_name = f
+                    if name_parser:
+                        log_name = name_parser(f, subdir)
+                    else:
+                        log_name = f
 
                     self.logs.append(Log(f))
                     self.log_names.append(log_name)
 
-
-
-    def plot_metric(self, metric_name, restrict_model=lambda x: True, 
-                          restrict_data=lambda x: True,
-                          data_name_parser=None,
-                          color_group=False,
-                          title='', eor=-1):
-
+    def plot_metric(self, metric_name, restrict_model=lambda x: True,
+                    restrict_data=lambda x: True,
+                    data_name_parser=None,
+                    color_group=False,
+                    title='', eor=-1):
         """
         Plot all values for a specific metrics. A function restrict can be
         inputted to restrict the set of models being plotted. A function group
@@ -148,7 +146,7 @@ class LogCollection(object):
         """
 
         # colormap = plt.get_cmap('plasma')(np.linspace(0,1, 25))
-        fig, ax = plt.subplots(figsize=(13,11))
+        fig, ax = plt.subplots(figsize=(13, 11))
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         # ax.spines['bottom'].set_visible(False)
@@ -157,35 +155,44 @@ class LogCollection(object):
 
         for i, name in enumerate(self.log_names):
             if restrict_model(name):
-                label = name+' '
+                label = name + ' '
                 log = self.logs[i]
                 for dataset in log.data.keys():
                     if restrict_data(dataset):
-                        label_name = data_name_parser(dataset, name) if data_name_parser else dataset
-                        steps = [step/float(232) for step in log.steps[:eor]]
+                        label_name = data_name_parser(
+                            dataset, name) if data_name_parser else dataset
+                        steps = [step / float(232) for step in log.steps[:eor]]
                         if color_group:
-                            steps, data = self.prune_data(steps, log.data[dataset][metric_name][:eor])
+                            steps, data = self.prune_data(
+                                steps, log.data[dataset][metric_name][:eor])
                             ax.plot(steps, data,
-                                     color_group(name, dataset),
-                                     label=label+label_name, linewidth=3.0)
+                                    color_group(name, dataset),
+                                    label=label + label_name, linewidth=3.0)
                         else:
                             ax.plot(steps,
-                                     log.data[dataset][metric_name][:eor],
-                                     label=label+label_name)
-                        ax.tick_params(axis='both', which='major', labelsize=20)
+                                    log.data[dataset][metric_name][:eor],
+                                    label=label + label_name)
+                        ax.tick_params(
+                            axis='both', which='major', labelsize=20)
                         plt.xlabel("Epochs", fontsize=24)
                         plt.ylabel("Sequence Accuracy", fontsize=24)
                         plt.title(title)
 
-        k_line  = mlines.Line2D([], [], color='black', linestyle='--', label='Baseline, training loss', linewidth=3)
-        k_line2 = mlines.Line2D([], [], color='black', label='Attention Guidance, training loss', linewidth=3)
-        m_line  = mlines.Line2D([], [], color='m', label='Baseline, test loss', linewidth=3)
-        g_line  = mlines.Line2D([], [], color='g', label='Attention Guidance, test loss', linewidth=3)
+        # k_line = mlines.Line2D([], [], color='black', linestyle='--',
+        #                        label='Baseline, training loss', linewidth=3)
+        # k_line2 = mlines.Line2D([], [], color='black',
+        #                         label='Attention Guidance, training loss', linewidth=3)
+        # m_line = mlines.Line2D(
+        #     [], [], color='m', label='Baseline, test loss', linewidth=3)
+        # g_line = mlines.Line2D(
+        #     [], [], color='g', label='Attention Guidance, test loss', linewidth=3)
 
-        baseline = mlines.Line2D([], [], color='m', linewidth=3.0, label='Baseline')
-        guided = mlines.Line2D([], [], color='g', linewidth=3.0, label='Guided')
+        baseline = mlines.Line2D(
+            [], [], color='m', linewidth=3.0, label='Baseline')
+        guided = mlines.Line2D(
+            [], [], color='g', linewidth=3.0, label='Guided')
 
-        # plt.legend([k_line, k_line2, m_line, g_line], ['Baseline training', 'Guided, training', 'Baseline, test', 'Guided, test'], fontsize=24) 
+        # plt.legend([k_line, k_line2, m_line, g_line], ['Baseline training', 'Guided, training', 'Baseline, test', 'Guided, test'], fontsize=24)
         plt.legend([baseline, guided], ['Baseline', 'Guided'], fontsize=24)
         plt.show()
 
@@ -201,7 +208,7 @@ class LogCollection(object):
         """
 
         data = dict()
-        counts = dict() 
+        counts = dict()
 
         for i, name in enumerate(self.log_names):
             if restrict_model(name):
@@ -213,16 +220,16 @@ class LogCollection(object):
                         log_max = max(log.data[dataset][metric_name])
                         if basename in data:
                             if dataname in data[basename]:
-                                data[basename][dataname]+=log_max
-                                counts[basename][dataname]+=1
+                                data[basename][dataname] += log_max
+                                counts[basename][dataname] += 1
                             else:
-                                data[basename][dataname]=log_max
-                                counts[basename][dataname]=1
+                                data[basename][dataname] = log_max
+                                counts[basename][dataname] = 1
                         else:
                             data[basename] = dict()
-                            data[basename][dataname]=log_max
+                            data[basename][dataname] = log_max
                             counts[basename] = dict()
-                            counts[basename][dataname]=1
+                            counts[basename][dataname] = 1
 
         # find max
         max_scores = {}
@@ -230,7 +237,7 @@ class LogCollection(object):
             max_scores[basename] = dict()
             for dataset in datasets:
                 c = counts[basename][dataset]
-                max_av = data[basename][dataset]/c
+                max_av = data[basename][dataset] / c
                 max_scores[basename][dataset] = max_av
 
         return max_scores
@@ -254,38 +261,39 @@ class LogCollection(object):
                     continue
 
                 dataname = find_data_name(dataset)
-                group_data[basename][dataname].append(log.data[dataset][metric_name])
+                group_data[basename][dataname].append(
+                    log.data[dataset][metric_name])
 
         return group_data
 
     def plot_groups(self, metric_name, find_basename,
-                   restrict_model=lambda x: True,
-                   restrict_data=lambda x: True,
-                   find_data_name=lambda x: x,
-                   color_group=False, eor=-1):
+                    restrict_model=lambda x: True,
+                    restrict_data=lambda x: True,
+                    find_data_name=lambda x: x,
+                    color_group=False, eor=-1):
 
         import numpy as np
 
-        fig, ax = plt.subplots(figsize=(13,11))
+        fig, ax = plt.subplots(figsize=(13, 11))
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
 
         group_data = self.group_data(metric_name=metric_name,
-                                     restrict_model=restrict_model, 
-                                     find_basename=find_basename, 
+                                     restrict_model=restrict_model,
+                                     find_basename=find_basename,
                                      find_data_name=find_data_name,
                                      restrict_data=restrict_data)
 
-        steps = [step/float(232) for step in self.logs[0].steps[:eor]]
+        steps = [step / float(232) for step in self.logs[0].steps[:eor]]
         for model, data in group_data.items():
             for dataset in data:
                 av = np.mean(data[dataset], axis=0)[:eor]
                 if color_group:
                     print(dataset, model, color_group(model, dataset))
-                    ax.plot(steps, av, color_group(model, dataset), label=model+dataset, linewidth=3.0)
+                    ax.plot(steps, av, color_group(model, dataset),
+                            label=model + dataset, linewidth=3.0)
                 else:
-                    ax.plot(steps, av, dataset, label=model+dataset)
-
+                    ax.plot(steps, av, dataset, label=model + dataset)
 
         ax.tick_params(axis='both', which='major', labelsize=20)
         plt.xlabel("Epochs", fontsize=24)
@@ -300,12 +308,12 @@ class LogCollection(object):
 
         i = 1
         while i < len(data):
-            d1, d2 = data[i-1], data[i]
-            if d1-d2 > 1:
+            d1, d2 = data[i - 1], data[i]
+            if d1 - d2 > 1:
                 del steps[i]
                 del data[i]
                 continue
 
-            i+=1
+            i += 1
 
         return steps, data

@@ -9,6 +9,7 @@ parser.add_argument('--dir', help="data directory", default="../data")
 parser.add_argument('--max-len', help="max sequence length", default=10)
 args = parser.parse_args()
 
+
 def generate_dataset(root, name, size):
     path = os.path.join(root, name)
     if not os.path.exists(path):
@@ -31,6 +32,7 @@ def generate_dataset(root, name, size):
         fout.write("\n".join([str(i) for i in range(10)]))
     tgt_vocab = os.path.join(path, 'vocab.target')
     shutil.copy(src_vocab, tgt_vocab)
+
 
 if __name__ == '__main__':
     data_dir = args.dir

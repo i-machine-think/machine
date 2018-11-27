@@ -10,8 +10,9 @@ if sys.version_info >= (3, 4):
 else:
     ABC = abc.ABCMeta(types.StringType('ABC'), (), {})
 
+
 class BaseModel(ABC, nn.Module):
-    """ 
+    """
     Abstract base class for models.
 
     Args:
@@ -21,7 +22,8 @@ class BaseModel(ABC, nn.Module):
 
     """
 
-    def __init__(self, encoder_module, decoder_module=None, decode_function=F.log_softmax):
+    def __init__(self, encoder_module, decoder_module=None,
+                 decode_function=F.log_softmax):
         super(BaseModel, self).__init__()
         self.encoder_module = encoder_module
         self.decoder_module = decoder_module
@@ -31,13 +33,15 @@ class BaseModel(ABC, nn.Module):
         """
         Flatten parameters of all components in the model.
         """
-        raise NotImplementedError("A generic version of this function should be implemented")
+        raise NotImplementedError(
+            "A generic version of this function should be implemented")
 
     def reset_parameters(self):
         """
         Reset the parameters of all components in the model.
         """
-        raise NotImplementedError("A generic version of this function should be implemented")
+        raise NotImplementedError(
+            "A generic version of this function should be implemented")
 
     def forward(self, inputs, input_lengths=None, targets={},
                 teacher_forcing_ratio=0):
@@ -63,4 +67,3 @@ class BaseModel(ABC, nn.Module):
               predicted token IDs, *KEY_INPUT* : target outputs if provided for decoding, *KEY_ATTN_SCORE* : list of
               sequences, where each list is of attention weights }.
         """
-        pass

@@ -5,14 +5,13 @@ import logging
 import torch
 import torchtext
 
-import machine
-from machine.loss import Perplexity, NLLLoss
-from machine.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy, SymbolRewritingAccuracy
+from machine.loss import NLLLoss
+from machine.metrics import FinalTargetAccuracy, SequenceAccuracy, WordAccuracy
 from machine.dataset import SourceField, TargetField
 from machine.evaluator import Evaluator
 from machine.trainer import SupervisedTrainer
 from machine.util.checkpoint import Checkpoint
-from machine.trainer import SupervisedTrainer
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -23,26 +22,33 @@ except NameError:
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--checkpoint_path', help='Give the checkpoint path from which to load the model')
+parser.add_argument('--checkpoint_path',
+                    help='Give the checkpoint path from which to load the model')
 parser.add_argument('--test_data', help='Path to test data')
-parser.add_argument('--cuda_device', default=0, type=int, help='set cuda device to use')
-parser.add_argument('--max_len', type=int, help='Maximum sequence length', default=50)
+parser.add_argument('--cuda_device', default=0, type=int,
+                    help='set cuda device to use')
+parser.add_argument('--max_len', type=int,
+                    help='Maximum sequence length', default=50)
 parser.add_argument('--batch_size', type=int, help='Batch size', default=32)
 parser.add_argument('--log-level', default='info', help='Logging level.')
 
-parser.add_argument('--attention', choices=['pre-rnn', 'post-rnn'], default=False)
-parser.add_argument('--attention_method', choices=['dot', 'mlp', 'hard'], default=None)
+parser.add_argument(
+    '--attention', choices=['pre-rnn', 'post-rnn'], default=False)
+parser.add_argument('--attention_method',
+                    choices=['dot', 'mlp', 'hard'], default=None)
 
-parser.add_argument('--ignore_output_eos', action='store_true', help='Ignore end of sequence token during training and evaluation')
+parser.add_argument('--ignore_output_eos', action='store_true',
+                    help='Ignore end of sequence token during training and evaluation')
 
 opt = parser.parse_args()
 
 LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
-logging.basicConfig(format=LOG_FORMAT, level=getattr(logging, opt.log_level.upper()))
+logging.basicConfig(format=LOG_FORMAT, level=getattr(
+    logging, opt.log_level.upper()))
 logging.info(opt)
 
-IGNORE_INDEX=-1
-output_eos_used= not opt.ignore_output_eos
+IGNORE_INDEX = -1
+output_eos_used = not opt.ignore_output_eos
 
 
 if not opt.attention and opt.attention_method:
@@ -55,10 +61,11 @@ if torch.cuda.is_available():
     logging.info("Cuda device set to %i" % opt.cuda_device)
     torch.cuda.set_device(opt.cuda_device)
 
-#################################################################################
+##########################################################################
 # load model
 
-logging.info("loading checkpoint from {}".format(os.path.join(opt.checkpoint_path)))
+logging.info("loading checkpoint from {}".format(
+    os.path.join(opt.checkpoint_path)))
 checkpoint = Checkpoint.load(opt.checkpoint_path)
 seq2seq = checkpoint.model
 input_vocab = checkpoint.input_vocab
@@ -77,8 +84,10 @@ tgt.eos_id = tgt.vocab.stoi[tgt.SYM_EOS]
 tgt.sos_id = tgt.vocab.stoi[tgt.SYM_SOS]
 max_len = opt.max_len
 
+
 def len_filter(example):
     return len(example.src) <= max_len and len(example.tgt) <= max_len
+
 
 # generate test set
 test = torchtext.data.TabularDataset(
@@ -95,7 +104,8 @@ loss_weights = [1.]
 for loss in losses:
     loss.to(device)
 
-metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad), FinalTargetAccuracy(ignore_index=pad, eos_id=tgt.eos_id)]
+metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad),
+           FinalTargetAccuracy(ignore_index=pad, eos_id=tgt.eos_id)]
 # Since we need the actual tokens to determine k-grammar accuracy,
 # we also provide the input and output vocab and relevant special symbols
 # metrics.append(SymbolRewritingAccuracy(
@@ -110,11 +120,12 @@ metrics = [WordAccuracy(ignore_index=pad), SequenceAccuracy(ignore_index=pad), F
 
 data_func = SupervisedTrainer.get_batch_data
 
-#################################################################################
+##########################################################################
 # Evaluate model on test set
 
 evaluator = Evaluator(batch_size=opt.batch_size, loss=losses, metrics=metrics)
-losses, metrics = evaluator.evaluate(model=seq2seq, data=test, get_batch_data=data_func)
+losses, metrics = evaluator.evaluate(
+    model=seq2seq, data=test, get_batch_data=data_func)
 
 total_loss, log_msg, _ = SupervisedTrainer.get_losses(losses, metrics, 0)
 

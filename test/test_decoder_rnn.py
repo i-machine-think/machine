@@ -1,9 +1,9 @@
-import os
 import unittest
 
 import torch
 
 from machine.models.DecoderRNN import DecoderRNN
+
 
 class TestDecoderRNN(unittest.TestCase):
 
@@ -44,7 +44,8 @@ class TestDecoderRNN(unittest.TestCase):
             self.assertTrue(torch.equal(prob1.data, prob2.data))
 
     def test_dropout_WITH_NON_ZERO_PROB(self):
-        rnn = DecoderRNN(self.vocab_size, 50, 16, 0, 1, n_layers=2, dropout_p=0.5)
+        rnn = DecoderRNN(self.vocab_size, 50, 16, 0,
+                         1, n_layers=2, dropout_p=0.5)
         for param in rnn.parameters():
             param.data.uniform_(-1, 1)
 

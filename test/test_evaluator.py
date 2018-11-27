@@ -13,6 +13,7 @@ from machine.models.EncoderRNN import EncoderRNN
 from machine.models.DecoderRNN import DecoderRNN
 from machine.trainer.supervised_trainer import SupervisedTrainer as trainer
 
+
 class TestPredictor(unittest.TestCase):
 
     def setUp(self):
@@ -27,13 +28,15 @@ class TestPredictor(unittest.TestCase):
         tgt.build_vocab(self.dataset)
 
         encoder = EncoderRNN(len(src.vocab), 10, 10, 10, rnn_cell='lstm')
-        decoder = DecoderRNN(len(tgt.vocab), 10, 10, tgt.sos_id, tgt.eos_id, rnn_cell='lstm')
+        decoder = DecoderRNN(len(tgt.vocab), 10, 10,
+                             tgt.sos_id, tgt.eos_id, rnn_cell='lstm')
         self.seq2seq = Seq2seq(encoder, decoder)
 
         for param in self.seq2seq.parameters():
             param.data.uniform_(-0.08, 0.08)
 
-    @patch.object(Seq2seq, '__call__', return_value=([], None, dict(inputs=[], length=[10]*64, sequence=MagicMock())))
+    @patch.object(Seq2seq, '__call__', return_value=(
+        [], None, dict(inputs=[], length=[10] * 64, sequence=MagicMock())))
     @patch.object(Seq2seq, 'eval')
     def test_set_eval_mode(self, mock_eval, mock_call):
         """ Make sure that evaluation is done in evaluation mode. """
@@ -43,11 +46,13 @@ class TestPredictor(unittest.TestCase):
 
         evaluator = Evaluator(batch_size=64)
         with patch('machine.evaluator.evaluator.torch.stack', return_value=None), \
-             patch('machine.metrics.WordAccuracy.eval_batch', return_value=None), \
-             patch('machine.metrics.WordAccuracy.eval_batch', return_value=None), \
-             patch('machine.loss.NLLLoss.eval_batch', return_value=None):
-            evaluator.evaluate(self.seq2seq, self.dataset, trainer.get_batch_data)
+                patch('machine.metrics.WordAccuracy.eval_batch', return_value=None), \
+                patch('machine.metrics.WordAccuracy.eval_batch', return_value=None), \
+                patch('machine.loss.NLLLoss.eval_batch', return_value=None):
+            evaluator.evaluate(self.seq2seq, self.dataset,
+                               trainer.get_batch_data)
 
         num_batches = int(math.ceil(len(self.dataset) / evaluator.batch_size))
-        expected_calls = [call.eval()] + num_batches * [call.call(ANY, ANY, ANY)]
+        expected_calls = [call.eval()] + num_batches * \
+            [call.call(ANY, ANY, ANY)]
         self.assertEquals(expected_calls, mock_mgr.mock_calls)

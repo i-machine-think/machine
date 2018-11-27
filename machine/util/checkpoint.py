@@ -7,6 +7,7 @@ import logging
 import torch
 import dill
 
+
 class Checkpoint(object):
     """
     The Checkpoint class manages the saving and loading of a model during training. It allows training to be suspended
@@ -35,7 +36,8 @@ class Checkpoint(object):
     INPUT_VOCAB_FILE = 'input_vocab.pt'
     OUTPUT_VOCAB_FILE = 'output_vocab.pt'
 
-    def __init__(self, model, optimizer, epoch, step, input_vocab, output_vocab, path=None):
+    def __init__(self, model, optimizer, epoch, step,
+                 input_vocab, output_vocab, path=None):
         self.model = model
         self.optimizer = optimizer
         self.input_vocab = input_vocab
@@ -71,7 +73,7 @@ class Checkpoint(object):
         torch.save({'epoch': self.epoch,
                     'step': self.step,
                     'optimizer': self.optimizer
-                   },
+                    },
                    os.path.join(path, self.TRAINER_STATE_NAME))
         torch.save(self.model, os.path.join(path, self.MODEL_NAME))
 
@@ -93,15 +95,18 @@ class Checkpoint(object):
         """
         logger = logging.getLogger(__name__)
         logger.info("Loading checkpoints from {}".format(path))
-        
+
         if torch.cuda.is_available():
-            resume_checkpoint = torch.load(os.path.join(path, cls.TRAINER_STATE_NAME))
+            resume_checkpoint = torch.load(
+                os.path.join(path, cls.TRAINER_STATE_NAME))
             model = torch.load(os.path.join(path, cls.MODEL_NAME))
         else:
-            resume_checkpoint = torch.load(os.path.join(path, cls.TRAINER_STATE_NAME), map_location=lambda storage, loc: storage)
-            model = torch.load(os.path.join(path, cls.MODEL_NAME), map_location=lambda storage, loc: storage)
+            resume_checkpoint = torch.load(os.path.join(
+                path, cls.TRAINER_STATE_NAME), map_location=lambda storage, loc: storage)
+            model = torch.load(os.path.join(path, cls.MODEL_NAME),
+                               map_location=lambda storage, loc: storage)
 
-        model.flatten_parameters() # make RNN parameters contiguous
+        model.flatten_parameters()  # make RNN parameters contiguous
         with open(os.path.join(path, cls.INPUT_VOCAB_FILE), 'rb') as fin:
             input_vocab = dill.load(fin)
         with open(os.path.join(path, cls.OUTPUT_VOCAB_FILE), 'rb') as fin:
