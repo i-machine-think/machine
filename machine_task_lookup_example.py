@@ -24,15 +24,30 @@ IGNORE_INDEX = -1
 LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 
 
-def train_lookup_model(default_settings='baseline_2018'):
+# Example for how to run file:
+#   python machine_task_lookup_example.py --default_settings "baseline_2018"
+#     - uses the baseline parameters stored in machine-task found
+#       by Hupkes et al. 2018
+#   python machine_task_lookup_example.py --default_settings "Hupkes_2018"
+#     - Final settings used in Learning compositionally
+#       through attentive guidance(Hupkes et al. 2018)
 
-    if default_settings != 'baseline_2018' and default_settings != 'full_focus_2018':
-        raise NameError("Invalid default setting name for lookup table task \n \
-        - check .yml file or machine-tasks repo for more info")
+# NOTE: Must have pulled the machine-task and machine repos into the same
+#       folder. Since this script adds machine-task to the path and assumes
+#       that machine-task is present one directory above.
+#       This is just an example of how to use machine-task to train with
+#       machine, for more machine specific utility please refer to
+#       train_model.py. A lot of machine parameters have been fixed
+#       for the sake of keeping this example brief and simple.
+
+def train_lookup_model():
+    parser = init_argparser()
+    opt = parser.parse_args()
+    default_settings = opt.default_settings
 
     # Add machine-task to path
     import sys
-    sys.path.append(os.path.join(os.getcwd(), "machine-tasks"))
+    sys.path.append(os.path.join(os.getcwd(), "../machine-tasks"))
 
     # gets the lookupt task from machine-tasks
     def get_lookup_task_dev():
@@ -74,6 +89,23 @@ def train_lookup_model(default_settings='baseline_2018'):
                                num_epochs=100, dev_data=dev,
                                monitor_data=monitor_data, optimizer='adam',
                                checkpoint_path='../models')
+
+
+def init_argparser():
+    """
+    Args: default_settings (str, optional): 
+
+    """
+    parser = argparse.ArgumentParser()
+
+    # parser arguments
+    #  - baseline_2018: uses the baseline parameters stored in machine-task
+    #                  found by Hupkes et al. 2018
+    #  - Hupkes_2018: Final settings used in Learning compositionally
+    #                 through attentive guidance(Hupkes et al. 2018)
+    parser.add_argument('--default_settings', type=str, help='Choose default settings',
+                        choices=['baseline_2018', 'Hupkes_2018'], default='baseline_2018')
+    return parser
 
 
 def init_logging(parameters):
@@ -151,5 +183,4 @@ def create_trainer(batch_size, losses, loss_weights, metrics):
 
 
 if __name__ == "__main__":
-    train_lookup_model(default_settings='baseline_2018')
-    train_lookup_model(default_settings='full_focus_2018')
+    train_lookup_model()
