@@ -11,9 +11,8 @@ import torch.optim as optim
 import time
 from collections import OrderedDict
 
-from machine.trainer import SupervisedTrainer
-from machine.models import EncoderRNN, DecoderRNN, LanguageModel
-from machine.loss import Perplexity
+# from machine.trainer import SupervisedTrainer
+# from machine.models import EncoderRNN, DecoderRNN, LanguageModel
 
 import math
 
@@ -91,7 +90,7 @@ model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=lr,
                        betas=(0.0, 0.999), eps=1e-9)
 
-criterion = nn.NLLLoss()
+criterion = nn.CrossEntropyLoss(reduction='elementwise_mean')
 
 
 def evaluate(data_source):
