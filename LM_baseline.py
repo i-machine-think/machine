@@ -91,12 +91,12 @@ model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=lr,
                        betas=(0.0, 0.999), eps=1e-9)
 
-criterion = Perplexity()
+criterion = nn.NLLLoss()
 
 start_time = time.time()
 hidden = model.init_hidden(batch_size)
 for epoch in range(NUM_EPOCHS):
-    for i, batch in tqdm(enumerate(train_iter)):
+    for i, batch in tqdm(enumerate(train_iter), total=len(train_iter)):
         model.train()
         data, targets = batch.text, batch.target
 
@@ -120,11 +120,11 @@ for epoch in range(NUM_EPOCHS):
                 for batch in valid_iter:
                     hidden = model.init_hidden(batch_size)
                     text, targets = batch.text, batch.target
-                    output, hidden = model(data, hidden)
+                    output, hidden = model(text, hidden)
                     loss = criterion(
                         output.view(-1, vocab_size), targets.view(-1))
                     val_loss += loss.item() * text.size(0)
-            val_loss /= len(valid.examples[0].text)
+            val_loss /= len(valid_iter)
 
-            print('| Epoch: {}, Training Loss: {:.4f}, Validation Loss: {:.4f}'.format(
-                epoch, epoch_loss, val_loss))
+            print('| Epoch: {} | Validation Loss: {:.4f}'.format(
+                epoch, val_loss))
