@@ -21,7 +21,7 @@ import math
 class Baseline_LSTM_LM(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
-    def __init__(self, ntoken, ninp, nhid, nlayers, dropout=0.5, tie_weights=False):
+    def __init__(self, ntoken, ninp, nhid, nlayers, dropout=0.2, tie_weights=False):
         super(Baseline_LSTM_LM, self).__init__()
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(ntoken, ninp)
@@ -73,49 +73,58 @@ def repackage_hidden(h):
         return tuple(repackage_hidden(v) for v in h)
 
 
-batch_size = 32
+batch_size = 64
 lr = 0.001
+NUM_EPOCHS = 50
+log_interval = 3
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 train_iter, valid_iter, test_iter = WikiText2.iters(
     batch_size=batch_size, device=device)
+
 vocab_size = len(train_iter.dataset.fields['text'].vocab)
+
 model = Baseline_LSTM_LM(vocab_size, 64, 64, 1)
-optimizer = optim.Adam(model.parameters(), lr=lr)
+model.to(device)
 
-criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=lr,
+                       betas=(0.0, 0.999), eps=1e-9)
 
+criterion = Perplexity()
 
-model.train()
-total_loss = 0.0
-log_interval = 10
 start_time = time.time()
 hidden = model.init_hidden(batch_size)
-for i, batch in tqdm(enumerate(train_iter)):
+for epoch in range(NUM_EPOCHS):
+    for i, batch in tqdm(enumerate(train_iter)):
+        model.train()
+        data, targets = batch.text, batch.target
 
-    data, targets = batch.text, batch.target
+        # Starting each batch, we detach the hidden state from how it was previously produced.
+        # If we didn't, the model would try backpropagating all the way to start of the dataset.
+        hidden = repackage_hidden(hidden)
+        model.zero_grad()
+        output, hidden = model(data, hidden)
+        loss = criterion(output.view(-1, vocab_size), targets.view(-1))
+        loss.backward()
 
-    # Starting each batch, we detach the hidden state from how it was previously produced.
-    # If we didn't, the model would try backpropagating all the way to start of the dataset.
-    hidden = repackage_hidden(hidden)
-    model.zero_grad()
-    output, hidden = model(data, hidden)
-    loss = criterion(output.view(-1, vocab_size), targets.view(-1))
-    loss.backward()
+        # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
+        for p in model.parameters():
+            p.data.add_(-lr, p.grad.data)
 
-    # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-    torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
-    for p in model.parameters():
-        p.data.add_(-lr, p.grad.data)
+        if i % log_interval == 0 and i > 0:
+            val_loss = 0
+            model.eval()
+            with torch.no_grad():
+                for batch in valid_iter:
+                    hidden = model.init_hidden(batch_size)
+                    text, targets = batch.text, batch.target
+                    output, hidden = model(data, hidden)
+                    loss = criterion(
+                        output.view(-1, vocab_size), targets.view(-1))
+                    val_loss += loss.item() * text.size(0)
+            val_loss /= len(valid.examples[0].text)
 
-    total_loss += loss.item()
-
-    if i % log_interval == 0 and i > 0:
-        cur_loss = total_loss / log_interval
-        elapsed = time.time() - start_time
-        print('loss {:5.2f} | ppl {:8.2f}'.format(
-            cur_loss, math.exp(cur_loss)))
-        # print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.2f} | ms/batch {:5.2f} | '
-        #       'loss {:5.2f} | ppl {:8.2f}'.format(
-        #           epoch, batch, len(train_data) // 35, lr,
-        #           elapsed * 1000 / log_interval, cur_loss, math.exp(cur_loss)))
-        total_loss = 0
+            print('| Epoch: {}, Training Loss: {:.4f}, Validation Loss: {:.4f}'.format(
+                epoch, epoch_loss, val_loss))
