@@ -76,7 +76,7 @@ def repackage_hidden(h):
 batch_size = 64
 lr = 0.001
 NUM_EPOCHS = 50
-log_interval = 3
+log_interval = 100
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -93,11 +93,32 @@ optimizer = optim.Adam(model.parameters(), lr=lr,
 
 criterion = nn.NLLLoss()
 
-start_time = time.time()
-hidden = model.init_hidden(batch_size)
-for epoch in range(NUM_EPOCHS):
+
+def evaluate(data_source):
+    # data_source = valid_iter or test_iter
+    # Turn on evaluation mode which disables dropout.
+    model.eval()
+    total_loss = 0.
+    hidden = model.init_hidden(batch_size)
+    with torch.no_grad():
+        for i, batch in tqdm(enumerate(data_source), total=len(data_source)):
+            data, targets = batch.text, batch.target
+            output, hidden = model(data, hidden)
+            output_flat = output.view(-1, vocab_size)
+            total_loss += len(data) * criterion(output_flat,
+                                                targets.view(-1)).item()
+            hidden = repackage_hidden(hidden)
+
+    return total_loss / (len(data_source) - 1)
+
+
+def train():
+    # Turn on training mode which enables dropout.
+    model.train()
+    total_loss = 0.
+    start_time = time.time()
+    hidden = model.init_hidden(batch_size)
     for i, batch in tqdm(enumerate(train_iter), total=len(train_iter)):
-        model.train()
         data, targets = batch.text, batch.target
 
         # Starting each batch, we detach the hidden state from how it was previously produced.
@@ -110,21 +131,58 @@ for epoch in range(NUM_EPOCHS):
 
         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
-        for p in model.parameters():
-            p.data.add_(-lr, p.grad.data)
+        optimizer.step()
+
+        total_loss += loss.item()
 
         if i % log_interval == 0 and i > 0:
-            val_loss = 0
-            model.eval()
-            with torch.no_grad():
-                for batch in valid_iter:
-                    hidden = model.init_hidden(batch_size)
-                    text, targets = batch.text, batch.target
-                    output, hidden = model(text, hidden)
-                    loss = criterion(
-                        output.view(-1, vocab_size), targets.view(-1))
-                    val_loss += loss.item() * text.size(0)
-            val_loss /= len(valid_iter)
+            cur_loss = total_loss / log_interval
+            elapsed = time.time() - start_time
+            print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.2f} | ms/batch {:5.2f} | '
+                  'loss {:5.2f} | ppl {:8.2f}'.format(
+                      epoch, i, len(train_data) // 35, lr,
+                      elapsed * 1000 / log_interval, cur_loss, math.exp(cur_loss)))
+            total_loss = 0
+            start_time = time.time()
 
-            print('| Epoch: {} | Validation Loss: {:.4f}'.format(
-                epoch, val_loss))
+
+# Loop over epochs.
+best_val_loss = None
+
+# At any point you can hit Ctrl + C to break out of training early.
+try:
+    for epoch in range(1, NUM_EPOCHS+1):
+        epoch_start_time = time.time()
+        train()
+        val_loss = evaluate(valid_iter)
+        print('-' * 89)
+        print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
+              'valid ppl {:8.2f}'.format(epoch, (time.time() - epoch_start_time),
+                                         val_loss, math.exp(val_loss)))
+        print('-' * 89)
+        # Save the model if the validation loss is the best we've seen so far.
+        # if not best_val_loss or val_loss < best_val_loss:
+        #     with open(args.save, 'wb') as f:
+        #         torch.save(model, f)
+        #     best_val_loss = val_loss
+        # else:
+        #     # Anneal the learning rate if no improvement has been seen in the validation dataset.
+        #     lr /= 4.0
+
+except KeyboardInterrupt:
+    print('-' * 89)
+    print('Exiting from training early')
+
+# Load the best saved model.
+# with open(args.save, 'rb') as f:
+#     model = torch.load(f)
+#     # after load the rnn params are not a continuous chunk of memory
+#     # this makes them a continuous chunk, and will speed up forward pass
+#     model.rnn.flatten_parameters()
+
+# Run on test data.
+test_loss = evaluate(test_iter)
+print('=' * 89)
+print('| End of training | test loss {:5.2f} | test ppl {:8.2f}'.format(
+    test_loss, math.exp(test_loss)))
+print('=' * 89)
