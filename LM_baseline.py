@@ -1,4 +1,4 @@
-from torchtext.datasets import WikiText2
+from torchtext.datasets import WikiText2, PennTreebank
 from tqdm import tqdm
 import os
 import argparse
@@ -27,19 +27,24 @@ def repackage_hidden(h):
 
 batch_size = 64
 lr = 0.001
+lr_decay = 0.1
 NUM_EPOCHS = 40
 log_interval = 100
 
 torch.manual_seed(123)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-train_iter, valid_iter, test_iter = WikiText2.iters(
+# train_iter, valid_iter, test_iter = WikiText2.iters(
+# batch_size=batch_size, device=device)
+
+
+train_iter, valid_iter, test_iter = PennTreebank.iters(
     batch_size=batch_size, device=device)
 
 vocab_size = len(train_iter.dataset.fields['text'].vocab)
 
 encoder = EncoderRNN(vocab_size, 35, 650, 650,
-                     rnn_cell='lstm', input_dropout_p=0.5)
+                     rnn_cell='lstm', input_dropout_p=0.5, dropout_p=0.5)
 model = LanguageModel(encoder, tie_weights=True, dropout_p_decoder=0.5)
 model.to(device)
 
@@ -55,6 +60,7 @@ def evaluate(data_source):
     model.eval()
     total_loss = 0.
     hidden = model.init_hidden(batch_size)
+    example_count = 0
     with torch.no_grad():
         for i, batch in tqdm(enumerate(data_source), total=len(data_source)):
             data, targets = batch.text.t(), batch.target
@@ -62,9 +68,10 @@ def evaluate(data_source):
             output_flat = output.view(-1, vocab_size)
             total_loss += len(data) * criterion(output_flat,
                                                 targets.view(-1)).item()
+            example_count += len(data)
             hidden = repackage_hidden(hidden)
 
-    return total_loss / (len(data_source) - 1)
+    return total_loss / example_count
 
 
 def train():
@@ -95,7 +102,7 @@ def train():
         if i % log_interval == 0 and i > 0:
             cur_loss = total_loss / log_interval
             elapsed = time.time() - start_time
-            print('| epoch {:3d} | {:5d}/{:5d} batches | lr {:02.2f} | ms/batch {:5.2f} | '
+            print('| epoch {:3d} | {:5d}/{:5d} batches | ms/batch {:5.2f} | '
                   'loss {:5.2f} | ppl {:8.2f}'.format(
                       epoch, i, len(train_iter) // 35, lr,
                       elapsed * 1000 / log_interval, cur_loss, math.exp(cur_loss)))
@@ -122,9 +129,11 @@ try:
             with open('model.pt', 'wb') as f:
                 torch.save(model, f)
             best_val_loss = val_loss
-        # else:
-        #     # Anneal the learning rate if no improvement has been seen in the validation dataset.
-        #     lr /= 4.0
+        else:
+            # Anneal the learning rate if no improvement has been seen in the validation dataset.
+            print("No improvement in val loss - decreasing lr")
+            for param_group in optimizer.param_groups:
+                param_group['lr'] *= lr_decay
 
 except KeyboardInterrupt:
     print('-' * 89)
