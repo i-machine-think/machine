@@ -38,9 +38,9 @@ train_iter, valid_iter, test_iter = WikiText2.iters(
 
 vocab_size = len(train_iter.dataset.fields['text'].vocab)
 
-encoder = EncoderRNN(vocab_size, 35, 1500, 64,
-                     rnn_cell='lstm', input_dropout_p=0.65)
-model = LanguageModel(encoder, tie_weights=True, dropout_p_decoder=0.65)
+encoder = EncoderRNN(vocab_size, 35, 650, 650,
+                     rnn_cell='lstm', input_dropout_p=0.5)
+model = LanguageModel(encoder, tie_weights=True, dropout_p_decoder=0.5)
 model.to(device)
 
 optimizer = optim.Adam(model.parameters(), lr=lr,
@@ -119,7 +119,7 @@ try:
         print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:
-            with open('model.pt'', 'wb') as f:
+            with open('model.pt', 'wb') as f:
                 torch.save(model, f)
             best_val_loss = val_loss
         # else:
@@ -131,7 +131,7 @@ except KeyboardInterrupt:
     print('Exiting from training early')
 
 # Load the best saved model.
-with open('model.pt'', 'rb') as f:
+with open('model.pt', 'rb') as f:
     model = torch.load(f)
     # after load the rnn params are not a continuous chunk of memory
     # this makes them a continuous chunk, and will speed up forward pass
