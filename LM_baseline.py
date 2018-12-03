@@ -44,7 +44,7 @@ model = LanguageModel(encoder, tie_weights=True, dropout_p_decoder=0.65)
 model.to(device)
 
 optimizer = optim.Adam(model.parameters(), lr=lr,
-                       betas=(0.0, 0.999), eps=1e-8, weight_decay=12e−7)
+                       betas=(0.0, 0.999), eps=1e-8, weight_decay=12e-7)
 
 criterion = nn.CrossEntropyLoss()
 
