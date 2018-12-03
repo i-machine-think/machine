@@ -43,7 +43,7 @@ train_iter, valid_iter, test_iter = PennTreebank.iters(
 
 vocab_size = len(train_iter.dataset.fields['text'].vocab)
 
-encoder = EncoderRNN(vocab_size, 35, 650, 650,
+encoder = EncoderRNN(vocab_size, 35, 65, 65,
                      rnn_cell='lstm', input_dropout_p=0.5, dropout_p=0.5)
 model = LanguageModel(encoder, tie_weights=True, dropout_p_decoder=0.5)
 model.to(device)
@@ -102,10 +102,11 @@ def train():
         if i % log_interval == 0 and i > 0:
             cur_loss = total_loss / log_interval
             elapsed = time.time() - start_time
-            print('| epoch {:3d} | {:5d}/{:5d} batches | ms/batch {:5.2f} | '
-                  'loss {:5.2f} | ppl {:8.2f}'.format(
-                      epoch, i, len(train_iter) // 35, lr,
-                      elapsed * 1000 / log_interval, cur_loss, math.exp(cur_loss)))
+            print('| epoch {:3d} | {}/{} batches | ms/batch {:5.2f} \
+                   | loss {:5.2f} | ppl {:8.2f}'.format(epoch,
+                                                        i, len(train_iter),
+                                                        elapsed * 1000 / log_interval,
+                                                        cur_loss, math.exp(cur_loss)))
             total_loss = 0
             start_time = time.time()
 
