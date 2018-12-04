@@ -52,7 +52,8 @@ class LanguageModel(BaseModel):
         output = self.decoder_dropout(output)
         decoded = self.decoder(output.contiguous().view(-1, output.size(2)))
 
-        return decoded.view(output.size(0), output.size(1), decoded.size(1)), hidden
+        return decoded.view(output.size(0), output.size(1),
+                            decoded.size(1)), hidden
 
     def init_hidden(self, batch_size):
         weight = next(self.parameters())

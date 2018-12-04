@@ -56,7 +56,10 @@ class EncoderRNN(BaseRNN):
             input_var (batch, seq_len): tensor containing the features of the input sequence.
             input_lengths (list of int, optional): A list that contains the lengths of sequences
               in the mini-batch
-
+            **hidden** : Tuple of (h_0, c_0), each of shape (num_layers * num_directions, batch, hidden_size)
+              where h_0 is tensor containing the initial hidden state, and c_0 is a tensor
+              containing the initial cell state for for each element in the batch. 
+              If none is provided then defaults to zero
         Returns: output, hidden
             - **output** (batch, seq_len, hidden_size): variable containing the encoded features of the input sequence
             - **hidden** (num_layers * num_directions, batch, hidden_size): variable containing the features in the hidden state h

@@ -26,17 +26,17 @@ def repackage_hidden(h):
 
 
 batch_size = 64
-lr = 0.001
+lr = 0.1
 lr_decay = 0.1
+optimization_step = 100
 NUM_EPOCHS = 40
-log_interval = 100
+log_interval = 10
 
 torch.manual_seed(123)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # train_iter, valid_iter, test_iter = WikiText2.iters(
 # batch_size=batch_size, device=device)
-
 
 train_iter, valid_iter, test_iter = PennTreebank.iters(
     batch_size=batch_size, device=device)
@@ -78,10 +78,16 @@ def train():
     # Turn on training mode which enables dropout.
     model.train()
     total_loss = 0.
+    total_num_examples = 0
     start_time = time.time()
     hidden = model.init_hidden(batch_size)
+
+    anneal_lr = 0
+    number_of_checkpoints_since_last_loss_decrease = 0
+    best_val_loss = 1000
+
     for i, batch in tqdm(enumerate(train_iter), total=len(train_iter)):
-        # transpose text to make batch first
+            # transpose text to make batch first
         data, targets = batch.text.t(), batch.target
 
         model.zero_grad()
@@ -97,10 +103,11 @@ def train():
         # If we didn't, the model would try backpropagating all the way to start of the dataset.
         hidden = repackage_hidden(hidden)
 
-        total_loss += loss.item()
+        total_loss += len(data)*loss.item()
+        total_num_examples += len(data)
 
         if i % log_interval == 0 and i > 0:
-            cur_loss = total_loss / log_interval
+            cur_loss = total_loss / total_num_examples
             elapsed = time.time() - start_time
             print('| epoch {:3d} | {}/{} batches | ms/batch {:5.2f} \
                    | loss {:5.2f} | ppl {:8.2f}'.format(epoch,
@@ -108,7 +115,24 @@ def train():
                                                         elapsed * 1000 / log_interval,
                                                         cur_loss, math.exp(cur_loss)))
             total_loss = 0
+            total_num_examples = 0
             start_time = time.time()
+
+        if i % optimization_step == 0 and i > 0:
+            loss = evaluate(valid_iter)
+            if loss < best_val_loss:
+                best_val_loss = loss
+                number_of_checkpoints_since_last_loss_decrease = 0
+            else:
+                number_of_checkpoints_since_last_loss_decrease += 1
+
+            if number_of_checkpoints_since_last_loss_decrease >= 30:
+                # Anneal the learning rate if no improvement has been seen in the validation dataset.
+                print("30 checkpoints since last decrease - decreasing lr rate")
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] *= lr_decay
+
+                number_of_checkpoints_since_last_loss_decrease = 0
 
 
 # Loop over epochs.
@@ -130,11 +154,6 @@ try:
             with open('model.pt', 'wb') as f:
                 torch.save(model, f)
             best_val_loss = val_loss
-        else:
-            # Anneal the learning rate if no improvement has been seen in the validation dataset.
-            print("No improvement in val loss - decreasing lr")
-            for param_group in optimizer.param_groups:
-                param_group['lr'] *= lr_decay
 
 except KeyboardInterrupt:
     print('-' * 89)
