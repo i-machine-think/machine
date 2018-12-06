@@ -130,11 +130,10 @@ class LogCollection(object):
                     self.logs.append(Log(f))
                     self.log_names.append(log_name)
 
-    def plot_metric(self, metric_name, restrict_model=lambda x: True,
-                    restrict_data=lambda x: True,
-                    data_name_parser=None,
-                    color_group=False,
-                    title='', eor=-1):
+    def plot_metric(self, metric_name, restrict_model=lambda x: True, 
+                    restrict_data=lambda x: True, data_name_parser=None,
+                    color_group=False, title='', eor=-1,
+                    show_figure=True, ylabel=None, **line_kwargs):
         """
         Plot all values for a specific metrics. A function restrict can be
         inputted to restrict the set of models being plotted. A function group
@@ -167,34 +166,21 @@ class LogCollection(object):
                                 steps, log.data[dataset][metric_name][:eor])
                             ax.plot(steps, data,
                                     color_group(name, dataset),
-                                    label=label + label_name, linewidth=3.0)
+                                    label=label + label_name, linewidth=3.0, **line_kwargs)
                         else:
                             ax.plot(steps,
                                     log.data[dataset][metric_name][:eor],
-                                    label=label + label_name)
+                                    label=label + label_name, **line_kwargs)
                         ax.tick_params(
                             axis='both', which='major', labelsize=20)
                         plt.xlabel("Epochs", fontsize=24)
-                        plt.ylabel("Sequence Accuracy", fontsize=24)
+                        plt.ylabel(metric_name if ylabel is None else ylabel, fontsize=24)
                         plt.title(title)
 
-        # k_line = mlines.Line2D([], [], color='black', linestyle='--',
-        #                        label='Baseline, training loss', linewidth=3)
-        # k_line2 = mlines.Line2D([], [], color='black',
-        #                         label='Attention Guidance, training loss', linewidth=3)
-        # m_line = mlines.Line2D(
-        #     [], [], color='m', label='Baseline, test loss', linewidth=3)
-        # g_line = mlines.Line2D(
-        #     [], [], color='g', label='Attention Guidance, test loss', linewidth=3)
+        plt.legend()
 
-        baseline = mlines.Line2D(
-            [], [], color='m', linewidth=3.0, label='Baseline')
-        guided = mlines.Line2D(
-            [], [], color='g', linewidth=3.0, label='Guided')
-
-        # plt.legend([k_line, k_line2, m_line, g_line], ['Baseline training', 'Guided, training', 'Baseline, test', 'Guided, test'], fontsize=24)
-        plt.legend([baseline, guided], ['Baseline', 'Guided'], fontsize=24)
-        plt.show()
+        if show_figure:
+            plt.show()
 
         return fig
 
