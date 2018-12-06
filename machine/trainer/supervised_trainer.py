@@ -17,6 +17,7 @@ from machine.loss import NLLLoss
 from machine.metrics import WordAccuracy
 from machine.optim import Optimizer
 from machine.util.checkpoint import Checkpoint
+from machine.util.callback import CallbackContainer, Logger, ModelCheckpoint
 from machine.util.log import Log
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -78,16 +79,13 @@ class SupervisedTrainer(object):
 
         return losses
 
-    def _train_epoches(self, data, model, n_epochs, start_epoch, start_step,
-                       dev_data=None, monitor_data=[], teacher_forcing_ratio=0,
-                       top_k=5):
-        log = self.logger
+    def _train_epoches(self, data, model, n_epochs, 
+                       start_epoch, start_step,
+                       callbacks,
+                       dev_data=None, monitor_data=[], 
+                       teacher_forcing_ratio=0):
 
-        print_loss_total = defaultdict(float)  # Reset every print_every
-        epoch_loss_total = defaultdict(float)  # Reset every epoch
-        epoch_loss_avg = defaultdict(float)
-        print_loss_avg = defaultdict(float)
-
+        # TODO: move this out of the train_epoches function
         batch_iterator = torchtext.data.BucketIterator(
             dataset=data, batch_size=self.batch_size,
             sort=False, sort_within_batch=True,
@@ -97,45 +95,60 @@ class SupervisedTrainer(object):
         steps_per_epoch = len(batch_iterator)
         total_steps = steps_per_epoch * n_epochs
 
-        step = start_step
-        step_elapsed = 0
+        # give start information to callbacks
+        callbacks.set_info(start_step, start_epoch,
+                           steps_per_epoch,
+                           total_steps)
 
-        # store initial model to be sure at least one model is stored
-        val_data = dev_data or data
-        losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data)
+        # set data as attribute to trainer
+        self.data = data
+        self.val_data = dev_data or data
 
-        total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
-        log.info(log_msg)
+        ########################################
 
+        # Call all callbacks
+        callbacks.on_train_begin()
+        # TODO check if checkpoint is saved correctly in Checkpoint callback
+
+        self.logger.info(log_msg)
+
+        # TODO this should also be callback
         logs = Log()
-        loss_best = top_k*[total_loss]
-        best_checkpoints = top_k*[None]
-        best_checkpoints[0] = model_name
-
-        Checkpoint(model=model,
-                   optimizer=self.optimizer,
-                   epoch=start_epoch, step=start_step,
-                   input_vocab=data.fields[machine.src_field_name].vocab,
-                   output_vocab=data.fields[machine.tgt_field_name].vocab).save(self.expt_dir, name=model_name)
-
 
         for epoch in range(start_epoch, n_epochs + 1):
-            log.info("Epoch: %d, Step: %d" % (epoch, step))
 
+            # call all callbacks,
+            #TODO describe which are the default ones
+            self.callbacks.on_epoch_begin(epoch)
+
+            # use trainer logger, TODO this should also be moved
+            self.logger.info("Epoch: %d, Step: %d" % (epoch, step))
+
+            ##########################################
+            # TODO this does not seem needed, remove this bit
             batch_generator = batch_iterator.__iter__()
 
             # consuming seen batches from previous training
             for _ in range((epoch - 1) * steps_per_epoch, step):
                 next(batch_generator)
+            #
+            ##########################################
 
-            model.train(True)
+            model.train()
+
             for batch in batch_generator:
-                step += 1
-                step_elapsed += 1
+
+                self.callbacks.on_batch_begin(info, batch)
 
                 input_variables, input_lengths, target_variables = self.get_batch_data(batch)
 
+                # TODO this should be moved to a "train" callback, this callback
+                # should interact with both trainer.model and trainer.val_losses
+                # etc so that its outcomes are also accessible for the logger
                 losses = self._train_batch(input_variables, input_lengths.tolist(), target_variables, model, teacher_forcing_ratio)
+
+                #########################################
+                # TODO this is unrevised, should be checked
 
                 # Record average loss
                 for loss in losses:
@@ -173,27 +186,7 @@ class SupervisedTrainer(object):
 
                     log.info(log_msg)
 
-                # check if new model should be saved
-                if step % self.checkpoint_every == 0 or step == total_steps:
-                    # compute dev loss
-                    losses, metrics = self.evaluator.evaluate(model, val_data, self.get_batch_data)
-                    total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
-
-                    max_eval_loss = max(loss_best)
-                    if total_loss < max_eval_loss:
-                            index_max = loss_best.index(max_eval_loss)
-                            # rm prev model
-                            if best_checkpoints[index_max] is not None:
-                                shutil.rmtree(os.path.join(self.expt_dir, best_checkpoints[index_max]))
-                            best_checkpoints[index_max] = model_name
-                            loss_best[index_max] = total_loss
-
-                            # save model
-                            Checkpoint(model=model,
-                                       optimizer=self.optimizer,
-                                       epoch=epoch, step=step,
-                                       input_vocab=data.fields[machine.src_field_name].vocab,
-                                       output_vocab=data.fields[machine.tgt_field_name].vocab).save(self.expt_dir, name=model_name)
+                self.callbacks.on_batch_end(batch, info)
 
             if step_elapsed == 0: continue
 
@@ -213,12 +206,20 @@ class SupervisedTrainer(object):
 
             log.info(log_msg)
 
+            #
+            ############################################
+
+            self.callbacks.on_epoch_end(epoch, info)
+
+        self.callbacks.on_train_end(info)
+
         return logs
 
     def train(self, model, data, num_epochs=5,
               resume=False, dev_data=None, 
               monitor_data={}, optimizer=None,
               teacher_forcing_ratio=0,
+              custom_callbacks=[],
               learning_rate=0.001, checkpoint_path=None, top_k=5):
         """ Run training for a given model.
 
@@ -269,9 +270,15 @@ class SupervisedTrainer(object):
 
         self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))
 
+        #TODO here generate the callbacks based on the available info
+        callbacks = CallbackContainer([Logger(), ModelCheckpoint(top_k=top_k)] +
+                custom_callbacks,
+                self)
+
         logs = self._train_epoches(data, model, num_epochs,
                             start_epoch, step, dev_data=dev_data,
                             monitor_data=monitor_data,
+                            callbacks=callbacks,
                             teacher_forcing_ratio=teacher_forcing_ratio,
                             top_k=top_k)
         return model, logs

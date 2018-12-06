@@ -12,38 +12,47 @@ class CallbackContainer(object):
 
     def __init__(self, callbacks=[]):
         self.callbacks = callbacks
-
-    def set_trainer(self, trainer):
-        for callback in self.callbacks:
-            callback.set_trainer(trainer)
+        self.info={}
 
     def set_params(self, params):
         for callback in self.callbacks:
             self.params = params
 
-    def on_epoch_begin(self, epoch, info=None):
-        for callback in self.callbacks:
-            callback.on_epoch_begin(epoch, info)
+    def set_info(self, start_step, start_epoch,
+                 steps_per_epoch, total_steps):
+        self.info['start_step'] = start_step
+        self.info['step'] = start_step
+        self.info['start_epoch'] = start_epoch
+        self.info['step_elapsed'] = 0
+        self.info['steps_per_epoch'] = steps_per_epoch
+        self.info['total_steps'] = total_steps
 
-    def on_epoch_end(self, epoch, info=None):
+    def on_epoch_begin(self, epoch):
         for callback in self.callbacks:
-            callback.on_epoch_end(epoch, info)
+            callback.on_epoch_begin(epoch, self.info, self.trainer)
 
-    def on_batch_begin(self, batch, info=None):
+    def on_epoch_end(self, epoch):
         for callback in self.callbacks:
-            callback.on_batch_begin(batch, info)
+            callback.on_epoch_end(epoch, self.info, self.trainer)
 
-    def on_batch_end(self, batch, info=None):
+    def on_batch_begin(self, batch):
         for callback in self.callbacks:
-            callback.on_batch_end(batch, info)
+            callback.on_batch_begin(batch, self.info, self.trainer)
 
-    def on_train_begin(self, info=None):
-        for callback in self.callbacks:
-            callback.on_train_begin(info)
+        self.info['step'] += 1
+        self.info['step_elapsed'] += 1
 
-    def on_train_end(self, info=None):
+    def on_batch_end(self, batch):
         for callback in self.callbacks:
-            callback.on_train_end(info)
+            callback.on_batch_end(batch, self.info, self.trainer)
+
+    def on_train_begin(self):
+        for callback in self.callbacks:
+            callback.on_train_begin(self.info, self.trainer)
+
+    def on_train_end(self):
+        for callback in self.callbacks:
+            callback.on_train_end(self.info, self.trainer)
 
 class Callback(object):
     """
@@ -242,7 +251,7 @@ class ModelCheckpoint(Callback):
     is trained with the SupervisedTrainer.
     """
 
-    def __init__(self, data, dev_data, top_k=5, monitor='val', 
+    def __init__(self, top_k=5, monitor='val', 
             save_best_only=True):
         super(ModelCheckpoint, self).__init__()
         self.top_k = top_k
@@ -294,12 +303,14 @@ class ModelCheckpoint(Callback):
                                input_vocab=self.data.fields[seq2seq.src_field_name].vocab,
                                output_vocab=self.data.fields[seq2seq.tgt_field_name].vocab).save(self.expt_dir, name=model_name)
 
-    def on_train_begin(self, info=None):
+    def on_train_begin(self, info, trainer):
 
         # set the best losses based on starting accuracies
+        losses, metrics = trainer.evaluator.evaluate(trainer.model, 
+                trainer.val_data, trainer.get_batch_data)
 
         total_loss, log_msg, model_name = \
-                self.get_losses(info['losses'], info['metrics'], info['step'])
+                self.get_losses(losses, metrics, info['step'])
 
         self.loss_best = self.top_k*[total_loss]
         self.best_checkpoints = self.top_k*[None]
