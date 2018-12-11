@@ -17,7 +17,7 @@ from machine.loss import NLLLoss
 from machine.metrics import WordAccuracy
 from machine.optim import Optimizer
 from machine.util.checkpoint import Checkpoint
-from machine.util.callback import CallbackContainer, Logger, ModelCheckpoint
+from machine.util.callbacks import CallbackContainer, Logger, ModelCheckpoint
 from machine.util.log import Log
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -36,19 +36,23 @@ class SupervisedTrainer(object):
         checkpoint_every (int, optional): number of epochs to checkpoint after, (default: 100)
         print_every (int, optional): number of iterations to print after, (default: 100)
     """
-    def __init__(self, expt_dir='experiment', loss=[NLLLoss()], loss_weights=None, metrics=[], batch_size=64, eval_batch_size=128,
-                 random_seed=None,
+
+    def __init__(self, expt_dir='experiment', loss=[NLLLoss()],
+                 loss_weights=None, metrics=[], batch_size=64,
+                 eval_batch_size=128, random_seed=None,
                  checkpoint_every=100, print_every=100):
         self._trainer = "Simple Trainer"
+
         self.random_seed = random_seed
         if random_seed is not None:
             random.seed(random_seed)
             torch.manual_seed(random_seed)
-        k = NLLLoss()
+
         self.loss = loss
         self.metrics = metrics
         self.loss_weights = loss_weights or len(loss)*[1.]
-        self.evaluator = Evaluator(loss=self.loss, metrics=self.metrics, batch_size=eval_batch_size)
+        self.evaluator = Evaluator(
+            loss=self.loss, metrics=self.metrics, batch_size=eval_batch_size)
         self.optimizer = None
         self.checkpoint_every = checkpoint_every
         self.print_every = print_every
@@ -62,27 +66,29 @@ class SupervisedTrainer(object):
 
         self.logger = logging.getLogger(__name__)
 
-    def _train_batch(self, input_variable, input_lengths, target_variable, model, teacher_forcing_ratio):
+    def _train_batch(self, input_variable, input_lengths, target_variable, teacher_forcing_ratio):
         loss = self.loss
 
         # Forward propagation
-        decoder_outputs, decoder_hidden, other = model(input_variable, input_lengths, target_variable, teacher_forcing_ratio=teacher_forcing_ratio)
+        decoder_outputs, decoder_hidden, other = self.model(
+            input_variable, input_lengths, target_variable, teacher_forcing_ratio=teacher_forcing_ratio)
 
-        losses = self.evaluator.compute_batch_loss(decoder_outputs, decoder_hidden, other, target_variable)
-        
+        losses = self.evaluator.compute_batch_loss(
+            decoder_outputs, decoder_hidden, other, target_variable)
+
         # Backward propagation
         for i, loss in enumerate(losses, 0):
             loss.scale_loss(self.loss_weights[i])
             loss.backward(retain_graph=True)
         self.optimizer.step()
-        model.zero_grad()
+        self.model.zero_grad()
 
         return losses
 
-    def _train_epoches(self, data, model, n_epochs, 
+    def _train_epoches(self, data, n_epochs,
                        start_epoch, start_step,
                        callbacks,
-                       dev_data=None, monitor_data=[], 
+                       dev_data=None, monitor_data=[],
                        teacher_forcing_ratio=0):
 
         # TODO: move this out of the train_epoches function
@@ -103,14 +109,18 @@ class SupervisedTrainer(object):
         # set data as attribute to trainer
         self.data = data
         self.val_data = dev_data or data
+        self.monitor_data = monitor_data
 
         ########################################
 
         # Call all callbacks
+        # set the best losses based on starting accuracies
+        self.losses, self.metrics = self.evaluator.evaluate(self.model,
+                                                            self.val_data,
+                                                            self.get_batch_data)
+
         callbacks.on_train_begin()
         # TODO check if checkpoint is saved correctly in Checkpoint callback
-
-        self.logger.info(log_msg)
 
         # TODO this should also be callback
         logs = Log()
@@ -118,105 +128,52 @@ class SupervisedTrainer(object):
         for epoch in range(start_epoch, n_epochs + 1):
 
             # call all callbacks,
-            #TODO describe which are the default ones
-            self.callbacks.on_epoch_begin(epoch)
-
-            # use trainer logger, TODO this should also be moved
-            self.logger.info("Epoch: %d, Step: %d" % (epoch, step))
+            # TODO describe which are the default ones
+            callbacks.on_epoch_begin(epoch)
 
             ##########################################
             # TODO this does not seem needed, remove this bit
             batch_generator = batch_iterator.__iter__()
 
             # consuming seen batches from previous training
-            for _ in range((epoch - 1) * steps_per_epoch, step):
+            for _ in range((epoch - 1) * steps_per_epoch, start_step):
                 next(batch_generator)
             #
             ##########################################
 
-            model.train()
+            self.model.train()
 
             for batch in batch_generator:
 
-                self.callbacks.on_batch_begin(info, batch)
+                callbacks.on_batch_begin(batch)
 
-                input_variables, input_lengths, target_variables = self.get_batch_data(batch)
+                input_variables, input_lengths, target_variables = self.get_batch_data(
+                    batch)
 
                 # TODO this should be moved to a "train" callback, this callback
                 # should interact with both trainer.model and trainer.val_losses
                 # etc so that its outcomes are also accessible for the logger
-                losses = self._train_batch(input_variables, input_lengths.tolist(), target_variables, model, teacher_forcing_ratio)
+                self.losses = self._train_batch(input_variables,
+                                                input_lengths.tolist(),
+                                                target_variables,
+                                                teacher_forcing_ratio)
 
                 #########################################
                 # TODO this is unrevised, should be checked
 
-                # Record average loss
-                for loss in losses:
-                    name = loss.log_name
-                    print_loss_total[name] += loss.get_loss()
-                    epoch_loss_total[name] += loss.get_loss()
-
-                # print log info according to print_every parm
-                if step % self.print_every == 0 and step_elapsed > self.print_every:
-                    for loss in losses:
-                        name = loss.log_name
-                        print_loss_avg[name] = print_loss_total[name] / self.print_every
-                        print_loss_total[name] = 0
-
-                    m_logs = {}
-                    train_losses, train_metrics = self.evaluator.evaluate(model, data, self.get_batch_data)
-                    train_loss, train_log_msg, model_name = self.get_losses(train_losses, train_metrics, step)
-                    logs.write_to_log('Train', train_losses, train_metrics, step)
-                    logs.update_step(step)
-
-                    m_logs['Train'] = train_log_msg
-
-                    # compute vals for all monitored sets
-                    for m_data in monitor_data:
-                        losses, metrics = self.evaluator.evaluate(model, monitor_data[m_data], self.get_batch_data)
-                        total_loss, log_msg, model_name = self.get_losses(losses, metrics, step)
-                        m_logs[m_data] = log_msg
-                        logs.write_to_log(m_data, losses, metrics, step)
-
-                    all_losses = ' '.join(['%s:\t %s\n' % (os.path.basename(name), m_logs[name]) for name in m_logs])
-
-                    log_msg = 'Progress %d%%, %s' % (
-                            step / total_steps * 100,
-                            all_losses)
-
-                    log.info(log_msg)
-
-                self.callbacks.on_batch_end(batch, info)
-
-            if step_elapsed == 0: continue
-
-            for loss in losses:
-                epoch_loss_avg[loss.log_name] = epoch_loss_total[loss.log_name] / min(steps_per_epoch, step - start_step)
-                epoch_loss_total[loss.log_name] = 0
-
-            if dev_data is not None:
-                losses, metrics = self.evaluator.evaluate(model, dev_data, self.get_batch_data)
-                loss_total, log_, model_name = self.get_losses(losses, metrics, step)
-
-                self.optimizer.update(loss_total, epoch)    # TODO check if this makes sense!
-                log_msg += ", Dev set: " + log_
-                model.train(mode=True)
-            else:
-                self.optimizer.update(epoch_loss_avg, epoch) # TODO check if this makes sense!
-
-            log.info(log_msg)
+                callbacks.on_batch_end(batch)
 
             #
             ############################################
 
-            self.callbacks.on_epoch_end(epoch, info)
+            callbacks.on_epoch_end(epoch)
 
-        self.callbacks.on_train_end(info)
+        callbacks.on_train_end()
 
         return logs
 
     def train(self, model, data, num_epochs=5,
-              resume=False, dev_data=None, 
+              resume=False, dev_data=None,
               monitor_data={}, optimizer=None,
               teacher_forcing_ratio=0,
               custom_callbacks=[],
@@ -243,6 +200,7 @@ class SupervisedTrainer(object):
         if resume:
             resume_checkpoint = Checkpoint.load(checkpoint_path)
             model = resume_checkpoint.model
+            self.model = model
             self.optimizer = resume_checkpoint.optimizer
 
             # A walk around to set optimizing parameters properly
@@ -250,38 +208,40 @@ class SupervisedTrainer(object):
             defaults = resume_optim.param_groups[0]
             defaults.pop('params', None)
             defaults.pop('initial_lr', None)
-            self.optimizer.optimizer = resume_optim.__class__(model.parameters(), **defaults)
+            self.optimizer.optimizer = resume_optim.__class__(
+                self.model.parameters(), **defaults)
 
             start_epoch = resume_checkpoint.epoch
             step = resume_checkpoint.step
         else:
             start_epoch = 1
             step = 0
+            self.model = model
 
             def get_optim(optim_name):
                 optims = {'adam': optim.Adam, 'adagrad': optim.Adagrad,
                           'adadelta': optim.Adadelta, 'adamax': optim.Adamax,
                           'rmsprop': optim.RMSprop, 'sgd': optim.SGD,
-                           None:optim.Adam}
+                          None: optim.Adam}
                 return optims[optim_name]
 
-            self.optimizer = Optimizer(get_optim(optimizer)(model.parameters(), lr=learning_rate),
+            self.optimizer = Optimizer(get_optim(optimizer)(self.model.parameters(),
+                                                            lr=learning_rate),
                                        max_grad_norm=5)
 
-        self.logger.info("Optimizer: %s, Scheduler: %s" % (self.optimizer.optimizer, self.optimizer.scheduler))
+        self.logger.info("Optimizer: %s, Scheduler: %s" %
+                         (self.optimizer.optimizer, self.optimizer.scheduler))
 
-        #TODO here generate the callbacks based on the available info
-        callbacks = CallbackContainer([Logger(), ModelCheckpoint(top_k=top_k)] +
-                custom_callbacks,
-                self)
+        # TODO here generate the callbacks based on the available info
+        callbacks = CallbackContainer(self,
+                                      [Logger(), ModelCheckpoint(top_k=top_k)] + custom_callbacks)
 
-        logs = self._train_epoches(data, model, num_epochs,
-                            start_epoch, step, dev_data=dev_data,
-                            monitor_data=monitor_data,
-                            callbacks=callbacks,
-                            teacher_forcing_ratio=teacher_forcing_ratio,
-                            top_k=top_k)
-        return model, logs
+        logs = self._train_epoches(data, num_epochs,
+                                   start_epoch, step, dev_data=dev_data,
+                                   monitor_data=monitor_data,
+                                   callbacks=callbacks,
+                                   teacher_forcing_ratio=teacher_forcing_ratio)
+        return self.model, logs
 
     @staticmethod
     def get_batch_data(batch):
@@ -291,23 +251,23 @@ class SupervisedTrainer(object):
 
         return input_variables, input_lengths, target_variables
 
-    @staticmethod
-    def get_losses(losses, metrics, step):
-        total_loss = 0
-        model_name = ''
-        log_msg= ''
+    # @staticmethod
+    # def get_losses(losses, metrics, step):
+    #     total_loss = 0
+    #     model_name = ''
+    #     log_msg = ''
 
-        for metric in metrics:
-            val = metric.get_val()
-            log_msg += '%s %.4f ' % (metric.name, val)
-            model_name += '%s_%.2f_' % (metric.log_name, val)
+    #     for metric in metrics:
+    #         val = metric.get_val()
+    #         log_msg += '%s %.4f ' % (metric.name, val)
+    #         model_name += '%s_%.2f_' % (metric.log_name, val)
 
-        for loss in losses:
-            val = loss.get_loss()
-            log_msg += '%s %.4f ' % (loss.name, val)
-            model_name += '%s_%.2f_' % (loss.log_name, val)
-            total_loss += val
+    #     for loss in losses:
+    #         val = loss.get_loss()
+    #         log_msg += '%s %.4f ' % (loss.name, val)
+    #         model_name += '%s_%.2f_' % (loss.log_name, val)
+    #         total_loss += val
 
-        model_name += 's%d' % step
+    #     model_name += 's%d' % step
 
-        return total_loss, log_msg, model_name
+    #     return total_loss, log_msg, model_name

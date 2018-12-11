@@ -81,10 +81,10 @@ def train_lookup_model():
 
     # Train
     print("Training")
-    # seq2seq, _ = trainer.train(seq2seq, train,
-    #                            num_epochs=100, dev_data=dev,
-    #                            monitor_data=monitor_data, optimizer='adam',
-    #                            checkpoint_path='../models')
+    seq2seq, _ = trainer.train(seq2seq, train,
+                               num_epochs=100, dev_data=dev,
+                               monitor_data=monitor_data, optimizer='adam',
+                               checkpoint_path='../models')
 
 
 def init_argparser():
