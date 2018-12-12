@@ -7,3 +7,5 @@ six
 mock
 pandas
 requests
+scikit-learn
+matplotlib
