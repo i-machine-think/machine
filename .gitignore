@@ -1,3 +1,4 @@
 *.pt
 *.pyc
 *.swp
+machine/tasks/*/data/

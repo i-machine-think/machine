@@ -1,5 +1,6 @@
 from machine.tasks import Task
-from machine.tasks.utils import get_default_params
+from machine.tasks.utils import get_default_params, download_file_from_google_drive, unzip_and_remove_zip
+
 import os
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -32,7 +33,7 @@ class LookupTask(Task):
         lookup_tables_data_dir_path = os.path.join(dir_path, "data")
 
         if not os.path.isdir(lookup_tables_data_dir_path):
-            self._download_lookup_tables(lookup_tables_data_dir_path)
+            self._download_lookup_tables()
 
         data_dir = os.path.join(
             lookup_tables_data_dir_path, "samples/sample1/")
@@ -61,12 +62,12 @@ class LookupTask(Task):
         super().__init__("lookup", data_dir,
                          train_file, valid_file, test_files, default_params)
 
-    def _download_lookup_tables(self, data_dir_path):
+    def _download_lookup_tables(self):
         """
-        Downloads the lookup-3bit zip from a url and unzips/untar it into data_dir_path
-
-        Args: 
-            data_dir_path (path): where to download and unzip the lookup-3bit data
+        Downloads the lookup-3bit zip from a url and unzips/untar it into LookupTables/data
         """
-        raise NotImplementedError(
-            "Downloading the LookupTable Data is not Implemented")
+        # url = "https://drive.google.com/file/d/1DyWeYjUXlwW4mwBaicEHzyasW1DkRIhZ/view?usp=sharing"
+        file_id = '1DyWeYjUXlwW4mwBaicEHzyasW1DkRIhZ'
+        destination_file = os.path.join(dir_path, "data.zip")
+        download_file_from_google_drive(file_id, destination_file)
+        unzip_and_remove_zip(dir_path, destination_file)

@@ -1,5 +1,5 @@
 from machine.tasks import Task
-from machine.tasks.utils import get_default_params
+from machine.tasks.utils import get_default_params, download_file_from_google_drive, unzip_and_remove_zip
 import os
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -32,7 +32,7 @@ class SymbolTask(Task):
         data_dir = os.path.join(dir_path, "data")
 
         if not os.path.isdir(data_dir):
-            self._download_symbol_rewriting_data(data_dir)
+            self._download_symbol_rewriting_data()
 
         train_file = "grammar_std.train.full"
         test_files = ["grammar_long.tst.full", "grammar_repeat.tst.full",
@@ -57,12 +57,15 @@ class SymbolTask(Task):
         super().__init__("Symbol Rewriting", data_dir, train_file,
                          valid_file, test_files, default_params)
 
-    def _download_symbol_rewriting_data(self, data_dir_path):
+    def _download_symbol_rewriting_data(self):
         """
-        Downloads the symbol rewriting zip from a url and unzips/untar it into data_dir_path
+        Downloads the symbol rewriting zip from a url and unzips/untar it into current directory as data folder
 
         Args: 
             data_dir_path (path): where to download and unzip the lookup-3bit data
         """
-        raise NotImplementedError(
-            "Downloading the Symbol Rewriting Data is not Implemented")
+        # url = "https://drive.google.com/file/d/1XbVZmH0-w8h1VHUYZvXWLV8E4smQPQyz/view?usp=sharing"
+        file_id = '1XbVZmH0-w8h1VHUYZvXWLV8E4smQPQyz'
+        destination_file = os.path.join(dir_path, "data.zip")
+        download_file_from_google_drive(file_id, destination_file)
+        unzip_and_remove_zip(dir_path, destination_file)
