@@ -9,3 +9,4 @@ pandas
 requests
 scikit-learn
 matplotlib
+pyyaml
