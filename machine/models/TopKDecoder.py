@@ -277,8 +277,8 @@ class TopKDecoder(torch.nn.Module):
                     # Indices of the EOS symbol for both variables
                     # with b*k as the first dimension, and b, k for
                     # the first two dimensions
-                    idx = eos_indices[i]
-                    b_idx = int(idx[0] / self.k)
+                    idx = eos_indices[i].item()
+                    b_idx = int(idx / self.k)
                     # The indices of the replacing position
                     # according to the replacement strategy noted above
                     res_k_idx = self.k - (batch_eos_found[b_idx] % self.k) - 1
@@ -287,18 +287,22 @@ class TopKDecoder(torch.nn.Module):
 
                     # Replace the old information in return variables
                     # with the new ended sequence information
-                    t_predecessors[res_idx] = predecessors[t][idx[0]]
-                    current_output[res_idx, :] = nw_output[t][idx[0], :]
-                    if lstm:
-                        current_hidden[0][:, res_idx, :] = nw_hidden[t][0][:, idx[0], :]
-                        current_hidden[1][:, res_idx, :] = nw_hidden[t][1][:, idx[0], :]
-                        h_n[0][:, res_idx, :] = nw_hidden[t][0][:, idx[0], :].data
-                        h_n[1][:, res_idx, :] = nw_hidden[t][1][:, idx[0], :].data
+                    if t_predecessors.dim() > 0:
+                        t_predecessors[res_idx] = predecessors[t][idx]
                     else:
-                        current_hidden[:, res_idx, :] = nw_hidden[t][:, idx[0], :]
-                        h_n[:, res_idx, :] = nw_hidden[t][:, idx[0], :].data
-                    current_symbol[res_idx, :] = symbols[t][idx[0]]
-                    s[b_idx, res_k_idx] = scores[t][idx[0]].item()
+                        t_predecessors = predecessors[t][idx]
+
+                    current_output[res_idx, :] = nw_output[t][idx, :]
+                    if lstm:
+                        current_hidden[0][:, res_idx, :] = nw_hidden[t][0][:, idx, :]
+                        current_hidden[1][:, res_idx, :] = nw_hidden[t][1][:, idx, :]
+                        h_n[0][:, res_idx, :] = nw_hidden[t][0][:, idx, :].data
+                        h_n[1][:, res_idx, :] = nw_hidden[t][1][:, idx, :].data
+                    else:
+                        current_hidden[:, res_idx, :] = nw_hidden[t][:, idx, :]
+                        h_n[:, res_idx, :] = nw_hidden[t][:, idx, :].data
+                    current_symbol[res_idx, :] = symbols[t][idx]
+                    s[b_idx, res_k_idx] = scores[t][idx].item()
                     l[b_idx][res_k_idx] = t + 1
 
             # record the back tracked results
