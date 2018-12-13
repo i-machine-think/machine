@@ -1,7 +1,7 @@
-import torch.nn as nn
 import torch.nn.functional as F
 
 from .baseModel import BaseModel
+
 
 class Seq2seq(BaseModel):
     """ Standard sequence-to-sequence architecture with configurable encoder
@@ -9,7 +9,8 @@ class Seq2seq(BaseModel):
     """
 
     def __init__(self, encoder, decoder, decode_function=F.log_softmax):
-        super(Seq2seq, self).__init__(encoder_module=encoder, decoder_module=decoder, decode_function=decode_function)
+        super(Seq2seq, self).__init__(encoder_module=encoder,
+                                      decoder_module=decoder, decode_function=decode_function)
 
     def flatten_parameters(self):
         """
@@ -23,10 +24,11 @@ class Seq2seq(BaseModel):
         # Unpack target variables
         target_output = targets.get('decoder_output', None)
 
-        encoder_outputs, encoder_hidden = self.encoder_module(inputs, input_lengths)
+        encoder_outputs, encoder_hidden = self.encoder_module(
+            inputs, input_lengths)
         result = self.decoder_module(inputs=target_output,
-                              encoder_hidden=encoder_hidden,
-                              encoder_outputs=encoder_outputs,
-                              function=self.decode_function,
-                              teacher_forcing_ratio=teacher_forcing_ratio)
+                                     encoder_hidden=encoder_hidden,
+                                     encoder_outputs=encoder_outputs,
+                                     function=self.decode_function,
+                                     teacher_forcing_ratio=teacher_forcing_ratio)
         return result

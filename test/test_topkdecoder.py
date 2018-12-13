@@ -90,7 +90,8 @@ class TestDecoderRNN(unittest.TestCase):
                 new_batch_queue = []
                 for b in range(batch_size):
                     new_queue = []
-                    for k in range(min(len(time_batch_queue[t][b]), beam_size)):
+                    for k in range(
+                            min(len(time_batch_queue[t][b]), beam_size)):
                         _, inputs, hidden, seq_score, _ = time_batch_queue[t][b][k]
                         if inputs == eos:
                             batch_finished_seqs[b].append(
@@ -101,7 +102,8 @@ class TestDecoderRNN(unittest.TestCase):
                             inputs, hidden, None, F.log_softmax)
                         topk_score, topk = decoder_outputs[0].data.topk(
                             beam_size)
-                        for score, sym in zip(topk_score.tolist()[0], topk.tolist()[0]):
+                        for score, sym in zip(topk_score.tolist()[
+                                              0], topk.tolist()[0]):
                             new_queue.append(
                                 (t, sym, hidden, score + seq_score, k))
                     new_queue = sorted(new_queue, key=lambda x: x[3], reverse=True)[
@@ -142,7 +144,7 @@ class TestDecoderRNN(unittest.TestCase):
             for b in range(batch_size):
                 precision_error = False
                 for k in range(beam_size - 1):
-                    if np.isclose(topk_scores[b][k], topk_scores[b][k+1]):
+                    if np.isclose(topk_scores[b][k], topk_scores[b][k + 1]):
                         precision_error = True
                         break
                 if precision_error:
@@ -155,4 +157,4 @@ class TestDecoderRNN(unittest.TestCase):
                     for t in range(total_steps):
                         # topk includes SOS
                         self.assertEqual(
-                            topk_pred_symbols[t][b, k].data[0], topk[b][k][t+1][1])
+                            topk_pred_symbols[t][b, k].data[0], topk[b][k][t + 1][1])

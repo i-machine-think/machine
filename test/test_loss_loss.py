@@ -44,7 +44,7 @@ class TestLoss(unittest.TestCase):
         loss = NLLLoss()
         self.assertEqual(loss.name, NLLLoss._NAME)
         self.assertEqual(loss.log_name, NLLLoss._SHORTNAME)
-        self.assertTrue(type(loss.criterion) is torch.nn.NLLLoss)
+        self.assertTrue(isinstance(loss.criterion, torch.nn.NLLLoss))
 
     def test_nllloss(self):
         loss = NLLLoss()

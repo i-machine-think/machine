@@ -2,7 +2,6 @@ from __future__ import division
 import logging
 import os
 import random
-import time
 import shutil
 
 import torch
@@ -14,7 +13,6 @@ from collections import defaultdict
 import machine
 from machine.evaluator import Evaluator
 from machine.loss import NLLLoss
-from machine.metrics import WordAccuracy
 from machine.optim import Optimizer
 from machine.util.checkpoint import Checkpoint
 from machine.util.callbacks import CallbackContainer, Logger, ModelCheckpoint

@@ -2,6 +2,7 @@ import torch.nn as nn
 
 from .baseRNN import BaseRNN
 
+
 class EncoderRNN(BaseRNN):
     """
     Applies a multi-layer RNN to an input sequence.
@@ -22,7 +23,7 @@ class EncoderRNN(BaseRNN):
         - **inputs**: list of sequences, whose length is the batch size and within which each sequence is a list of token IDs.
         - **input_lengths** (list of int, optional): list that contains the lengths of sequences
             in the mini-batch, it must be provided when using variable length RNN (default: `None`)
-            
+
     Outputs: output, hidden
         - **output** (batch, seq_len, hidden_size): tensor containing the encoded features of the input sequence
         - **hidden** (num_layers * num_directions, batch, hidden_size): tensor containing the features in the hidden state `h`
@@ -35,10 +36,10 @@ class EncoderRNN(BaseRNN):
     """
 
     def __init__(self, vocab_size, max_len, hidden_size, embedding_size,
-            input_dropout_p=0, dropout_p=0,
-            n_layers=1, bidirectional=False, rnn_cell='gru', variable_lengths=False):
+                 input_dropout_p=0, dropout_p=0,
+                 n_layers=1, bidirectional=False, rnn_cell='gru', variable_lengths=False):
         super(EncoderRNN, self).__init__(vocab_size, max_len, hidden_size,
-                input_dropout_p, dropout_p, n_layers, rnn_cell)
+                                         input_dropout_p, dropout_p, n_layers, rnn_cell)
 
         self.embedding_size = embedding_size
         self.variable_lengths = variable_lengths
@@ -62,8 +63,10 @@ class EncoderRNN(BaseRNN):
         embedded = self.embedding(input_var)
         embedded = self.input_dropout(embedded)
         if self.variable_lengths:
-            embedded = nn.utils.rnn.pack_padded_sequence(embedded, input_lengths, batch_first=True)
+            embedded = nn.utils.rnn.pack_padded_sequence(
+                embedded, input_lengths, batch_first=True)
         output, hidden = self.rnn(embedded)
         if self.variable_lengths:
-            output, _ = nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
+            output, _ = nn.utils.rnn.pad_packed_sequence(
+                output, batch_first=True)
         return output, hidden

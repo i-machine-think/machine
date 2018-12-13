@@ -1,7 +1,6 @@
 from __future__ import print_function
 import math
 import torch.nn as nn
-import torch
 import numpy as np
 
 
@@ -112,7 +111,7 @@ class Loss(object):
     def backward(self, retain_graph=False):
         """ Backpropagate the computed loss.
         """
-        if type(self.acc_loss) is int:
+        if isinstance(self.acc_loss, int):
             raise ValueError("No loss to back propagate.")
         self.acc_loss.backward(retain_graph=retain_graph)
 

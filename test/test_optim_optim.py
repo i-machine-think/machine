@@ -13,7 +13,7 @@ class TestOptimizer(unittest.TestCase):
         params = [torch.nn.Parameter(torch.randn(2, 3, 4))]
         try:
             optimizer = Optimizer(torch.optim.Adam(params))
-        except:
+        except BaseException:
             self.fail("__init__ failed.")
 
         self.assertEqual(optimizer.max_grad_norm, 0)

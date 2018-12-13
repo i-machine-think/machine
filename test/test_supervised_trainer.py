@@ -22,7 +22,8 @@ class TestSupervisedTrainer(unittest.TestCase):
         src.build_vocab(self.dataset)
         tgt.build_vocab(self.dataset)
 
-    @mock.patch('machine.trainer.SupervisedTrainer._train_batch', return_value=[])
+    @mock.patch('machine.trainer.SupervisedTrainer._train_batch',
+                return_value=[])
     @mock.patch('machine.util.checkpoint.Checkpoint.save')
     @mock.patch('machine.evaluator.Evaluator.evaluate', return_value=([], []))
     def test_batch_num_when_resuming(self, mock_evaluator, mock_checkpoint, mock_func):
@@ -41,7 +42,8 @@ class TestSupervisedTrainer(unittest.TestCase):
                                start_epoch, step, callbacks)
         self.assertEqual(steps_per_epoch - step, mock_func.call_count)
 
-    @mock.patch('machine.trainer.SupervisedTrainer._train_batch', return_value=0)
+    @mock.patch('machine.trainer.SupervisedTrainer._train_batch',
+                return_value=0)
     @mock.patch('machine.util.checkpoint.Checkpoint.save')
     @mock.patch('machine.evaluator.Evaluator.evaluate', return_value=([], []))
     def test_resume_from_multiple_of_epoches(self, mock_evaluator, mock_checkpoint, mock_func):
@@ -64,7 +66,8 @@ class TestSupervisedTrainer(unittest.TestCase):
     @mock.patch('machine.optim.Optimizer')
     @mock.patch('torch.optim.SGD')
     @mock.patch('machine.trainer.SupervisedTrainer._train_epoches')
-    def test_loading_optimizer(self, train_func, sgd, optimizer, load_function, checkpoint):
+    def test_loading_optimizer(
+            self, train_func, sgd, optimizer, load_function, checkpoint):
 
         load_function.returnvalue = checkpoint
         mock_model = mock.Mock()

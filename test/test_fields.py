@@ -5,6 +5,7 @@ import torchtext
 
 from machine.dataset import SourceField, TargetField
 
+
 class TestField(unittest.TestCase):
 
     def test_sourcefield(self):
@@ -28,7 +29,8 @@ class TestField(unittest.TestCase):
         self.assertEqual(processed, ['<sos>', None, '<eos>'])
 
     def test_targetfield_with_other_setting(self):
-        field = TargetField(batch_first=False, preprocessing=lambda seq: seq + seq)
+        field = TargetField(batch_first=False,
+                            preprocessing=lambda seq: seq + seq)
         self.assertTrue(isinstance(field, torchtext.data.Field))
         self.assertTrue(field.batch_first)
 

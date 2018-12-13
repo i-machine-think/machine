@@ -24,7 +24,8 @@ class TestCheckpoint(unittest.TestCase):
     @mock.patch('machine.util.checkpoint.torch')
     @mock.patch('machine.util.checkpoint.dill')
     @mock.patch('machine.util.checkpoint.open')
-    def test_save_checkpoint_calls_torch_save(self, mock_open, mock_dill, mock_torch):
+    def test_save_checkpoint_calls_torch_save(
+            self, mock_open, mock_dill, mock_torch):
         epoch = 5
         step = 10
         optim = mock.Mock()
@@ -45,12 +46,12 @@ class TestCheckpoint(unittest.TestCase):
                                         os.path.join(chk_point.path, Checkpoint.TRAINER_STATE_NAME))
         mock_torch.save.assert_any_call(mock_model,
                                         os.path.join(chk_point.path, Checkpoint.MODEL_NAME))
-        self.assertEqual(2, mock_open.call_count)
+        self.assertEquals(2, mock_open.call_count)
         mock_open.assert_any_call(os.path.join(
             path, Checkpoint.INPUT_VOCAB_FILE), ANY)
         mock_open.assert_any_call(os.path.join(
             path, Checkpoint.OUTPUT_VOCAB_FILE), ANY)
-        self.assertEqual(2, mock_dill.dump.call_count)
+        self.assertEquals(2, mock_dill.dump.call_count)
         mock_dill.dump.assert_any_call(mock_vocab,
                                        mock_open.return_value.__enter__.return_value)
 
