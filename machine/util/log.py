@@ -1,4 +1,7 @@
 from __future__ import print_function
+from collections import defaultdict
+import matplotlib.lines as mlines
+import matplotlib.pyplot as plt
 
 import os
 import matplotlib
@@ -127,7 +130,7 @@ class LogCollection(object):
                     self.logs.append(Log(f))
                     self.log_names.append(log_name)
 
-    def plot_metric(self, metric_name, restrict_model=lambda x: True, 
+    def plot_metric(self, metric_name, restrict_model=lambda x: True,
                     restrict_data=lambda x: True, data_name_parser=None,
                     color_group=False, title='', eor=-1,
                     show_figure=True, ylabel=None, **line_kwargs):
@@ -171,7 +174,8 @@ class LogCollection(object):
                         ax.tick_params(
                             axis='both', which='major', labelsize=20)
                         plt.xlabel("Epochs", fontsize=24)
-                        plt.ylabel(metric_name if ylabel is None else ylabel, fontsize=24)
+                        plt.ylabel(
+                            metric_name if ylabel is None else ylabel, fontsize=24)
                         plt.title(title)
 
         plt.legend()
