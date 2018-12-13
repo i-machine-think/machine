@@ -3,7 +3,6 @@ sudo: false
 language: python
 cache: pip
 python:
-  - "2.7"
   - "3.6"
 
 notifications:
@@ -13,7 +12,6 @@ notifications:
 install:
   - pip install -U pip
   - pip -q install -r requirements.txt
-  - pip install matplotlib
 
   # dev dependencies
   - pip install flake8
