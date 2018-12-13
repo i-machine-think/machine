@@ -19,10 +19,10 @@ class Callback(object):
     def set_trainer(self, trainer):
         self.trainer = trainer
 
-    def on_epoch_begin(self, epoch, info=None):
+    def on_epoch_begin(self, info=None):
         pass
 
-    def on_epoch_end(self, epoch, info=None):
+    def on_epoch_end(self, info=None):
         pass
 
     def on_batch_begin(self, batch, info=None):

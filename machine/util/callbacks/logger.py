@@ -25,11 +25,10 @@ class Logger(Callback):
         self.trainer = trainer
         self.print_every = self.trainer.print_every
 
-    def on_epoch_begin(self, epoch, info=None):
-        step = info['step']
-        self.logger.info("Epoch: %d, Step: %d" % (epoch, step))
+    def on_epoch_begin(self, info=None):
+        self.logger.info("Epoch: %d, Step: %d" % (info['epoch'], info['step']))
 
-    def on_epoch_end(self, epoch, info=None):
+    def on_epoch_end(self, info=None):
 
         for loss in self.trainer.losses:
             self.epoch_loss_avg[loss.log_name] = \
@@ -40,7 +39,7 @@ class Logger(Callback):
         loss_msg = ' '.join(
             ['%s: %.4f' % (loss.log_name, loss.get_loss()) for loss in self.trainer.losses])
 
-        log_msg = "Finished epoch %d: Train %s" % (epoch, loss_msg)
+        log_msg = "Finished epoch %d: Train %s" % (info['epoch'], loss_msg)
 
         if self.trainer.val_data is not None:
             losses, metrics = self.trainer.evaluator.evaluate(
@@ -49,12 +48,12 @@ class Logger(Callback):
                 losses, metrics, info['step'])
 
             # TODO check if this makes sense!
-            self.trainer.optimizer.update(loss_total, epoch)
+            self.trainer.optimizer.update(loss_total, info['epoch'])
             log_msg += ", Dev set: " + log_
             self.trainer.model.train()
         else:
             # TODO check if this makes sense!
-            self.trainer.optimizer.update(self.epoch_loss_avg, epoch)
+            self.trainer.optimizer.update(self.epoch_loss_avg, info['epoch'])
 
         self.logger.info(log_msg)
 
@@ -80,6 +79,8 @@ class Logger(Callback):
                 self.print_loss_total[name] = 0
 
             m_logs = {}
+
+            # TODO: Remove evaluate function from here?
             train_losses, train_metrics = self.trainer.evaluator.evaluate(
                 self.trainer.model, self.trainer.data, self.trainer.get_batch_data)
             _, train_log_msg, _ = self.get_losses(
@@ -92,6 +93,7 @@ class Logger(Callback):
             m_logs['Train'] = train_log_msg
 
             # compute vals for all monitored sets
+            # TODO: Remove evaluate function from here?
             for m_data in self.trainer.monitor_data:
                 losses, metrics = self.trainer.evaluator.evaluate(
                     self.trainer.model, self.trainer.monitor_data[m_data],

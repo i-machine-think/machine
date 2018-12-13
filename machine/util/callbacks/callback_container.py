@@ -20,13 +20,14 @@ class CallbackContainer(object):
         self.info['total_steps'] = total_steps
 
     def on_epoch_begin(self, epoch):
+        self.info['epoch'] = epoch
         for callback in self.callbacks:
-            callback.on_epoch_begin(epoch, self.info)
-        self.info['epoch'] += 1
+            callback.on_epoch_begin(self.info)
 
     def on_epoch_end(self, epoch):
+        self.info['epoch'] = epoch
         for callback in self.callbacks:
-            callback.on_epoch_end(epoch, self.info)
+            callback.on_epoch_end(self.info)
 
     def on_batch_begin(self, batch):
         for callback in self.callbacks:

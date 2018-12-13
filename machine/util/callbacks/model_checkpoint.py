@@ -25,10 +25,10 @@ class ModelCheckpoint(Callback):
         self.checkpoint_every = trainer.checkpoint_every
         self.expt_dir = trainer.expt_dir
 
-    def on_epoch_begin(self, epoch, info=None):
+    def on_epoch_begin(self, info=None):
         pass
 
-    def on_epoch_end(self, epoch, info=None):
+    def on_epoch_end(self, info=None):
         pass
 
     def on_batch_begin(self, batch, info=None):
@@ -41,7 +41,7 @@ class ModelCheckpoint(Callback):
         # loss too often
         if info['step'] % self.checkpoint_every == 0 or \
                 info['step'] == info['total_steps']:
-            total_loss, log_msg, model_name = \
+            total_loss, _, model_name = \
                 self.get_losses(self.trainer.losses,
                                 self.trainer.metrics, info['step'])
 
