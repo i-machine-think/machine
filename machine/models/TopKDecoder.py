@@ -287,6 +287,9 @@ class TopKDecoder(torch.nn.Module):
 
                     # Replace the old information in return variables
                     # with the new ended sequence information
+
+                    # TODO: Check this still works (this if was added for
+                    #      torch 1.0 but might have unforseen consequences)
                     if t_predecessors.dim() > 0:
                         t_predecessors[res_idx] = predecessors[t][idx]
                     else:

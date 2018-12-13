@@ -7,6 +7,7 @@ import numpy as np
 from machine.models.DecoderRNN import DecoderRNN
 from machine.models.TopKDecoder import TopKDecoder
 
+
 class TestDecoderRNN(unittest.TestCase):
 
     @classmethod
@@ -46,11 +47,13 @@ class TestDecoderRNN(unittest.TestCase):
                     if not finished[b] and symbol == eos:
                         finished[b] = True
                         self.assertEqual(other_topk['length'][b], t_step + 1)
-                        self.assertTrue(np.isclose(seq_scores[b], other_topk['score'][b][0]))
+                        self.assertTrue(np.isclose(
+                            seq_scores[b], other_topk['score'][b][0]))
                     if not finished[b]:
                         symbol_topk = other_topk['topk_sequence'][t_step][b].data[0][0]
                         self.assertEqual(symbol, symbol_topk)
-                        self.assertTrue(torch.equal(t_output.data, output_topk[t_step].data))
+                        self.assertTrue(torch.equal(
+                            t_output.data, output_topk[t_step].data))
                 if sum(finished) == batch_size:
                     break
 
@@ -64,7 +67,8 @@ class TestDecoderRNN(unittest.TestCase):
         eos = 1
 
         for _ in range(10):
-            decoder = DecoderRNN(self.vocab_size, max_len, hidden_size, sos, eos)
+            decoder = DecoderRNN(self.vocab_size, max_len,
+                                 hidden_size, sos, eos)
             for param in decoder.parameters():
                 param.data.uniform_(-1, 1)
             topk_decoder = TopKDecoder(decoder, beam_size)
@@ -78,7 +82,8 @@ class TestDecoderRNN(unittest.TestCase):
             #   3. hidden state
             #   4. accumulated log likelihood
             #   5. beam number
-            batch_queue = [[(-1, sos, encoder_hidden[:,b,:].unsqueeze(1), 0, None)] for b in range(batch_size)]
+            batch_queue = [[(-1, sos, encoder_hidden[:, b, :].unsqueeze(1), 0, None)]
+                           for b in range(batch_size)]
             time_batch_queue = [batch_queue]
             batch_finished_seqs = [list() for _ in range(batch_size)]
             for t in range(max_len):
@@ -88,14 +93,19 @@ class TestDecoderRNN(unittest.TestCase):
                     for k in range(min(len(time_batch_queue[t][b]), beam_size)):
                         _, inputs, hidden, seq_score, _ = time_batch_queue[t][b][k]
                         if inputs == eos:
-                            batch_finished_seqs[b].append(time_batch_queue[t][b][k])
+                            batch_finished_seqs[b].append(
+                                time_batch_queue[t][b][k])
                             continue
                         inputs = torch.LongTensor([[inputs]])
-                        decoder_outputs, hidden, _ = decoder.forward_step(inputs, hidden, None, F.log_softmax)
-                        topk_score, topk = decoder_outputs[0].data.topk(beam_size)
+                        decoder_outputs, hidden, _ = decoder.forward_step(
+                            inputs, hidden, None, F.log_softmax)
+                        topk_score, topk = decoder_outputs[0].data.topk(
+                            beam_size)
                         for score, sym in zip(topk_score.tolist()[0], topk.tolist()[0]):
-                            new_queue.append((t, sym, hidden, score + seq_score, k))
-                    new_queue = sorted(new_queue, key=lambda x: x[3], reverse=True)[:beam_size]
+                            new_queue.append(
+                                (t, sym, hidden, score + seq_score, k))
+                    new_queue = sorted(new_queue, key=lambda x: x[3], reverse=True)[
+                        :beam_size]
                     new_batch_queue.append(new_queue)
                 time_batch_queue.append(new_batch_queue)
 
@@ -104,7 +114,8 @@ class TestDecoderRNN(unittest.TestCase):
             # unfinished beams
             for b in range(batch_size):
                 if len(finalist[b]) < beam_size:
-                    last_step = sorted(time_batch_queue[-1][b], key=lambda x: x[3], reverse=True)
+                    last_step = sorted(
+                        time_batch_queue[-1][b], key=lambda x: x[3], reverse=True)
                     finalist[b] += last_step[:beam_size - len(finalist[b])]
 
             # back track
@@ -138,7 +149,10 @@ class TestDecoderRNN(unittest.TestCase):
                     break
                 for k in range(beam_size):
                     self.assertEqual(topk_lengths[b][k], len(topk[b][k]) - 1)
-                    self.assertTrue(np.isclose(topk_scores[b][k], topk[b][k][-1][3]))
+                    self.assertTrue(np.isclose(
+                        topk_scores[b][k], topk[b][k][-1][3]))
                     total_steps = topk_lengths[b][k]
                     for t in range(total_steps):
-                        self.assertEqual(topk_pred_symbols[t][b, k].data[0], topk[b][k][t+1][1]) # topk includes SOS
+                        # topk includes SOS
+                        self.assertEqual(
+                            topk_pred_symbols[t][b, k].data[0], topk[b][k][t+1][1])
