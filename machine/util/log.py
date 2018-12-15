@@ -2,12 +2,13 @@ from __future__ import print_function
 from collections import defaultdict
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
-
+from sys import platform as sys_pf
 import os
 import matplotlib
-if os.environ.get('DISPLAY', '') == '':
+if os.environ.get('DISPLAY', '') == '' or sys_pf == 'darwin':
     print('no display found. Using non-interactive Agg backend')
     matplotlib.use('Agg')
+    # matplotlib.use("TkAgg")
 
 
 class Log(object):

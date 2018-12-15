@@ -1,6 +1,5 @@
-import logging
-from collections import defaultdict
 from machine.util.callbacks import Callback
+from machine.util import Log
 
 
 class History(Callback):
@@ -12,13 +11,7 @@ class History(Callback):
 
     def __init__(self):
         super(History, self).__init__()
-        self.steps = []
-        self.log = defaultdict(lambda: defaultdict(list))
-
-        self.logging = logging.getLogger(__name__)
-
-        # if path is not None:
-        #     self.read_from_file(path)
+        self.logs = Log()
 
     def set_trainer(self, trainer):
         self.trainer = trainer
@@ -33,22 +26,18 @@ class History(Callback):
         pass
 
     def on_batch_end(self, batch, info=None):
-        pass
+        if info['print']:
+            self.logs.write_to_log('Train', info['train_losses'],
+                                   info['train_metrics'], info['step'])
+            self.logs.update_step(info['step'])
+            for m_data in self.trainer.monitor_data:
+                self.logs.write_to_log(m_data,
+                                       info['monitor_losses'][m_data],
+                                       info['monitor_metrics'][m_data],
+                                       info['step'])
 
     def on_train_begin(self, info=None):
         pass
 
     def on_train_end(self, info=None):
         pass
-
-    def write_to_log(self, dataname, losses, metrics, step):
-        """
-        Add new losses to Log object.
-        """
-        for metric in metrics:
-            val = metric.get_val()
-            self.log[dataname][metric.log_name].append(val)
-
-        for loss in losses:
-            val = loss.get_loss()
-            self.log[dataname][loss.log_name].append(val)

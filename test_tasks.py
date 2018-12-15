@@ -60,8 +60,8 @@ def train_lookup_model():
 
     # # Prepare logging and data set
     init_logging(parameters)
-    src, tgt, train, dev, monitor_data = prepare_dataset(
-        parameters, train_path, test_paths, valid_path)
+    src, tgt, train, dev, monitor_data = prepare_iters(
+        parameters, train_path, test_paths, valid_path, parameters['batch_size'])
 
     # Prepare model
     seq2seq, output_vocab = initialize_model(
@@ -76,20 +76,23 @@ def train_lookup_model():
     loss_weights = [1.]
     metrics = [SequenceAccuracy(ignore_index=pad)]
 
-    trainer = create_trainer(
-        parameters['batch_size'], losses, loss_weights, metrics)
+    trainer = create_trainer()
 
     # Train
     print("Training")
     seq2seq, _ = trainer.train(seq2seq, train,
-                               num_epochs=100, dev_data=dev,
+                               num_epochs=20, dev_data=dev,
                                monitor_data=monitor_data, optimizer='adam',
-                               checkpoint_path='../models')
+                               checkpoint_path='../models',
+                               losses=losses, metrics=metrics,
+                               loss_weights=loss_weights,
+                               checkpoint_every=10,
+                               print_every=10,)
 
 
 def init_argparser():
     """
-    Args: default_settings (str, optional): 
+    Args: default_settings (str, optional):
 
     """
     parser = argparse.ArgumentParser()
@@ -110,7 +113,7 @@ def init_logging(parameters):
     logging.info(parameters)
 
 
-def prepare_dataset(parameters, train_path, test_paths, valid_path):
+def prepare_iters(parameters, train_path, test_paths, valid_path, batch_size, eval_batch_size=512):
     src = SourceField()
     tgt = TargetField(include_eos=False)
     tabular_data_fields = [('src', src), ('tgt', tgt)]
@@ -121,24 +124,24 @@ def prepare_dataset(parameters, train_path, test_paths, valid_path):
         return len(example.src) <= max_len and len(example.tgt) <= max_len
 
     # generate training and testing data
-    train = torchtext.data.TabularDataset(
+    train = get_standard_batch_iterator(torchtext.data.TabularDataset(
         path=train_path, format='tsv',
         fields=tabular_data_fields,
         filter_pred=len_filter
-    )
+    ), batch_size)
 
-    dev = torchtext.data.TabularDataset(
+    dev = get_standard_batch_iterator(torchtext.data.TabularDataset(
         path=valid_path, format='tsv',
         fields=tabular_data_fields,
         filter_pred=len_filter
-    )
+    ), eval_batch_size)
 
     monitor_data = OrderedDict()
     for dataset in test_paths:
-        m = torchtext.data.TabularDataset(
+        m = get_standard_batch_iterator(torchtext.data.TabularDataset(
             path=dataset, format='tsv',
             fields=tabular_data_fields,
-            filter_pred=len_filter)
+            filter_pred=len_filter), eval_batch_size)
         monitor_data[dataset] = m
 
     return src, tgt, train, dev, monitor_data
@@ -146,8 +149,8 @@ def prepare_dataset(parameters, train_path, test_paths, valid_path):
 
 def initialize_model(parameters, src, tgt, train):
     # build vocabulary
-    src.build_vocab(train, max_size=50000)
-    tgt.build_vocab(train, max_size=50000)
+    src.build_vocab(train.dataset, max_size=50000)
+    tgt.build_vocab(train.dataset, max_size=50000)
 
     output_vocab = tgt.vocab
 
@@ -171,11 +174,16 @@ def initialize_model(parameters, src, tgt, train):
     return seq2seq, output_vocab
 
 
-def create_trainer(batch_size, losses, loss_weights, metrics):
-    return SupervisedTrainer(loss=losses, metrics=metrics,
-                             loss_weights=loss_weights, batch_size=batch_size,
-                             eval_batch_size=512, checkpoint_every=10,
-                             print_every=10, expt_dir='../models')
+def create_trainer():
+    return SupervisedTrainer(expt_dir='../models')
+
+
+def get_standard_batch_iterator(data, batch_size):
+    return torchtext.data.BucketIterator(
+        dataset=data, batch_size=batch_size,
+        sort=False, sort_within_batch=True,
+        sort_key=lambda x: len(x.src),
+        device=device, repeat=False)
 
 
 if __name__ == "__main__":
