@@ -16,8 +16,8 @@ class TestEncoderRNN(unittest.TestCase):
         rnn = EncoderRNN(self.vocab_size, 10, 50, 16, input_dropout_p=0)
         for param in rnn.parameters():
             param.data.uniform_(-1, 1)
-        output1, _ = rnn(self.input_var, self.lengths)
-        output2, _ = rnn(self.input_var, self.lengths)
+        output1, _ = rnn(self.input_var, input_lengths=self.lengths)
+        output2, _ = rnn(self.input_var, input_lengths=self.lengths)
         self.assertTrue(torch.equal(output1.data, output2.data))
 
     def test_input_dropout_WITH_NON_ZERO_PROB(self):
@@ -27,8 +27,8 @@ class TestEncoderRNN(unittest.TestCase):
 
         equal = True
         for _ in range(50):
-            output1, _ = rnn(self.input_var, self.lengths)
-            output2, _ = rnn(self.input_var, self.lengths)
+            output1, _ = rnn(self.input_var, input_lengths=self.lengths)
+            output2, _ = rnn(self.input_var, input_lengths=self.lengths)
             if not torch.equal(output1.data, output2.data):
                 equal = False
                 break
@@ -38,8 +38,8 @@ class TestEncoderRNN(unittest.TestCase):
         rnn = EncoderRNN(self.vocab_size, 10, 50, 16, dropout_p=0)
         for param in rnn.parameters():
             param.data.uniform_(-1, 1)
-        output1, _ = rnn(self.input_var, self.lengths)
-        output2, _ = rnn(self.input_var, self.lengths)
+        output1, _ = rnn(self.input_var, input_lengths=self.lengths)
+        output2, _ = rnn(self.input_var, input_lengths=self.lengths)
         self.assertTrue(torch.equal(output1.data, output2.data))
 
     def test_dropout_WITH_NON_ZERO_PROB(self):
@@ -52,8 +52,8 @@ class TestEncoderRNN(unittest.TestCase):
 
         equal = True
         for _ in range(50):
-            output1, _ = rnn(self.input_var, self.lengths)
-            output2, _ = rnn(self.input_var, self.lengths)
+            output1, _ = rnn(self.input_var, input_lengths=self.lengths)
+            output2, _ = rnn(self.input_var, input_lengths=self.lengths)
             if not torch.equal(output1.data, output2.data):
                 equal = False
                 break
