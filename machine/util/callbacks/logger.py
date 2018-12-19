@@ -38,7 +38,11 @@ class Logger(Callback):
         loss_msg = ' '.join(
             ['%s: %.4f' % (loss.log_name, self.epoch_loss_avg[loss.log_name]) for loss in self.trainer.losses])
 
-        log_msg = "Finished epoch %d: Train %s" % (info['epoch'], loss_msg)
+        _, train_log_msg, _ = self.get_losses(
+            info['train_losses'], info['train_metrics'], info['step'])
+
+        log_msg = "Finished epoch %d: Avg Train loss %s, Full Train: %s" % (
+            info['epoch'], loss_msg, train_log_msg)
 
         loss_total, log_, _ = self.get_losses(
             info['eval_losses'], info['eval_metrics'], info['step'])
@@ -62,7 +66,8 @@ class Logger(Callback):
         # scheduled printing of losses
         if info['print']:
 
-            # all losses are computed and should be printed
+            # all losses have been already computed and now should be printed
+
             for loss in self.trainer.batch_losses:
                 name = loss.log_name
                 self.print_loss_avg[name] = \
@@ -71,10 +76,8 @@ class Logger(Callback):
 
             m_logs = {}
 
-            _, train_log_msg, _ = self.get_losses(
-                info['train_losses'], info['train_metrics'], info['step'])
-            print(train_log_msg)
-
+            m_logs['Train Batch'] = ' '.join(
+                ['%s %s' % (loss_name, avg_loss) for loss_name, avg_loss in self.print_loss_avg.items()])
             # compute vals for all monitored sets
             for m_data in self.trainer.monitor_data:
                 losses = info['monitor_losses'][m_data]

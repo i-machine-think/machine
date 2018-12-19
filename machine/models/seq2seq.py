@@ -25,7 +25,7 @@ class Seq2seq(BaseModel):
         target_output = targets.get('decoder_output', None)
 
         encoder_outputs, encoder_hidden = self.encoder_module(
-            inputs, input_lengths)
+            inputs, input_lengths=input_lengths)
         result = self.decoder_module(inputs=target_output,
                                      encoder_hidden=encoder_hidden,
                                      encoder_outputs=encoder_outputs,

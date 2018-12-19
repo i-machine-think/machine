@@ -111,7 +111,7 @@ class SupervisedTrainer(object):
             self.model.train()
             for batch in data:
 
-                # skip over the batches that are below start step
+                # Skip over the batches that are below start step
                 if epoch == start_epoch and s > 0:
                     s -= 1
                     continue

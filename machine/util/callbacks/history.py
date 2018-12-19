@@ -20,6 +20,8 @@ class History(Callback):
         pass
 
     def on_epoch_end(self, info=None):
+        # self.logs.write_to_log('Train', info['train_losses'],
+        #                            info['train_metrics'], info['step'])
         pass
 
     def on_batch_begin(self, batch, info=None):
@@ -27,8 +29,6 @@ class History(Callback):
 
     def on_batch_end(self, batch, info=None):
         if info['print']:
-            self.logs.write_to_log('Train', info['train_losses'],
-                                   info['train_metrics'], info['step'])
             self.logs.update_step(info['step'])
             for m_data in self.trainer.monitor_data:
                 self.logs.write_to_log(m_data,

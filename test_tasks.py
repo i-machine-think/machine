@@ -87,7 +87,7 @@ def train_lookup_model():
                                losses=losses, metrics=metrics,
                                loss_weights=loss_weights,
                                checkpoint_every=10,
-                               print_every=10,)
+                               print_every=10)
 
 
 def init_argparser():

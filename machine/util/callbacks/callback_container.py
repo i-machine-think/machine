@@ -30,6 +30,10 @@ class CallbackContainer(object):
     def on_epoch_end(self, epoch):
         self.info['epoch'] = epoch
 
+        # we evaluate for loss on whole train
+        self.info['train_losses'], self.info['train_metrics'] = self.trainer.evaluator.evaluate(
+            self.trainer.model, self.trainer.train_data, self.trainer.get_batch_data)
+
         self.info['eval_losses'], self.info['eval_metrics'] \
             = self._evaluate_model_on_validation()
 
@@ -51,11 +55,8 @@ class CallbackContainer(object):
         if self.info['step'] % self.trainer.print_every == 0 \
                 and self.info['step_elapsed'] > self.trainer.print_every:
             self.info['print'] = True
-
-            # If we 'print' then we want to log, therefore we evaluate
-            # for loss on whole train and on all monitored datasets
-            self.info['train_losses'], self.info['train_metrics'] = self.trainer.evaluator.evaluate(
-                self.trainer.model, self.trainer.train_data, self.trainer.get_batch_data)
+            # If we 'print' then we want to log,
+            # therefore we evaluate on all monitored datasets
 
             # Evaluate on all Monitor datasets
             self.info['monitor_losses'] = {}

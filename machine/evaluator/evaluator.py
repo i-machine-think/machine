@@ -108,10 +108,10 @@ class Evaluator(object):
         # Since we are passing data_iterator
         # We evaluate on whole batches - so exhaust all batches first
         # and store the initial point
+        # data_iterator_reset = False
         initial_iteration = data_iterator.iterations
-        if initial_iteration > 0:
-            for _ in data_iterator.__iter__():
-                pass
+        if initial_iteration > 1 and initial_iteration != len(data_iterator):
+            raise Warning("Passed in data_iterator in middle of iterations")
 
         previous_train_mode = model.training
         model.eval()
@@ -127,6 +127,7 @@ class Evaluator(object):
         # loop over batches
         with torch.no_grad():
             for batch in data_iterator:
+
                 input_variable, input_lengths, target_variable = get_batch_data(
                     batch)
 
@@ -142,9 +143,5 @@ class Evaluator(object):
                                           decoder_hidden, other, target_variable)
 
         model.train(previous_train_mode)
-
-        # Bring the data_iterator object back to where it was when passed
-        for _ in range(0, initial_iteration):
-            next(iter(data_iterator))
 
         return losses, metrics
