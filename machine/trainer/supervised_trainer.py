@@ -77,7 +77,7 @@ class SupervisedTrainer(object):
     def _train_epoches(self, data, n_epochs,
                        start_epoch, start_step,
                        callbacks,
-                       dev_data=None, monitor_data=[],
+                       dev_data, monitor_data=[],
                        teacher_forcing_ratio=0):
 
         steps_per_epoch = len(data)
@@ -90,7 +90,7 @@ class SupervisedTrainer(object):
 
         # set data as attribute to trainer
         self.train_data = data
-        self.val_data = dev_data or data
+        self.val_data = dev_data
         self.monitor_data = monitor_data
 
         # ########################################
@@ -133,9 +133,9 @@ class SupervisedTrainer(object):
         return logs
 
     def train(self, model, data,
+              dev_data,
               num_epochs=5,
               resume=False,
-              dev_data=None,
               monitor_data={},
               optimizer=None,
               teacher_forcing_ratio=0,
@@ -154,13 +154,19 @@ class SupervisedTrainer(object):
         Args:
             model (machine.models): model to run training on, if `resume=True`, it would be
                overwritten by the model loaded from the latest checkpoint.
-            data (machine.dataset.dataset.Dataset): dataset object to train on
+            data (torchtext.data.Iterator: torchtext iterator object to train on
             num_epochs (int, optional): number of epochs to run (default 5)
             resume(bool, optional): resume training with the latest checkpoint, (default False)
-            dev_data (machine.dataset.dataset.Dataset, optional): dev Dataset (default None)
+            dev_data (torchtext.data.Iterator): dev/validation set iterator
+                Note: must not pass in the train iterator here as this gets evaluated during training (in between batches)
+                If you want to evaluate on the full train during training then make two iterators and pass the second one here
+            monitor_data (list of torchtext.data.Iterator, optional): list of iterators to test on (default None)
+                Note: must not pass in the train iterator here as this gets evaluated during training (in between batches)
+                      If you want to evaluate on the full train during training then make two iterators and pass the second one here
             optimizer (machine.optim.Optimizer, optional): optimizer for training
                (default: Optimizer(pytorch.optim.Adam, max_grad_norm=5))
             teacher_forcing_ratio (float, optional): teaching forcing ratio (default 0)
+            custom_callbacks (list, optional): list of custom call backs (see utils.callbacks.callback for base class)
             learing_rate (float, optional): learning rate used by the optimizer (default 0.001)
             checkpoint_path (str, optional): path to load checkpoint from in case training should be resumed
             top_k (int): how many models should be stored during training
@@ -225,6 +231,7 @@ class SupervisedTrainer(object):
 
     @staticmethod
     def get_batch_data(batch):
+        # TODO Maybe move this method / or make optional - this is seq2seq specific
         input_variables, input_lengths = getattr(batch, machine.src_field_name)
         target_variables = {'decoder_output': getattr(batch, machine.tgt_field_name),
                             'encoder_input': input_variables}  # The k-grammar metric needs to have access to the inputs

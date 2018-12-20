@@ -20,9 +20,8 @@ class History(Callback):
         pass
 
     def on_epoch_end(self, info=None):
-        # self.logs.write_to_log('Train', info['train_losses'],
-        #                            info['train_metrics'], info['step'])
-        pass
+        self.logs.write_to_log('Train', info['train_losses'],
+                               info['train_metrics'], info['step'])
 
     def on_batch_begin(self, batch, info=None):
         pass

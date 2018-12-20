@@ -7,6 +7,21 @@ import torch.nn as nn
 class LanguageModel(BaseModel):
     """
     Implements a language model
+
+    Args:
+        encoder_module (EncoderRNN): Encoder to use
+        tie_weights (bool, optional): Whether to tie embedding weights to decoder weights
+        dropout_p_decoder (float, optional): dropout prob of decoder
+
+    Inputs: inputs, hidden
+        - **inputs**: list of sequences, whose length is the batch size and within which each sequence is a list of token IDs.
+        - **hidden** : Tuple of (h_0, c_0), each of shape (num_layers * num_directions, batch, hidden_size)
+              where h_0 is tensor containing the initial hidden state, and c_0 is a tensor
+              containing the initial cell state for for each element in the batch. 
+
+    Outputs: output, hidden
+        - **output** (batch, seq_len, hidden_size): tensor containing the decoded features of the input sequence
+        - **hidden** (num_layers * num_directions, batch, hidden_size): tensor containing the features in the hidden state `h`
     """
 
     def __init__(self, encoder_module, tie_weights=False, dropout_p_decoder=0.5):
@@ -41,6 +56,9 @@ class LanguageModel(BaseModel):
         self.encoder_module.rnn.flatten_parameters()
 
     def init_weights(self):
+        """
+        Standard weight initialization
+        """
         initrange = 0.1
         self.encoder_module.embedding.weight.data.uniform_(
             -initrange, initrange)

@@ -23,15 +23,33 @@ class Callback(object):
         pass
 
     def on_epoch_end(self, info=None):
+        """
+        Function called at the end of every epoch
+        self.info['train_losses'] and self.info['train_metrics'] should be available to use here.
+        self.info['eval_losses'] and self.info['eval_metrics'] should be available to use here.
+        """
         pass
 
     def on_batch_begin(self, batch, info=None):
         pass
 
     def on_batch_end(self, batch, info=None):
+        """
+        Function called at the end of every batch
+        If self.info['print'] = True:
+            Then self.info['monitor_losses'] and self.info['monitor_metrics']
+            should be available to use here.
+        If self.info['checkpoint'] = True:, 
+            Then self.info['eval_losses'] and self.info['eval_metrics']
+            should be available to use here.
+        """
         pass
 
     def on_train_begin(self, info=None):
+        """
+        Function called at the very beginning of every training
+        self.info['eval_losses'] and self.info['eval_metrics'] should be available to use here.
+        """
         pass
 
     def on_train_end(self, info=None):

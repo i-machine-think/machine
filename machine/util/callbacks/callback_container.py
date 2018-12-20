@@ -1,4 +1,15 @@
 class CallbackContainer(object):
+    """
+    Container class for the Callback class. 
+    Stores info about the training process and passes it to 
+    each callback at set times during training. Also evaluates
+    on train/valid/tests at different times and passes along to 
+    Callback. 
+    Args: 
+        trainer (SupervisedTrainer): supervised trainer object which is doing the training
+        callbacks (list of machine.callbacks.Callback objects, optional): List of Callback
+            objects which should be called during training (default: []).
+    """
 
     def __init__(self, trainer, callbacks=[]):
         self.callbacks = callbacks
@@ -34,6 +45,7 @@ class CallbackContainer(object):
         self.info['train_losses'], self.info['train_metrics'] = self.trainer.evaluator.evaluate(
             self.trainer.model, self.trainer.train_data, self.trainer.get_batch_data)
 
+        # evaluate on whole validation set
         self.info['eval_losses'], self.info['eval_metrics'] \
             = self._evaluate_model_on_validation()
 
