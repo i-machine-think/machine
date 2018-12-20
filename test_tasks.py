@@ -12,13 +12,9 @@ from machine.loss import NLLLoss
 from machine.metrics import SequenceAccuracy
 from machine.dataset import SourceField, TargetField
 from machine.tasks import get_task
+from machine.dataset.get_standard_iter import get_standard_iter
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-try:
-    raw_input          # Python 2
-except NameError:
-    raw_input = input  # Python 3
 
 # CONSTANTS
 IGNORE_INDEX = -1
@@ -33,10 +29,7 @@ LOG_FORMAT = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 #     - Final settings used in Learning compositionally
 #       through attentive guidance(Hupkes et al. 2018)
 
-# NOTE: Must have pulled the machine-task and machine repos into the same
-#       folder. Since this script adds machine-task to the path and assumes
-#       that machine-task is present one directory above.
-#       This is just an example of how to use machine-task to train with
+#       This is just an example of how to use machine.task to train with
 #       machine, for more machine specific utility please refer to
 #       train_model.py. A lot of machine parameters have been fixed
 #       for the sake of keeping this example brief and simple.
@@ -76,7 +69,7 @@ def train_lookup_model():
     loss_weights = [1.]
     metrics = [SequenceAccuracy(ignore_index=pad)]
 
-    trainer = create_trainer()
+    trainer = SupervisedTrainer(expt_dir='../models')
 
     # Train
     print("Training")
@@ -124,24 +117,24 @@ def prepare_iters(parameters, train_path, test_paths, valid_path, batch_size, ev
         return len(example.src) <= max_len and len(example.tgt) <= max_len
 
     # generate training and testing data
-    train = get_standard_batch_iterator(torchtext.data.TabularDataset(
+    train = get_standard_iter(torchtext.data.TabularDataset(
         path=train_path, format='tsv',
         fields=tabular_data_fields,
         filter_pred=len_filter
-    ), batch_size)
+    ), batch_size=batch_size)
 
-    dev = get_standard_batch_iterator(torchtext.data.TabularDataset(
+    dev = get_standard_iter(torchtext.data.TabularDataset(
         path=valid_path, format='tsv',
         fields=tabular_data_fields,
         filter_pred=len_filter
-    ), eval_batch_size)
+    ), batch_size=eval_batch_size)
 
     monitor_data = OrderedDict()
     for dataset in test_paths:
-        m = get_standard_batch_iterator(torchtext.data.TabularDataset(
+        m = get_standard_iter(torchtext.data.TabularDataset(
             path=dataset, format='tsv',
             fields=tabular_data_fields,
-            filter_pred=len_filter), eval_batch_size)
+            filter_pred=len_filter), batch_size=eval_batch_size)
         monitor_data[dataset] = m
 
     return src, tgt, train, dev, monitor_data
@@ -172,18 +165,6 @@ def initialize_model(parameters, src, tgt, train):
         param.data.uniform_(-0.08, 0.08)
 
     return seq2seq, output_vocab
-
-
-def create_trainer():
-    return SupervisedTrainer(expt_dir='../models')
-
-
-def get_standard_batch_iterator(data, batch_size):
-    return torchtext.data.BucketIterator(
-        dataset=data, batch_size=batch_size,
-        sort=False, sort_within_batch=True,
-        sort_key=lambda x: len(x.src),
-        device=device, repeat=False)
 
 
 if __name__ == "__main__":
