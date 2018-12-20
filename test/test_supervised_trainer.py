@@ -47,7 +47,7 @@ class TestSupervisedTrainer(unittest.TestCase):
         step = 3
         trainer.set_local_parameters(123, [], [], [], 1, 1)
         trainer._train_epoches(self.data_iterator, n_epoches,
-                               start_epoch, step, callbacks)
+                               start_epoch, step, callbacks, self.data_iterator)
 
         self.assertEqual(steps_per_epoch - step, mock_func.call_count)
 
@@ -69,7 +69,7 @@ class TestSupervisedTrainer(unittest.TestCase):
         step = 7
         trainer.set_local_parameters(123, [], [], [], 1, 1)
         trainer._train_epoches(
-            self.data_iterator, n_epoches, start_epoch, step, callbacks)
+            self.data_iterator, n_epoches, start_epoch, step, callbacks, self.data_iterator)
 
     @mock.patch('machine.util.checkpoint.Checkpoint')
     @mock.patch('machine.util.checkpoint.Checkpoint.load')
