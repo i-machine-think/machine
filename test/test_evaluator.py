@@ -27,6 +27,12 @@ class TestPredictor(unittest.TestCase):
         src.build_vocab(self.dataset)
         tgt.build_vocab(self.dataset)
 
+        self.data_iterator = torchtext.data.BucketIterator(
+            dataset=self.dataset, batch_size=64,
+            sort=False, sort_within_batch=True,
+            sort_key=lambda x: len(x.src),
+            repeat=False)
+
         encoder = EncoderRNN(len(src.vocab), 10, 10, 10, rnn_cell='lstm')
         decoder = DecoderRNN(len(tgt.vocab), 10, 10,
                              tgt.sos_id, tgt.eos_id, rnn_cell='lstm')
@@ -44,15 +50,15 @@ class TestPredictor(unittest.TestCase):
         mock_mgr.attach_mock(mock_eval, 'eval')
         mock_mgr.attach_mock(mock_call, 'call')
 
-        evaluator = Evaluator(batch_size=64)
+        evaluator = Evaluator()
         with patch('machine.evaluator.evaluator.torch.stack', return_value=None), \
                 patch('machine.metrics.WordAccuracy.eval_batch', return_value=None), \
                 patch('machine.metrics.WordAccuracy.eval_batch', return_value=None), \
                 patch('machine.loss.NLLLoss.eval_batch', return_value=None):
-            evaluator.evaluate(self.seq2seq, self.dataset,
+            evaluator.evaluate(self.seq2seq, self.data_iterator,
                                trainer.get_batch_data)
 
-        num_batches = int(math.ceil(len(self.dataset) / evaluator.batch_size))
+        num_batches = len(self.data_iterator)
         expected_calls = [call.eval()] + num_batches * \
             [call.call(ANY, ANY, ANY)]
-        self.assertEquals(expected_calls, mock_mgr.mock_calls)
+        self.assertEqual(expected_calls, mock_mgr.mock_calls)

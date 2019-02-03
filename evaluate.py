@@ -10,7 +10,8 @@ from machine.metrics import FinalTargetAccuracy, SequenceAccuracy, WordAccuracy
 from machine.dataset import SourceField, TargetField
 from machine.evaluator import Evaluator
 from machine.trainer import SupervisedTrainer
-from machine.util.checkpoint import Checkpoint
+from machine.util import Checkpoint
+from machine.util.callbacks import Callback
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -89,6 +90,14 @@ def len_filter(example):
     return len(example.src) <= max_len and len(example.tgt) <= max_len
 
 
+def get_standard_batch_iterator(data, batch_size):
+    return torchtext.data.BucketIterator(
+        dataset=data, batch_size=batch_size,
+        sort=False, sort_within_batch=True,
+        sort_key=lambda x: len(x.src),
+        device=device, repeat=False)
+
+
 # generate test set
 test = torchtext.data.TabularDataset(
     path=opt.test_data, format='tsv',
@@ -96,6 +105,7 @@ test = torchtext.data.TabularDataset(
     filter_pred=len_filter
 )
 
+test_iterator = get_standard_batch_iterator(test, opt.batch_size)
 # Prepare loss and metrics
 pad = output_vocab.stoi[tgt.pad_token]
 losses = [NLLLoss(ignore_index=pad)]
@@ -123,10 +133,9 @@ data_func = SupervisedTrainer.get_batch_data
 ##########################################################################
 # Evaluate model on test set
 
-evaluator = Evaluator(batch_size=opt.batch_size, loss=losses, metrics=metrics)
-losses, metrics = evaluator.evaluate(
-    model=seq2seq, data=test, get_batch_data=data_func)
+evaluator = Evaluator(loss=losses, metrics=metrics)
+losses, metrics = evaluator.evaluate(seq2seq, test_iterator, data_func)
 
-total_loss, log_msg, _ = SupervisedTrainer.get_losses(losses, metrics, 0)
+total_loss, log_msg, _ = Callback.get_losses(losses, metrics, 0)
 
 logging.info(log_msg)

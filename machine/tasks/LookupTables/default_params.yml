@@ -1,0 +1,31 @@
+# Define here dictionaries of default params 
+# these will be attached to the LookupTable Task object
+# The idea is to offer sensible and reproducible 
+# default suggestions of parameters for datasets 
+# which have been used in past papers
+task_defaults:
+    batch_size: 128
+    k: 3
+    max_len: 60
+    patience: 5
+    epochs: 20
+# Baseline used in Learning compositionally through attentive guidance (Hupkes et al. 2018)
+baseline_2018: 
+    full_focus: False
+    batch_size: 1
+    embedding_size: 128
+    hidden_size: 512
+    rnn_cell: 'gru'
+    attention: 'pre-rnn'
+    attention_method: 'mlp'
+    max_len: 50
+# Final Model used in Learning compositionally through attentive guidance (Hupkes et al. 2018)
+Hupkes_2018:
+    full_focus: True
+    batch_size: 1
+    embedding_size: 16
+    hidden_size: 512
+    rnn_cell: 'gru'
+    attention: 'pre-rnn'
+    attention_method: 'mlp'
+    max_len: 50

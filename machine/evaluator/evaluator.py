@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+import copy
 
 import torch
 import torchtext
@@ -14,16 +15,17 @@ class Evaluator(object):
 
     Args:
         loss (machine.loss, optional): loss for evaluator (default: machine.loss.NLLLoss)
-        batch_size (int, optional): batch size for evaluator (default: 64)
+        metrics (machine.metrics, optional): metrics for evaluator (default
+            machine.metrics.WordAccuracy and SequenceAccuracy )
     """
 
     def __init__(self, loss=[NLLLoss()], metrics=[
-                 WordAccuracy(), SequenceAccuracy()], batch_size=64):
+                 WordAccuracy(), SequenceAccuracy()]):
         self.losses = loss
         self.metrics = metrics
-        self.batch_size = batch_size
 
-    def update_batch_metrics(self, metrics, other, target_variable):
+    @staticmethod
+    def update_batch_metrics(metrics, other, target_variable):
         """
         Update a list with metrics for current batch.
 
@@ -67,7 +69,8 @@ class Evaluator(object):
 
         return losses
 
-    def update_loss(self, losses, decoder_outputs,
+    @staticmethod
+    def update_loss(losses, decoder_outputs,
                     decoder_hidden, other, target_variable):
         """
         Update a list with losses for current batch
@@ -88,12 +91,12 @@ class Evaluator(object):
 
         return losses
 
-    def evaluate(self, model, data, get_batch_data):
+    def evaluate(self, model, data_iterator, get_batch_data):
         """ Evaluate a model on given dataset and return performance.
 
         Args:
             model (machine.models): model to evaluate
-            data (machine.dataset.dataset.Dataset): dataset to evaluate against
+            data_iterator (torchtext.data.Iterator): data iterator to evaluate against
 
         Returns:
             loss (float): loss of the given model on the given dataset
@@ -101,26 +104,30 @@ class Evaluator(object):
         """
         # If the model was in train mode before this method was called, we make sure it still is
         # after this method.
+
+        # Since we are passing data_iterator
+        # We evaluate on whole batches - so exhaust all batches first
+        # and store the initial point
+        # data_iterator_reset = False
+        initial_iteration = data_iterator.iterations
+        if initial_iteration > 1 and initial_iteration != len(data_iterator):
+            raise Warning("Passed in data_iterator in middle of iterations")
+
         previous_train_mode = model.training
         model.eval()
 
-        losses = self.losses
-        for loss in losses:
+        for loss in self.losses:
             loss.reset()
+        losses = copy.deepcopy(self.losses)
 
-        metrics = self.metrics
-        for metric in metrics:
+        for metric in self.metrics:
             metric.reset()
-
-        # create batch iterator
-        batch_iterator = torchtext.data.BucketIterator(
-            dataset=data, batch_size=self.batch_size,
-            sort=True, sort_key=lambda x: len(x.src),
-            device=device, train=False)
+        metrics = copy.deepcopy(self.metrics)
 
         # loop over batches
         with torch.no_grad():
-            for batch in batch_iterator:
+            for batch in data_iterator:
+
                 input_variable, input_lengths, target_variable = get_batch_data(
                     batch)
 

@@ -1,0 +1,5 @@
+task_defaults: 
+    batch_size: 1
+    k: 10
+    max_len: 10
+    patience: 15

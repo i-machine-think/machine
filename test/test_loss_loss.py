@@ -32,8 +32,8 @@ class TestLoss(unittest.TestCase):
         self.assertEqual(loss.log_name, shortname)
 
     def test_loss_init_WITH_NON_LOSS(self):
-        self.assertRaises(ValueError, lambda: Loss("name", "shortname",
-                                                   "decoder_outputs", "decoder_targets", "loss"))
+        self.assertRaises(ValueError, lambda: Loss(
+            "name", "shortname", "decoder_outputs", "decoder_targets", "loss"))
 
     def test_loss_backward_WITH_NO_LOSS(self):
         loss = Loss("name", "shortname", "decoder_output",
@@ -62,7 +62,7 @@ class TestLoss(unittest.TestCase):
     def test_nllloss_WITH_OUT_SIZE_AVERAGE(self):
         loss = NLLLoss(size_average=False)
         pytorch_loss = 0
-        pytorch_criterion = torch.nn.NLLLoss(size_average=False)
+        pytorch_criterion = torch.nn.NLLLoss(reduction='sum')
         for output, target in zip(self.outputs, self.targets):
             loss.eval_step(output, target)
             pytorch_loss += pytorch_criterion(output, target)

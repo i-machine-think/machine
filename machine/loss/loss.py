@@ -140,7 +140,7 @@ class NLLLoss(Loss):
 
         super(NLLLoss, self).__init__(
             self._NAME, self._SHORTNAME, self._INPUTS, self._TARGETS,
-            nn.NLLLoss(ignore_index=ignore_index, reduction='elementwise_mean' if size_average else 'sum'))
+            nn.NLLLoss(ignore_index=ignore_index, reduction='mean' if size_average else 'sum'))
 
     def get_loss(self):
         if isinstance(self.acc_loss, int):

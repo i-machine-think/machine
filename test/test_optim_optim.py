@@ -16,7 +16,7 @@ class TestOptimizer(unittest.TestCase):
         except BaseException:
             self.fail("__init__ failed.")
 
-        self.assertEquals(optimizer.max_grad_norm, 0)
+        self.assertEqual(optimizer.max_grad_norm, 0)
 
     def test_update(self):
         params = [torch.nn.Parameter(torch.randn(2, 3, 4))]
@@ -25,7 +25,7 @@ class TestOptimizer(unittest.TestCase):
         optimizer.set_scheduler(scheduler)
         optimizer.update(10, 0)
         optimizer.update(10, 1)
-        self.assertEquals(optimizer.optimizer.param_groups[0]['lr'], 0.1)
+        self.assertEqual(optimizer.optimizer.param_groups[0]['lr'], 0.1)
 
     @mock.patch("torch.nn.utils.clip_grad_norm_")
     def test_step(self, mock_clip_grad_norm):
