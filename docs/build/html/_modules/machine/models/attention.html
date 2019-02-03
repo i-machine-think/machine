@@ -1,0 +1,410 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>machine.models.attention &mdash; i-machine-think/machine 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> i-machine-think/machine
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/intro.html#requirements">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/intro.html#quickstart">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/intro.html#contributing">Contributing</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Package Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dataset.html">Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../util.html">Util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../evaluator.html">Evaluator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../optim.html">Optim</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../trainer.html">Trainer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">i-machine-think/machine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>machine.models.attention</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for machine.models.attention</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+
+<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Attention"><a class="viewcode-back" href="../../../models.html#machine.models.attention.Attention">[docs]</a><span class="k">class</span> <span class="nc">Attention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies an attention mechanism on the output features from the decoder.</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">            \begin{array}{ll}</span>
+<span class="sd">            x = context*output \\</span>
+<span class="sd">            attn = exp(x_i) / sum_j exp(x_j) \\</span>
+<span class="sd">            output = \tanh(w * (attn * context) + b * output)</span>
+<span class="sd">            \end{array}</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dim(int): The number of expected features in the output</span>
+<span class="sd">        method(str): The method to compute the alignment, mlp or dot</span>
+
+<span class="sd">    Inputs: output, context</span>
+<span class="sd">        - **output** (batch, output_len, dimensions): tensor containing the output features from the decoder.</span>
+<span class="sd">        - **context** (batch, input_len, dimensions): tensor containing features of the encoded input sequence.</span>
+
+<span class="sd">    Outputs: output, attn</span>
+<span class="sd">        - **output** (batch, output_len, dimensions): tensor containing the attended output features from the decoder.</span>
+<span class="sd">        - **attn** (batch, output_len, input_len): tensor containing attention weights.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        mask (torch.Tensor, optional): applies a :math:`-inf` to the indices specified in the `Tensor`.</span>
+<span class="sd">        method (torch.nn.Module): layer that implements the method of computing the attention vector</span>
+
+<span class="sd">    Examples::</span>
+
+<span class="sd">         &gt;&gt;&gt; attention = machine.models.Attention(256)</span>
+<span class="sd">         &gt;&gt;&gt; context = torch.randn(5, 3, 256)</span>
+<span class="sd">         &gt;&gt;&gt; output = torch.randn(5, 5, 256)</span>
+<span class="sd">         &gt;&gt;&gt; output, attn = attention(output, context)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Attention</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_method</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Attention.set_mask"><a class="viewcode-back" href="../../../models.html#machine.models.attention.Attention.set_mask">[docs]</a>    <span class="k">def</span> <span class="nf">set_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets indices to be masked</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mask (torch.Tensor): tensor containing indices to be masked</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span></div>
+
+<div class="viewcode-block" id="Attention.forward"><a class="viewcode-back" href="../../../models.html#machine.models.attention.Attention.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decoder_states</span><span class="p">,</span> <span class="n">encoder_states</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">attention_method_kwargs</span><span class="p">):</span>
+
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">decoder_states</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">decoder_states</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">input_size</span> <span class="o">=</span> <span class="n">encoder_states</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># compute mask</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">encoder_states</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mf">0.</span><span class="p">)[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Compute attention vals</span>
+        <span class="n">attn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">(</span><span class="n">decoder_states</span><span class="p">,</span> <span class="n">encoder_states</span><span class="p">,</span>
+                           <span class="o">**</span><span class="n">attention_method_kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">attn</span><span class="o">.</span><span class="n">masked_fill_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">))</span>
+
+        <span class="c1"># apply local mask</span>
+        <span class="n">attn</span><span class="o">.</span><span class="n">masked_fill_</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">))</span>
+
+        <span class="n">attn</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">attn</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">input_size</span><span class="p">),</span>
+                         <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">input_size</span><span class="p">)</span>
+
+        <span class="c1"># (batch, out_len, in_len) * (batch, in_len, dim) -&gt; (batch, out_len, dim)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">attn</span><span class="p">,</span> <span class="n">encoder_states</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">context</span><span class="p">,</span> <span class="n">attn</span></div>
+
+<div class="viewcode-block" id="Attention.get_method"><a class="viewcode-back" href="../../../models.html#machine.models.attention.Attention.get_method">[docs]</a>    <span class="k">def</span> <span class="nf">get_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set method to compute attention</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;mlp&#39;</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">MLP</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;concat&#39;</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">Concat</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;dot&#39;</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">Dot</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown attention method&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">method</span></div></div>
+
+
+<div class="viewcode-block" id="Concat"><a class="viewcode-back" href="../../../models.html#machine.models.attention.Concat">[docs]</a><span class="k">class</span> <span class="nc">Concat</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implements the computation of attention by applying an</span>
+<span class="sd">    MLP to the concatenation of the decoder and encoder</span>
+<span class="sd">    hidden states.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Concat</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Concat.forward"><a class="viewcode-back" href="../../../models.html#machine.models.attention.Concat.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decoder_states</span><span class="p">,</span> <span class="n">encoder_states</span><span class="p">):</span>
+        <span class="c1"># apply mlp to all encoder states for current decoder</span>
+
+        <span class="c1"># decoder_states --&gt; (batch, dec_seqlen, hl_size)</span>
+        <span class="c1"># encoder_states --&gt; (batch, enc_seqlen, hl_size)</span>
+        <span class="n">batch_size</span><span class="p">,</span> <span class="n">enc_seqlen</span><span class="p">,</span> <span class="n">hl_size</span> <span class="o">=</span> <span class="n">encoder_states</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">dec_seqlen</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">decoder_states</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+
+        <span class="c1"># (batch, enc_seqlen, hl_size) -&gt; (batch, dec_seqlen, enc_seqlen, hl_size)</span>
+        <span class="n">encoder_states_exp</span> <span class="o">=</span> <span class="n">encoder_states</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">encoder_states_exp</span> <span class="o">=</span> <span class="n">encoder_states_exp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="p">,</span> <span class="n">dec_seqlen</span><span class="p">,</span> <span class="n">enc_seqlen</span><span class="p">,</span> <span class="n">hl_size</span><span class="p">)</span>
+
+        <span class="c1"># (batch, dec_seqlen, hl_size) -&gt; (batch, dec_seqlen, enc_seqlen, hl_size)</span>
+        <span class="n">decoder_states_exp</span> <span class="o">=</span> <span class="n">decoder_states</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">decoder_states_exp</span> <span class="o">=</span> <span class="n">decoder_states_exp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="p">,</span> <span class="n">dec_seqlen</span><span class="p">,</span> <span class="n">enc_seqlen</span><span class="p">,</span> <span class="n">hl_size</span><span class="p">)</span>
+
+        <span class="c1"># reshape encoder and decoder states to allow batchwise computation. We will have</span>
+        <span class="c1"># batch_size x enc_seqlen x dec_seqlen batches. So we apply the Linear</span>
+        <span class="c1"># layer for each of them</span>
+        <span class="n">decoder_states_tr</span> <span class="o">=</span> <span class="n">decoder_states_exp</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hl_size</span><span class="p">)</span>
+        <span class="n">encoder_states_tr</span> <span class="o">=</span> <span class="n">encoder_states_exp</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hl_size</span><span class="p">)</span>
+
+        <span class="n">mlp_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">encoder_states_tr</span><span class="p">,</span> <span class="n">decoder_states_tr</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># apply mlp and respape to get in correct form</span>
+        <span class="n">mlp_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span><span class="p">(</span><span class="n">mlp_input</span><span class="p">)</span>
+        <span class="n">attn</span> <span class="o">=</span> <span class="n">mlp_output</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">dec_seqlen</span><span class="p">,</span> <span class="n">enc_seqlen</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">attn</span></div></div>
+
+
+<div class="viewcode-block" id="Dot"><a class="viewcode-back" href="../../../models.html#machine.models.attention.Dot">[docs]</a><span class="k">class</span> <span class="nc">Dot</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Dot</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Dot.forward"><a class="viewcode-back" href="../../../models.html#machine.models.attention.Dot.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decoder_states</span><span class="p">,</span> <span class="n">encoder_states</span><span class="p">):</span>
+        <span class="n">attn</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">decoder_states</span><span class="p">,</span> <span class="n">encoder_states</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">attn</span></div></div>
+
+
+<div class="viewcode-block" id="MLP"><a class="viewcode-back" href="../../../models.html#machine.models.attention.MLP">[docs]</a><span class="k">class</span> <span class="nc">MLP</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MLP</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MLP.forward"><a class="viewcode-back" href="../../../models.html#machine.models.attention.MLP.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decoder_states</span><span class="p">,</span> <span class="n">encoder_states</span><span class="p">):</span>
+        <span class="c1"># apply mlp to all encoder states for current decoder</span>
+
+        <span class="c1"># decoder_states --&gt; (batch, dec_seqlen, hl_size)</span>
+        <span class="c1"># encoder_states --&gt; (batch, enc_seqlen, hl_size)</span>
+        <span class="n">batch_size</span><span class="p">,</span> <span class="n">enc_seqlen</span><span class="p">,</span> <span class="n">hl_size</span> <span class="o">=</span> <span class="n">encoder_states</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">dec_seqlen</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">decoder_states</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+
+        <span class="c1"># (batch, enc_seqlen, hl_size) -&gt; (batch, dec_seqlen, enc_seqlen, hl_size)</span>
+        <span class="n">encoder_states_exp</span> <span class="o">=</span> <span class="n">encoder_states</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">encoder_states_exp</span> <span class="o">=</span> <span class="n">encoder_states_exp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="p">,</span> <span class="n">dec_seqlen</span><span class="p">,</span> <span class="n">enc_seqlen</span><span class="p">,</span> <span class="n">hl_size</span><span class="p">)</span>
+
+        <span class="c1"># (batch, dec_seqlen, hl_size) -&gt; (batch, dec_seqlen, enc_seqlen, hl_size)</span>
+        <span class="n">decoder_states_exp</span> <span class="o">=</span> <span class="n">decoder_states</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">decoder_states_exp</span> <span class="o">=</span> <span class="n">decoder_states_exp</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
+            <span class="n">batch_size</span><span class="p">,</span> <span class="n">dec_seqlen</span><span class="p">,</span> <span class="n">enc_seqlen</span><span class="p">,</span> <span class="n">hl_size</span><span class="p">)</span>
+
+        <span class="c1"># reshape encoder and decoder states to allow batchwise computation. We will have</span>
+        <span class="c1"># batch_size x enc_seqlen x dec_seqlen batches. So we apply the Linear</span>
+        <span class="c1"># layer for each of them</span>
+        <span class="n">decoder_states_tr</span> <span class="o">=</span> <span class="n">decoder_states_exp</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hl_size</span><span class="p">)</span>
+        <span class="n">encoder_states_tr</span> <span class="o">=</span> <span class="n">encoder_states_exp</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">hl_size</span><span class="p">)</span>
+
+        <span class="n">mlp_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">encoder_states_tr</span><span class="p">,</span> <span class="n">decoder_states_tr</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># apply mlp and reshape to get in correct form</span>
+        <span class="n">mlp_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span><span class="p">(</span><span class="n">mlp_input</span><span class="p">)</span>
+        <span class="n">mlp_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="n">mlp_output</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">mlp_output</span><span class="p">)</span>
+        <span class="n">attn</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">dec_seqlen</span><span class="p">,</span> <span class="n">enc_seqlen</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">attn</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

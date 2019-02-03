@@ -3,13 +3,13 @@ Evaluator
 
 evaluator
 ---------
-.. automodule:: seq2seq.evaluator.evaluator
+.. automodule:: machine.evaluator.evaluator
     :members:
     :undoc-members:
 
 predictor
 ---------
 
-.. automodule:: seq2seq.evaluator.predictor
+.. automodule:: machine.evaluator.predictor
     :members:
     :undoc-members:

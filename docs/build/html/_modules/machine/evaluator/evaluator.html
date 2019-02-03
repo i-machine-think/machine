@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>machine.evaluator.evaluator &mdash; i-machine-think/machine 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> i-machine-think/machine
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/intro.html#requirements">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/intro.html#quickstart">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../notes/intro.html#contributing">Contributing</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Package Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dataset.html">Dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../util.html">Util</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../evaluator.html">Evaluator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loss.html">Loss</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../optim.html">Optim</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../trainer.html">Trainer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">i-machine-think/machine</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>machine.evaluator.evaluator</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for machine.evaluator.evaluator</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torchtext</span>
+
+<span class="kn">from</span> <span class="nn">machine.loss</span> <span class="k">import</span> <span class="n">NLLLoss</span>
+<span class="kn">from</span> <span class="nn">machine.metrics</span> <span class="k">import</span> <span class="n">WordAccuracy</span><span class="p">,</span> <span class="n">SequenceAccuracy</span>
+
+<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Evaluator"><a class="viewcode-back" href="../../../evaluator.html#machine.evaluator.evaluator.Evaluator">[docs]</a><span class="k">class</span> <span class="nc">Evaluator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Class to evaluate models with given datasets.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss (machine.loss, optional): loss for evaluator (default: machine.loss.NLLLoss)</span>
+<span class="sd">        metrics (machine.metrics, optional): metrics for evaluator (default</span>
+<span class="sd">            machine.metrics.WordAccuracy and SequenceAccuracy )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="p">[</span><span class="n">NLLLoss</span><span class="p">()],</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span>
+                 <span class="n">WordAccuracy</span><span class="p">(),</span> <span class="n">SequenceAccuracy</span><span class="p">()]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">losses</span> <span class="o">=</span> <span class="n">loss</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span>
+
+<div class="viewcode-block" id="Evaluator.update_batch_metrics"><a class="viewcode-back" href="../../../evaluator.html#machine.evaluator.evaluator.Evaluator.update_batch_metrics">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">update_batch_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update a list with metrics for current batch.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metrics (list): list with of machine.metric.Metric objects</span>
+<span class="sd">            other (dict): dict generated by forward pass of model to be evaluated</span>
+<span class="sd">            target_variable (dict): map of keys to different targets of model</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            metrics (list): list with updated metrics</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># evaluate output symbols</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">other</span><span class="p">[</span><span class="s1">&#39;sequence&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+            <span class="n">metric</span><span class="o">.</span><span class="n">eval_batch</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">metrics</span></div>
+
+<div class="viewcode-block" id="Evaluator.compute_batch_loss"><a class="viewcode-back" href="../../../evaluator.html#machine.evaluator.evaluator.Evaluator.compute_batch_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_batch_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decoder_outputs</span><span class="p">,</span>
+                           <span class="n">decoder_hidden</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the loss for the current batch.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            decoder_outputs (torch.Tensor): decoder outputs of a batch</span>
+<span class="sd">            decoder_hidden (torch.Tensor): decoder hidden states for a batch</span>
+<span class="sd">            other (dict): maps extra outputs to torch.Tensors</span>
+<span class="sd">            target_variable (dict): map of keys to different targets</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           losses (list): a list with machine.loss.Loss objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">losses</span>
+        <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="n">losses</span><span class="p">:</span>
+            <span class="n">loss</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+        <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_loss</span><span class="p">(</span>
+            <span class="n">losses</span><span class="p">,</span> <span class="n">decoder_outputs</span><span class="p">,</span> <span class="n">decoder_hidden</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">losses</span></div>
+
+<div class="viewcode-block" id="Evaluator.update_loss"><a class="viewcode-back" href="../../../evaluator.html#machine.evaluator.evaluator.Evaluator.update_loss">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">update_loss</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">decoder_outputs</span><span class="p">,</span>
+                    <span class="n">decoder_hidden</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update a list with losses for current batch</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            losses (list): a list with machine.loss.Loss objects</span>
+<span class="sd">            decoder_outputs (torch.Tensor): decoder outputs of a batch</span>
+<span class="sd">            decoder_hidden (torch.Tensor): decoder hidden states for a batch</span>
+<span class="sd">            other (dict): maps extra outputs to torch.Tensors</span>
+<span class="sd">            target_variable (dict): map of keys to different targets</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">           losses (list): a list with machine.loss.Loss objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="n">losses</span><span class="p">:</span>
+            <span class="n">loss</span><span class="o">.</span><span class="n">eval_batch</span><span class="p">(</span><span class="n">decoder_outputs</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">losses</span></div>
+
+<div class="viewcode-block" id="Evaluator.evaluate"><a class="viewcode-back" href="../../../evaluator.html#machine.evaluator.evaluator.Evaluator.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">data_iterator</span><span class="p">,</span> <span class="n">get_batch_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Evaluate a model on given dataset and return performance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model (machine.models): model to evaluate</span>
+<span class="sd">            data_iterator (torchtext.data.Iterator): data iterator to evaluate against</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            loss (float): loss of the given model on the given dataset</span>
+<span class="sd">            accuracy (float): accuracy of the given model on the given dataset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If the model was in train mode before this method was called, we make sure it still is</span>
+        <span class="c1"># after this method.</span>
+
+        <span class="c1"># Since we are passing data_iterator</span>
+        <span class="c1"># We evaluate on whole batches - so exhaust all batches first</span>
+        <span class="c1"># and store the initial point</span>
+        <span class="c1"># data_iterator_reset = False</span>
+        <span class="n">initial_iteration</span> <span class="o">=</span> <span class="n">data_iterator</span><span class="o">.</span><span class="n">iterations</span>
+        <span class="k">if</span> <span class="n">initial_iteration</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">initial_iteration</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_iterator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;Passed in data_iterator in middle of iterations&quot;</span><span class="p">)</span>
+
+        <span class="n">previous_train_mode</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">training</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">losses</span><span class="p">:</span>
+            <span class="n">loss</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">losses</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">losses</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+            <span class="n">metric</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+
+        <span class="c1"># loop over batches</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">data_iterator</span><span class="p">:</span>
+
+                <span class="n">input_variable</span><span class="p">,</span> <span class="n">input_lengths</span><span class="p">,</span> <span class="n">target_variable</span> <span class="o">=</span> <span class="n">get_batch_data</span><span class="p">(</span>
+                    <span class="n">batch</span><span class="p">)</span>
+
+                <span class="n">decoder_outputs</span><span class="p">,</span> <span class="n">decoder_hidden</span><span class="p">,</span> <span class="n">other</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span>
+                    <span class="n">input_variable</span><span class="p">,</span> <span class="n">input_lengths</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">target_variable</span><span class="p">)</span>
+
+                <span class="c1"># Compute metric(s) over one batch</span>
+                <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_batch_metrics</span><span class="p">(</span>
+                    <span class="n">metrics</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">)</span>
+
+                <span class="c1"># Compute loss(es) over one batch</span>
+                <span class="n">losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_loss</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">decoder_outputs</span><span class="p">,</span>
+                                          <span class="n">decoder_hidden</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">)</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">previous_train_mode</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">losses</span><span class="p">,</span> <span class="n">metrics</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

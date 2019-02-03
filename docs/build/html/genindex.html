@@ -25,25 +25,17 @@
 
   
 
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="#"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="i-machine-think/machine 0.1.0 documentation" href="index.html"/> 
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -116,7 +108,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">i-machine-think/machine</a>
@@ -124,9 +116,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -178,12 +171,9 @@
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
- | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
- | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
- | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
@@ -192,7 +182,7 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="models.html#seq2seq.models.attention.Attention">Attention (class in seq2seq.models.attention)</a>
+      <li><a href="models.html#machine.models.attention.Attention">Attention (class in machine.models.attention)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -200,19 +190,27 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="models.html#seq2seq.models.baseRNN.BaseRNN">BaseRNN (class in seq2seq.models.baseRNN)</a>
+      <li><a href="models.html#machine.models.baseRNN.BaseRNN">BaseRNN (class in machine.models.baseRNN)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="dataset.html#seq2seq.dataset.fields.TargetField.build_vocab">build_vocab() (seq2seq.dataset.fields.TargetField method)</a>
+      <li><a href="dataset.html#machine.dataset.fields.SourceField.build_vocab">build_vocab() (machine.dataset.fields.SourceField method)</a>
+
+      <ul>
+        <li><a href="dataset.html#machine.dataset.fields.TargetField.build_vocab">(machine.dataset.fields.TargetField method)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="util.html#seq2seq.util.checkpoint.Checkpoint">Checkpoint (class in seq2seq.util.checkpoint)</a>
+      <li><a href="evaluator.html#machine.evaluator.evaluator.Evaluator.compute_batch_loss">compute_batch_loss() (machine.evaluator.evaluator.Evaluator method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="models.html#machine.models.attention.Concat">Concat (class in machine.models.attention)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -220,7 +218,11 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="models.html#seq2seq.models.DecoderRNN.DecoderRNN">DecoderRNN (class in seq2seq.models.DecoderRNN)</a>
+      <li><a href="models.html#machine.models.DecoderRNN.DecoderRNN">DecoderRNN (class in machine.models.DecoderRNN)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="models.html#machine.models.attention.Dot">Dot (class in machine.models.attention)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -228,15 +230,13 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="models.html#seq2seq.models.EncoderRNN.EncoderRNN">EncoderRNN (class in seq2seq.models.EncoderRNN)</a>
-</li>
-      <li><a href="loss.html#seq2seq.loss.loss.Loss.eval_batch">eval_batch() (seq2seq.loss.loss.Loss method)</a>
+      <li><a href="models.html#machine.models.EncoderRNN.EncoderRNN">EncoderRNN (class in machine.models.EncoderRNN)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="evaluator.html#seq2seq.evaluator.evaluator.Evaluator.evaluate">evaluate() (seq2seq.evaluator.evaluator.Evaluator method)</a>
+      <li><a href="evaluator.html#machine.evaluator.evaluator.Evaluator.evaluate">evaluate() (machine.evaluator.evaluator.Evaluator method)</a>
 </li>
-      <li><a href="evaluator.html#seq2seq.evaluator.evaluator.Evaluator">Evaluator (class in seq2seq.evaluator.evaluator)</a>
+      <li><a href="evaluator.html#machine.evaluator.evaluator.Evaluator">Evaluator (class in machine.evaluator.evaluator)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -244,19 +244,39 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="models.html#seq2seq.models.EncoderRNN.EncoderRNN.forward">forward() (seq2seq.models.EncoderRNN.EncoderRNN method)</a>
+      <li><a href="models.html#machine.models.seq2seq.Seq2seq.flatten_parameters">flatten_parameters() (machine.models.seq2seq.Seq2seq method)</a>
+</li>
+      <li><a href="models.html#machine.models.attention.Attention.forward">forward() (machine.models.attention.Attention method)</a>
 
       <ul>
-        <li><a href="models.html#seq2seq.models.TopKDecoder.TopKDecoder.forward">(seq2seq.models.TopKDecoder.TopKDecoder method)</a>
+        <li><a href="models.html#machine.models.DecoderRNN.DecoderRNN.forward">(machine.models.DecoderRNN.DecoderRNN method)</a>
+</li>
+        <li><a href="models.html#machine.models.EncoderRNN.EncoderRNN.forward">(machine.models.EncoderRNN.EncoderRNN method)</a>
+</li>
+        <li><a href="models.html#machine.models.TopKDecoder.TopKDecoder.forward">(machine.models.TopKDecoder.TopKDecoder method)</a>
+</li>
+        <li><a href="models.html#machine.models.attention.Concat.forward">(machine.models.attention.Concat method)</a>
+</li>
+        <li><a href="models.html#machine.models.attention.Dot.forward">(machine.models.attention.Dot method)</a>
+</li>
+        <li><a href="models.html#machine.models.attention.MLP.forward">(machine.models.attention.MLP method)</a>
+</li>
+        <li><a href="models.html#machine.models.baseRNN.BaseRNN.forward">(machine.models.baseRNN.BaseRNN method)</a>
+</li>
+        <li><a href="models.html#machine.models.seq2seq.Seq2seq.forward">(machine.models.seq2seq.Seq2seq method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="models.html#machine.models.DecoderRNN.DecoderRNN.forward_step">forward_step() (machine.models.DecoderRNN.DecoderRNN method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="loss.html#seq2seq.loss.loss.Loss.get_loss">get_loss() (seq2seq.loss.loss.Loss method)</a>
+      <li><a href="models.html#machine.models.attention.Attention.get_method">get_method() (machine.models.attention.Attention method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -264,19 +284,7 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="util.html#seq2seq.util.checkpoint.Checkpoint.INPUT_VOCAB_FILE">INPUT_VOCAB_FILE (seq2seq.util.checkpoint.Checkpoint attribute)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="L">L</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="util.html#seq2seq.util.checkpoint.Checkpoint.load">load() (seq2seq.util.checkpoint.Checkpoint class method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="loss.html#seq2seq.loss.loss.Loss">Loss (class in seq2seq.loss.loss)</a>
+      <li><a href="dataset.html#machine.dataset.fields.TargetField.include_eos">include_eos (machine.dataset.fields.TargetField attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -284,15 +292,31 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="util.html#seq2seq.util.checkpoint.Checkpoint.MODEL_NAME">MODEL_NAME (seq2seq.util.checkpoint.Checkpoint attribute)</a>
+      <li><a href="dataset.html#module-machine.dataset.fields">machine.dataset.fields (module)</a>
+</li>
+      <li><a href="evaluator.html#module-machine.evaluator.evaluator">machine.evaluator.evaluator (module)</a>
+</li>
+      <li><a href="evaluator.html#module-machine.evaluator.predictor">machine.evaluator.predictor (module)</a>
+</li>
+      <li><a href="loss.html#module-machine.loss.loss">machine.loss.loss (module)</a>
+</li>
+      <li><a href="models.html#module-machine.models.attention">machine.models.attention (module)</a>
+</li>
+      <li><a href="models.html#module-machine.models.baseRNN">machine.models.baseRNN (module)</a>
 </li>
   </ul></td>
-</tr></table>
-
-<h2 id="N">N</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="loss.html#seq2seq.loss.loss.NLLLoss">NLLLoss (class in seq2seq.loss.loss)</a>
+      <li><a href="models.html#module-machine.models.DecoderRNN">machine.models.DecoderRNN (module)</a>
+</li>
+      <li><a href="models.html#module-machine.models.EncoderRNN">machine.models.EncoderRNN (module)</a>
+</li>
+      <li><a href="models.html#module-machine.models.seq2seq">machine.models.seq2seq (module)</a>
+</li>
+      <li><a href="models.html#module-machine.models.TopKDecoder">machine.models.TopKDecoder (module)</a>
+</li>
+      <li><a href="optim.html#module-machine.optim.optim">machine.optim.optim (module)</a>
+</li>
+      <li><a href="models.html#machine.models.attention.MLP">MLP (class in machine.models.attention)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -300,11 +324,7 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="optim.html#seq2seq.optim.optim.Optimizer">Optimizer (class in seq2seq.optim.optim)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="util.html#seq2seq.util.checkpoint.Checkpoint.OUTPUT_VOCAB_FILE">OUTPUT_VOCAB_FILE (seq2seq.util.checkpoint.Checkpoint attribute)</a>
+      <li><a href="optim.html#machine.optim.optim.Optimizer">Optimizer (class in machine.optim.optim)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -312,23 +332,11 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="util.html#seq2seq.util.checkpoint.Checkpoint.path">path (seq2seq.util.checkpoint.Checkpoint attribute)</a>
-</li>
-      <li><a href="loss.html#seq2seq.loss.loss.Perplexity">Perplexity (class in seq2seq.loss.loss)</a>
+      <li><a href="evaluator.html#machine.evaluator.predictor.Predictor.predict">predict() (machine.evaluator.predictor.Predictor method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="evaluator.html#seq2seq.evaluator.predictor.Predictor.predict">predict() (seq2seq.evaluator.predictor.Predictor method)</a>
-</li>
-      <li><a href="evaluator.html#seq2seq.evaluator.predictor.Predictor">Predictor (class in seq2seq.evaluator.predictor)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="R">R</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="loss.html#seq2seq.loss.loss.Loss.reset">reset() (seq2seq.loss.loss.Loss method)</a>
+      <li><a href="evaluator.html#machine.evaluator.predictor.Predictor">Predictor (class in machine.evaluator.predictor)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -336,51 +344,21 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="util.html#seq2seq.util.checkpoint.Checkpoint.save">save() (seq2seq.util.checkpoint.Checkpoint method)</a>
+      <li><a href="models.html#machine.models.seq2seq.Seq2seq">Seq2seq (class in machine.models.seq2seq)</a>
 </li>
-      <li><a href="models.html#seq2seq.models.seq2seq.Seq2seq">Seq2seq (class in seq2seq.models.seq2seq)</a>
+      <li><a href="models.html#machine.models.attention.Attention.set_mask">set_mask() (machine.models.attention.Attention method)</a>
 </li>
-      <li><a href="dataset.html#module-seq2seq.dataset.fields">seq2seq.dataset.fields (module)</a>
-</li>
-      <li><a href="evaluator.html#module-seq2seq.evaluator.evaluator">seq2seq.evaluator.evaluator (module)</a>
-</li>
-      <li><a href="evaluator.html#module-seq2seq.evaluator.predictor">seq2seq.evaluator.predictor (module)</a>
-</li>
-      <li><a href="loss.html#module-seq2seq.loss.loss">seq2seq.loss.loss (module)</a>
-</li>
-      <li><a href="models.html#module-seq2seq.models.attention">seq2seq.models.attention (module)</a>
-</li>
-      <li><a href="models.html#module-seq2seq.models.baseRNN">seq2seq.models.baseRNN (module)</a>
-</li>
-      <li><a href="models.html#module-seq2seq.models.DecoderRNN">seq2seq.models.DecoderRNN (module)</a>
-</li>
-      <li><a href="models.html#module-seq2seq.models.EncoderRNN">seq2seq.models.EncoderRNN (module)</a>
-</li>
-      <li><a href="models.html#module-seq2seq.models.seq2seq">seq2seq.models.seq2seq (module)</a>
+      <li><a href="optim.html#machine.optim.optim.Optimizer.set_scheduler">set_scheduler() (machine.optim.optim.Optimizer method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="models.html#module-seq2seq.models.TopKDecoder">seq2seq.models.TopKDecoder (module)</a>
+      <li><a href="dataset.html#machine.dataset.fields.SourceField">SourceField (class in machine.dataset.fields)</a>
 </li>
-      <li><a href="optim.html#module-seq2seq.optim.optim">seq2seq.optim.optim (module)</a>
+      <li><a href="optim.html#machine.optim.optim.Optimizer.step">step() (machine.optim.optim.Optimizer method)</a>
 </li>
-      <li><a href="trainer.html#module-seq2seq.trainer.supervised_trainer">seq2seq.trainer.supervised_trainer (module)</a>
+      <li><a href="dataset.html#machine.dataset.fields.TargetField.SYM_EOS">SYM_EOS (machine.dataset.fields.TargetField attribute)</a>
 </li>
-      <li><a href="util.html#module-seq2seq.util.checkpoint">seq2seq.util.checkpoint (module)</a>
-</li>
-      <li><a href="models.html#seq2seq.models.attention.Attention.set_mask">set_mask() (seq2seq.models.attention.Attention method)</a>
-</li>
-      <li><a href="optim.html#seq2seq.optim.optim.Optimizer.set_scheduler">set_scheduler() (seq2seq.optim.optim.Optimizer method)</a>
-</li>
-      <li><a href="dataset.html#seq2seq.dataset.fields.SourceField">SourceField (class in seq2seq.dataset.fields)</a>
-</li>
-      <li><a href="optim.html#seq2seq.optim.optim.Optimizer.step">step() (seq2seq.optim.optim.Optimizer method)</a>
-</li>
-      <li><a href="trainer.html#seq2seq.trainer.supervised_trainer.SupervisedTrainer">SupervisedTrainer (class in seq2seq.trainer.supervised_trainer)</a>
-</li>
-      <li><a href="dataset.html#seq2seq.dataset.fields.TargetField.SYM_EOS">SYM_EOS (seq2seq.dataset.fields.TargetField attribute)</a>
-</li>
-      <li><a href="dataset.html#seq2seq.dataset.fields.TargetField.SYM_SOS">SYM_SOS (seq2seq.dataset.fields.TargetField attribute)</a>
+      <li><a href="dataset.html#machine.dataset.fields.TargetField.SYM_SOS">SYM_SOS (machine.dataset.fields.TargetField attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -388,15 +366,11 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="dataset.html#seq2seq.dataset.fields.TargetField">TargetField (class in seq2seq.dataset.fields)</a>
-</li>
-      <li><a href="models.html#seq2seq.models.TopKDecoder.TopKDecoder">TopKDecoder (class in seq2seq.models.TopKDecoder)</a>
+      <li><a href="dataset.html#machine.dataset.fields.TargetField">TargetField (class in machine.dataset.fields)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="trainer.html#seq2seq.trainer.supervised_trainer.SupervisedTrainer.train">train() (seq2seq.trainer.supervised_trainer.SupervisedTrainer method)</a>
-</li>
-      <li><a href="util.html#seq2seq.util.checkpoint.Checkpoint.TRAINER_STATE_NAME">TRAINER_STATE_NAME (seq2seq.util.checkpoint.Checkpoint attribute)</a>
+      <li><a href="models.html#machine.models.TopKDecoder.TopKDecoder">TopKDecoder (class in machine.models.TopKDecoder)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -404,7 +378,13 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="optim.html#seq2seq.optim.optim.Optimizer.update">update() (seq2seq.optim.optim.Optimizer method)</a>
+      <li><a href="optim.html#machine.optim.optim.Optimizer.update">update() (machine.optim.optim.Optimizer method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="evaluator.html#machine.evaluator.evaluator.Evaluator.update_batch_metrics">update_batch_metrics() (machine.evaluator.evaluator.Evaluator static method)</a>
+</li>
+      <li><a href="evaluator.html#machine.evaluator.evaluator.Evaluator.update_loss">update_loss() (machine.evaluator.evaluator.Evaluator static method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -412,9 +392,7 @@
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -423,11 +401,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright .
+        &copy; Copyright 
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -442,36 +420,25 @@
 
   
 
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.1.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>

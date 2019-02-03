@@ -4,36 +4,36 @@ Models
 baseRNN
 -------
 
-.. automodule:: seq2seq.models.baseRNN
+.. automodule:: machine.models.baseRNN
     :members:
 
 EncoderRNN
 ----------
 
-.. automodule:: seq2seq.models.EncoderRNN
+.. automodule:: machine.models.EncoderRNN
     :members:
 
 DecoderRNN
 ----------
 
-.. automodule:: seq2seq.models.DecoderRNN
+.. automodule:: machine.models.DecoderRNN
     :members:
 
 TopKDecoder
 -----------
 
-.. automodule:: seq2seq.models.TopKDecoder
+.. automodule:: machine.models.TopKDecoder
     :members:
 
 attention
 ---------
 
-.. automodule:: seq2seq.models.attention
+.. automodule:: machine.models.attention
     :members:
 
-seq2seq
+machine
 -------
 
-.. automodule:: seq2seq.models.seq2seq
+.. automodule:: machine.models.seq2seq
     :members:
 

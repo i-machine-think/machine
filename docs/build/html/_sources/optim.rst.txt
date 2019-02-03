@@ -4,7 +4,7 @@ Optim
 optim
 -----
 
-.. automodule:: seq2seq.optim.optim
+.. automodule:: machine.optim.optim
     :members:
     :undoc-members:
 

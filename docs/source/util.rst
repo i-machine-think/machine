@@ -4,6 +4,6 @@ Util
 checkpoint
 ----------
 
-.. automodule:: seq2seq.util.checkpoint
+.. automodule:: machine.util.checkpoint
     :members:
     :undoc-members:

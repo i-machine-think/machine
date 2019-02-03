@@ -1,6 +1,6 @@
 Loss
 ====
-.. automodule:: seq2seq.loss.loss
+.. automodule:: machine.loss.loss
 .. currentmodule:: seq2seq.loss.loss
 
 Loss
