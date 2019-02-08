@@ -12,6 +12,7 @@ from machine.loss import NLLLoss
 from machine.metrics import WordAccuracy, SequenceAccuracy, FinalTargetAccuracy, SymbolRewritingAccuracy, BLEU
 from machine.dataset import SourceField, TargetField
 from machine.util.checkpoint import Checkpoint
+from machine.dataset.get_standard_iter import get_standard_iter
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -33,7 +34,7 @@ def train_model():
 
     # Prepare logging and data set
     init_logging(opt)
-    src, tgt, train, dev, monitor_data = prepare_dataset(opt)
+    src, tgt, train, dev, monitor_data = prepare_iters(opt)
 
     # Prepare model
     if opt.load_checkpoint is not None:
@@ -52,22 +53,20 @@ def train_model():
     losses, loss_weights, metrics = prepare_losses_and_metrics(
         opt, pad, unk, sos, eos, input_vocab, output_vocab)
     checkpoint_path = os.path.join(
-        opt.output_dir, opt.load_checkpoint) if opt.resume else None
-    trainer = create_trainer(opt, losses, loss_weights, metrics)
+        opt.output_dir, opt.load_checkpoint) if opt.resume_training else None
+    trainer = SupervisedTrainer(expt_dir=opt.output_dir)
 
     # Train
     seq2seq, logs = trainer.train(seq2seq, train,
                                   num_epochs=opt.epochs, dev_data=dev, monitor_data=monitor_data, optimizer=opt.optim,
                                   teacher_forcing_ratio=opt.teacher_forcing_ratio, learning_rate=opt.lr,
-                                  resume=opt.resume, checkpoint_path=checkpoint_path)
+                                  resume_training=opt.resume_training, checkpoint_path=checkpoint_path,
+                                  losses=losses, metrics=metrics, loss_weights=loss_weights,
+                                  checkpoint_every=opt.save_every, print_every=opt.print_every)
 
     if opt.write_logs:
         output_path = os.path.join(opt.output_dir, opt.write_logs)
         logs.write_to_file(output_path)
-
-    # Evaluate
-    # evaluator = Evaluator(loss=loss, batch_size=opt.batch_size)
-    # dev_loss, accuracy = evaluator.evaluate(seq2seq, dev)
 
 
 def init_argparser():
@@ -125,12 +124,15 @@ def init_argparser():
     # Data management
     parser.add_argument('--load_checkpoint',
                         help='The name of the checkpoint to load, usually an encoded time string')
+
     parser.add_argument('--save_every', type=int,
                         help='Every how many batches the model should be saved', default=100)
     parser.add_argument('--print_every', type=int,
                         help='Every how many batches to print results', default=100)
-    parser.add_argument('--resume', action='store_true',
+
+    parser.add_argument('--resume-training', action='store_true',
                         help='Indicates if training has to be resumed from the latest checkpoint')
+
     parser.add_argument('--log-level', default='info', help='Logging level.')
     parser.add_argument(
         '--write-logs', help='Specify file to write logs to after training')
@@ -141,7 +143,7 @@ def init_argparser():
 
 
 def validate_options(parser, opt):
-    if opt.resume and not opt.load_checkpoint:
+    if opt.resume_training and not opt.load_checkpoint:
         parser.error(
             'load_checkpoint argument is required to resume training from checkpoint')
 
@@ -170,7 +172,8 @@ def init_logging(opt):
     logging.info(opt)
 
 
-def prepare_dataset(opt):
+def prepare_iters(opt):
+
     use_output_eos = not opt.ignore_output_eos
     src = SourceField()
     tgt = TargetField(include_eos=use_output_eos)
@@ -182,28 +185,26 @@ def prepare_dataset(opt):
         return len(example.src) <= max_len and len(example.tgt) <= max_len
 
     # generate training and testing data
-    train = torchtext.data.TabularDataset(
+    train = get_standard_iter(torchtext.data.TabularDataset(
         path=opt.train, format='tsv',
         fields=tabular_data_fields,
         filter_pred=len_filter
-    )
+    ), batch_size=opt.batch_size)
 
     if opt.dev:
-        dev = torchtext.data.TabularDataset(
+        dev = get_standard_iter(torchtext.data.TabularDataset(
             path=opt.dev, format='tsv',
             fields=tabular_data_fields,
-            filter_pred=len_filter
-        )
-
+            filter_pred=len_filter), batch_size=opt.eval_batch_size)
     else:
         dev = None
 
     monitor_data = OrderedDict()
     for dataset in opt.monitor:
-        m = torchtext.data.TabularDataset(
+        m = get_standard_iter(torchtext.data.TabularDataset(
             path=dataset, format='tsv',
             fields=tabular_data_fields,
-            filter_pred=len_filter)
+            filter_pred=len_filter), batch_size=opt.eval_batch_size)
         monitor_data[dataset] = m
 
     return src, tgt, train, dev, monitor_data
@@ -229,8 +230,8 @@ def load_model_from_checkpoint(opt, src, tgt):
 
 def initialize_model(opt, src, tgt, train):
     # build vocabulary
-    src.build_vocab(train, max_size=opt.src_vocab)
-    tgt.build_vocab(train, max_size=opt.tgt_vocab)
+    src.build_vocab(train.dataset, max_size=opt.src_vocab)
+    tgt.build_vocab(train.dataset, max_size=opt.tgt_vocab)
     input_vocab = src.vocab
     output_vocab = tgt.vocab
 
@@ -296,12 +297,6 @@ def prepare_losses_and_metrics(
             output_unk_symbol=unk))
 
     return losses, loss_weights, metrics
-
-
-def create_trainer(opt, losses, loss_weights, metrics):
-    return SupervisedTrainer(loss=losses, metrics=metrics, loss_weights=loss_weights, batch_size=opt.batch_size,
-                             eval_batch_size=opt.eval_batch_size, checkpoint_every=opt.save_every,
-                             print_every=opt.print_every, expt_dir=opt.output_dir)
 
 
 if __name__ == "__main__":

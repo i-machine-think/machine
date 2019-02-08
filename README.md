@@ -4,23 +4,22 @@
 
 # Introduction
 
-This is a pytorch implementation of a sequence to sequence learning toolkit for the i-machine-think project. This repository is a fork from the pytorch-seq2seq library developed by IBM, but has substantially diverged from it after heavy development. For the original implementation, visit [https://github.com/IBM/pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq).
+This is a pytorch implementation of a sequence to sequence learning toolkit for the i-machine-think project. This repository was originally a fork from the pytorch-seq2seq library developed by IBM, but has substantially diverged from it after heavy development. For the original implementation, visit [https://github.com/IBM/pytorch-seq2seq](https://github.com/IBM/pytorch-seq2seq).
 
 # Requirements
 
-This library runs with PyTorch 0.4.0. We refer to the [PyTorch website](http://pytorch.org/) to install the right version for your environment.
+This library runs with PyTorch 1.0.0. We refer to the [PyTorch website](http://pytorch.org/) to install the right version for your environment.
 To install additional requirements (including numpy and torchtext), run:
 
 `pip install -r requirements.txt`
 
 # Quickstart
 
-To use machine, clone the repository and do an editable install with pip.
-Although machine is compatible with python2.7, we recommend you use python3.
+To use machine, clone the repository and do an editable install with pip. Note that `machine` requires python 3.5 or higher (python 2.7 is no longer supported).
 
 ```
 git clone https://github.com/i-machine-think/machine.git $path_to_machine
-pip3 install $path_to_machine
+pip install $path_to_machine
 ```
 
 You can then import the classes of the library in your own project.
@@ -35,11 +34,25 @@ Furthermore, we included 3 commandline tools in the repository that demonstrate 
 
 The script `train_model.py` can be used to train a new model, resume the training of an existing model from a checkpoint, or retrain an existing model from a checkpoint. E.g. to train a model from scratch:
 
-     # Train a simple model with hidden layer size 128 and embedding size 128
-    `python train_model.py --train $train_path --dev $dev_path --output_dir $expt_dir  --embedding_size 128 --hidden_size 256 --rnn_cell gru --epoch 20 
+```
+# Train a simple model with hidden layer size 128 and embedding size 128
+python train_model.py --train $train_path --dev $dev_path --output_dir $expt_dir  --embedding_size 128 --hidden_size 256 --rnn_cell gru --epoch 20 
+```
 
-Several options are available from the command line, including changing the optimizer, batch size, using attention/bidirectionality and using teacher forcing. 
-For a complete overview, use the *help* function of the script.
+Several options are available from the command line, including changing the optimizer, batch size, using attention/bidirectionality and using teacher forcing. For a complete overview, use the *help* function of the script.
+
+### Tasks
+
+Some tasks come included in machine (will download autmatically if called). Task objects can be thought as wrappers for the metadata of datasets (filenames etc.). You can import a task such a the lookup task by doing the following:
+
+```
+from machine.tasks import get_task
+
+T = get_task("lookup", is_mini=True)
+``` 
+
+Please see `machine.tasks` for more info on how this works. Default parameters can be set for tasks in `.yaml` files which allow for quick replication of results and tracking of changes. These parameters are loaded in the task object so you can call `T.default_params['name_of_parameter_set']`, where the name of the parameter set depends on what is in the `yaml` file. This allows different default parameter sets for the same tasks.
+
 
 ## Evaluation and inference
 

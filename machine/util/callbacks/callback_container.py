@@ -22,12 +22,13 @@ class CallbackContainer(object):
             callback.set_trainer(trainer)
 
     def set_info(self, start_step, start_epoch,
-                 steps_per_epoch, total_steps):
+                 steps_per_epoch, total_steps,
+                 step_elapsed=0):
         self.info['start_step'] = start_step
         self.info['step'] = start_step
         self.info['start_epoch'] = start_epoch
         self.info['epoch'] = start_epoch
-        self.info['step_elapsed'] = 0
+        self.info['step_elapsed'] = step_elapsed
         self.info['steps_per_epoch'] = steps_per_epoch
         self.info['total_steps'] = total_steps
         self.info['print'] = False
@@ -109,11 +110,15 @@ class CallbackContainer(object):
             callback.on_train_end(self.info)
 
             # Gets log object from History call back
-            if getattr(callback, logs):
+            if hasattr(callback, 'logs'):
                 logs = callback.logs
         return logs
 
     def _evaluate_model_on_validation(self):
+        # No dev_set
+        if self.trainer.val_data is None:
+            return [], []
+
         return self.trainer.evaluator.evaluate(self.trainer.model,
                                                self.trainer.val_data,
                                                self.trainer.get_batch_data)

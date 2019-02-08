@@ -7,11 +7,6 @@ import torch
 from machine.evaluator import Predictor
 from machine.util.checkpoint import Checkpoint
 
-try:
-    raw_input          # Python 2
-except NameError:
-    raw_input = input  # Python 3
-
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--checkpoint_path',
@@ -52,7 +47,7 @@ if opt.debug:
     exit()
 
 while True:
-    seq_str = raw_input("\n\nType in a source sequence: ")
+    seq_str = input("\n\nType in a source sequence: ")
     if seq_str == 'q':
         exit()
     seq = seq_str.strip().split()

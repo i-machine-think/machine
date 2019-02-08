@@ -135,7 +135,7 @@ class SupervisedTrainer(object):
     def train(self, model, data,
               dev_data,
               num_epochs=5,
-              resume=False,
+              resume_training=False,
               monitor_data={},
               optimizer=None,
               teacher_forcing_ratio=0,
@@ -156,7 +156,7 @@ class SupervisedTrainer(object):
                overwritten by the model loaded from the latest checkpoint.
             data (torchtext.data.Iterator: torchtext iterator object to train on
             num_epochs (int, optional): number of epochs to run (default 5)
-            resume(bool, optional): resume training with the latest checkpoint, (default False)
+            resume_training(bool, optional): resume training with the latest checkpoint up until the number of epochs (default False)
             dev_data (torchtext.data.Iterator): dev/validation set iterator
                 Note: must not pass in the train iterator here as this gets evaluated during training (in between batches)
                 If you want to evaluate on the full train during training then make two iterators and pass the second one here
@@ -180,7 +180,7 @@ class SupervisedTrainer(object):
         self.set_local_parameters(random_seed, losses, metrics,
                                   loss_weights, checkpoint_every, print_every)
         # If training is set to resume
-        if resume:
+        if resume_training:
             resume_checkpoint = Checkpoint.load(checkpoint_path)
             model = resume_checkpoint.model
             self.model = model
