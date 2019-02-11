@@ -15,8 +15,8 @@ class TestPredictor(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         test_path = os.path.dirname(os.path.realpath(__file__))
-        src = SourceField()
-        trg = TargetField()
+        src = SourceField(batch_first=True)
+        trg = TargetField(batch_first=True)
         dataset = torchtext.data.TabularDataset(
             path=os.path.join(test_path, 'data/eng-fra.txt'), format='tsv',
             fields=[('src', src), ('trg', trg)],

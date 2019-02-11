@@ -14,8 +14,8 @@ class TestSupervisedTrainer(unittest.TestCase):
 
     def setUp(self):
         test_path = os.path.dirname(os.path.realpath(__file__))
-        src = SourceField()
-        tgt = TargetField()
+        src = SourceField(batch_first=True)
+        tgt = TargetField(batch_first=True)
         self.dataset = torchtext.data.TabularDataset(
             path=os.path.join(test_path, 'data/eng-fra.txt'), format='tsv',
             fields=[('src', src), ('tgt', tgt)],

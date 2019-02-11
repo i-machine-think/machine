@@ -175,8 +175,8 @@ def init_logging(opt):
 def prepare_iters(opt):
 
     use_output_eos = not opt.ignore_output_eos
-    src = SourceField()
-    tgt = TargetField(include_eos=use_output_eos)
+    src = SourceField(batch_first=True)
+    tgt = TargetField(include_eos=use_output_eos, batch_first=True)
     tabular_data_fields = [('src', src), ('tgt', tgt)]
 
     max_len = opt.max_len

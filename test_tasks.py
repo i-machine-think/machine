@@ -107,8 +107,8 @@ def init_logging(parameters):
 
 
 def prepare_iters(parameters, train_path, test_paths, valid_path, batch_size, eval_batch_size=512):
-    src = SourceField()
-    tgt = TargetField(include_eos=False)
+    src = SourceField(batch_first=True)
+    tgt = TargetField(include_eos=False, batch_first=True)
     tabular_data_fields = [('src', src), ('tgt', tgt)]
 
     max_len = parameters['max_len']

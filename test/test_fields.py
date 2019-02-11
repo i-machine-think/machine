@@ -9,7 +9,7 @@ from machine.dataset import SourceField, TargetField
 class TestField(unittest.TestCase):
 
     def test_sourcefield(self):
-        field = SourceField()
+        field = SourceField(batch_first=True)
         self.assertTrue(isinstance(field, torchtext.data.Field))
         self.assertTrue(field.batch_first)
         self.assertTrue(field.include_lengths)
@@ -21,7 +21,7 @@ class TestField(unittest.TestCase):
         self.assertTrue(field.include_lengths)
 
     def test_targetfield(self):
-        field = TargetField()
+        field = TargetField(batch_first=True)
         self.assertTrue(isinstance(field, torchtext.data.Field))
         self.assertTrue(field.batch_first)
 
@@ -40,7 +40,7 @@ class TestField(unittest.TestCase):
     def test_targetfield_specials(self):
         test_path = os.path.dirname(os.path.realpath(__file__))
         data_path = os.path.join(test_path, 'data/eng-fra.txt')
-        field = TargetField()
+        field = TargetField(batch_first=True)
         train = torchtext.data.TabularDataset(
             path=data_path, format='tsv',
             fields=[('src', torchtext.data.Field()), ('trg', field)]
