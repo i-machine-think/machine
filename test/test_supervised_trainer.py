@@ -87,13 +87,13 @@ class TestSupervisedTrainer(unittest.TestCase):
         trainer = SupervisedTrainer()
 
         trainer.train(mock_model, self.data_iterator, n_epoches,
-                      resume=True, checkpoint_path='dummy', optimizer='sgd')
+                      resume_training=True, checkpoint_path='dummy', optimizer='sgd')
 
         self.assertFalse(
             sgd.called, "Failed to not call Optimizer() when optimizer should be loaded from checkpoint")
 
         trainer.train(mock_model, self.data_iterator, n_epoches,
-                      resume=False, checkpoint_path='dummy', optimizer='sgd')
+                      resume_training=False, checkpoint_path='dummy', optimizer='sgd')
 
         sgd.assert_called()
 
