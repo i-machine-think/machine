@@ -29,7 +29,7 @@ rm $EXPT_DIR/log_test
 
 # Resume training
 echo "\n\nTest resume training"
-python3 train_model.py --train $TRAIN_PATH --dev $DEV_PATH --resume --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --load_checkpoint $(ls -t $EXPT_DIR | head -1) --save_every $CP_EVERY --optim rmsprop --batch_size 6
+python3 train_model.py --train $TRAIN_PATH --dev $DEV_PATH --resume-training --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --load_checkpoint $(ls -t $EXPT_DIR | head -1) --save_every $CP_EVERY --optim rmsprop --batch_size 6
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest train from checkpoint"
@@ -37,12 +37,12 @@ echo "\n\nTest train from checkpoint"
 python3 train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --epoch $EPOCH --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --load_checkpoint $(ls -t $EXPT_DIR/ | head -1) --save_every $CP_EVERY
 ERR=$((ERR+$?)); EX=$((EX+1))
 
-# evaluate.py
+# # evaluate.py
 echo "\n\nTest evaluator"
 python3 evaluate.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) --test_data $DEV_PATH --batch_size 15
 ERR=$((ERR+$?)); EX=$((EX+1))
 
-# test training without dev set
+#test training without dev set
 echo "\n\nTest training without dev set"
 python3 train_model.py --train $TRAIN_PATH --output_dir $EXPT_DIR --print_every 10 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY
 ERR=$((ERR+$?)); EX=$((EX+1))

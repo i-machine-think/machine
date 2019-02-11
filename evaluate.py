@@ -74,8 +74,8 @@ output_vocab = checkpoint.output_vocab
 
 ############################################################################
 # Prepare dataset and loss
-src = SourceField()
-tgt = TargetField(output_eos_used)
+src = SourceField(batch_first=True)
+tgt = TargetField(output_eos_used, batch_first=True)
 
 tabular_data_fields = [('src', src), ('tgt', tgt)]
 

@@ -28,12 +28,14 @@ class Logger(Callback):
         self.logger.info("Epoch: %d, Step: %d" % (info['epoch'], info['step']))
 
     def on_epoch_end(self, info=None):
-
         for loss in self.trainer.losses:
             self.epoch_loss_avg[loss.log_name] = \
                 self.epoch_loss_total[loss.log_name] \
-                / min(info['steps_per_epoch'], info['step'] - info['start_step'])
+                / max(min(info['steps_per_epoch'], info['step'] - info['start_step']), 1)
             self.epoch_loss_total[loss.log_name] = 0
+
+        if info['step_elapsed'] < 1:
+            self.logger.warning("0 Steps elapsed so avg. loss is 0")
 
         loss_msg = ' '.join(
             ['%s: %.4f' % (loss.log_name, self.epoch_loss_avg[loss.log_name]) for loss in self.trainer.losses])

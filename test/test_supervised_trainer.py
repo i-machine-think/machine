@@ -14,8 +14,8 @@ class TestSupervisedTrainer(unittest.TestCase):
 
     def setUp(self):
         test_path = os.path.dirname(os.path.realpath(__file__))
-        src = SourceField()
-        tgt = TargetField()
+        src = SourceField(batch_first=True)
+        tgt = TargetField(batch_first=True)
         self.dataset = torchtext.data.TabularDataset(
             path=os.path.join(test_path, 'data/eng-fra.txt'), format='tsv',
             fields=[('src', src), ('tgt', tgt)],
@@ -87,13 +87,13 @@ class TestSupervisedTrainer(unittest.TestCase):
         trainer = SupervisedTrainer()
 
         trainer.train(mock_model, self.data_iterator, n_epoches,
-                      resume=True, checkpoint_path='dummy', optimizer='sgd')
+                      resume_training=True, checkpoint_path='dummy', optimizer='sgd')
 
         self.assertFalse(
             sgd.called, "Failed to not call Optimizer() when optimizer should be loaded from checkpoint")
 
         trainer.train(mock_model, self.data_iterator, n_epoches,
-                      resume=False, checkpoint_path='dummy', optimizer='sgd')
+                      resume_training=False, checkpoint_path='dummy', optimizer='sgd')
 
         sgd.assert_called()
 
