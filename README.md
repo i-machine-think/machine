@@ -11,7 +11,8 @@ This is a pytorch implementation of a sequence to sequence learning toolkit for 
 This library runs with PyTorch 1.0.0. We refer to the [PyTorch website](http://pytorch.org/) to install the right version for your environment.
 To install additional requirements (including numpy and torchtext), run:
 
-`pip install -r requirements.txt`
+`pip3 install -r requirements.txt`
+
 
 # Quickstart
 
@@ -19,7 +20,7 @@ To use machine, clone the repository and do an editable install with pip. Note t
 
 ```
 git clone https://github.com/i-machine-think/machine.git $path_to_machine
-pip install $path_to_machine
+pip3 install $path_to_machine
 ```
 
 You can then import the classes of the library in your own project.
