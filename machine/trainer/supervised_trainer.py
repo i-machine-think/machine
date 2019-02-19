@@ -54,6 +54,7 @@ class SupervisedTrainer(object):
         self.checkpoint_every = checkpoint_every
         self.print_every = print_every
         self.logger = logging.getLogger(__name__)
+        self._stop_training = False
 
     def _train_batch(self, input_variable, input_lengths, target_variable, teacher_forcing_ratio):
         loss = self.losses
@@ -128,6 +129,10 @@ class SupervisedTrainer(object):
                 callbacks.on_batch_end(batch)
 
             callbacks.on_epoch_end(epoch)
+
+            # Stop training early if flag _stop_training is True
+            if self._stop_training: 
+                break
 
         logs = callbacks.on_train_end()
         return logs

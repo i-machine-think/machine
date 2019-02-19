@@ -103,4 +103,7 @@ class Logger(Callback):
         self.logger.info(log_msg)
 
     def on_train_end(self, info=None):
-        pass
+        # Log if training was ended early with flag _stop_training
+        if self.trainer._stop_training:
+            log_msg = 'Terminated Training Early at Epoch {}'.format(info['epoch'])
+            self.logger.info(log_msg)
