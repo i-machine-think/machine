@@ -49,8 +49,6 @@ class Logger(Callback):
         loss_total, log_, _ = self.get_losses(
             info['eval_losses'], info['eval_metrics'], info['step'])
 
-        # Update learning rate - Needs checking
-        self.trainer.optimizer.update(loss_total, info['epoch'])
         log_msg += ", Dev set: " + log_
 
         self.logger.info(log_msg)
@@ -105,5 +103,6 @@ class Logger(Callback):
     def on_train_end(self, info=None):
         # Log if training was ended early with flag _stop_training
         if self.trainer._stop_training:
-            log_msg = 'Terminated Training Early at Epoch {}'.format(info['epoch'])
+            log_msg = 'Terminated Training Early at Epoch {}'.format(
+                info['epoch'])
             self.logger.info(log_msg)
