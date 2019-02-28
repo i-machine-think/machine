@@ -132,7 +132,7 @@ class Evaluator(object):
                     batch)
 
                 decoder_outputs, decoder_hidden, other = model(
-                    input_variable, input_lengths.tolist(), target_variable)
+                    input_variable, input_lengths, target_variable)
 
                 # Compute metric(s) over one batch
                 metrics = self.update_batch_metrics(

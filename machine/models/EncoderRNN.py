@@ -54,7 +54,7 @@ class EncoderRNN(BaseRNN):
 
         Args:
             input_var (batch, seq_len): tensor containing the features of the input sequence.
-            input_lengths (list of int, optional): A list that contains the lengths of sequences
+            input_lengths (tensor int, optional): A tensor that contains the lengths of sequences
               in the mini-batch
             **hidden** : Tuple of (h_0, c_0), each of shape (num_layers * num_directions, batch, hidden_size)
               where h_0 is tensor containing the initial hidden state, and c_0 is a tensor
@@ -68,6 +68,7 @@ class EncoderRNN(BaseRNN):
         embedded = self.input_dropout(embedded)
 
         if self.variable_lengths:
+            total_length = embedded.size(1)  # get the max sequence length
             embedded = nn.utils.rnn.pack_padded_sequence(
                 embedded, input_lengths, batch_first=True)
 
@@ -78,6 +79,6 @@ class EncoderRNN(BaseRNN):
 
         if self.variable_lengths:
             output, _ = nn.utils.rnn.pad_packed_sequence(
-                output, batch_first=True)
+                output, batch_first=True, total_length=total_length)
 
         return output, hidden
