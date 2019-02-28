@@ -213,8 +213,6 @@ class General(nn.Module):
 
         # decoder_states (FloatTensor): sequence of queries ``(batch, tgt_len, dim)``
         # encoder_states (FloatTensor): sequence of sources ``(batch, src_len, dim``
-
-        src_batch, src_len, src_dim = encoder_states.size()
         tgt_batch, tgt_len, tgt_dim = decoder_states.size()
 
         decoder_states = decoder_states.view(tgt_batch * tgt_len, tgt_dim)
