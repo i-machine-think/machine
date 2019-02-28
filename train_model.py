@@ -108,7 +108,7 @@ def init_argparser():
     parser.add_argument(
         '--attention', choices=['pre-rnn', 'post-rnn'], default=False)
     parser.add_argument('--attention_method',
-                        choices=['dot', 'mlp', 'concat'], default=None)
+                        choices=['dot', 'mlp', 'concat', 'general'], default=None)
     parser.add_argument('--metrics', nargs='+', default=['seq_acc'], choices=[
                         'word_acc', 'seq_acc', 'target_acc', 'sym_rwr_acc', 'bleu'], help='Metrics to use')
     parser.add_argument('--full_focus', action='store_true')

@@ -65,6 +65,15 @@ echo "\n\nTest training with full focus"
 python3 train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --batch_size=7 --full_focus --ignore_output_eos
 ERR=$((ERR+$?)); EX=$((EX+1))
 
+# test general attention
+echo "\n\nTest general attention"
+python3 train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'general' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --batch_size=7 --full_focus --ignore_output_eos
+ERR=$((ERR+$?)); EX=$((EX+1))
+
+python3 train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'post-rnn' --attention_method 'general' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --batch_size=7 --full_focus --ignore_output_eos
+ERR=$((ERR+$?)); EX=$((EX+1))
+
+
 # test bidirectional
 echo "\n\nTest bidirectional model"
 python3 train_model.py --train $TRAIN_PATH --dev $DEV_PATH --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --bidirectional --epoch $EPOCH --save_every $CP_EVERY --ignore_output_eos
