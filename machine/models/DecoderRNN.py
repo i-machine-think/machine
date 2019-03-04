@@ -243,7 +243,13 @@ class DecoderRNN(BaseRNN):
                 decode(di, step_output, step_attn)
 
         ret_dict[DecoderRNN.KEY_SEQUENCE] = sequence_symbols
-        ret_dict[DecoderRNN.KEY_LENGTH] = lengths.tolist()
+        ret_dict[DecoderRNN.KEY_LENGTH] = ltorch.tensor(lengths, device=device)
+
+        # Transpose decoder hiddens in order to make parallel GPU work
+        h_n, c_n = decoder_hidden
+        h_n = h_n.transpose(0, 1)
+        c_n = c_n.transpose(0, 1)
+        decoder_hidden = (h_n, c_n)
 
         return decoder_outputs, decoder_hidden, ret_dict
 
