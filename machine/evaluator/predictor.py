@@ -13,7 +13,7 @@ class Predictor(object):
             tgt_vocab (machine.dataset.vocabulary.Vocabulary): target sequence vocabulary
         """
         if device is None:
-            device = torch.device(
+            self.device = torch.device(
                 "cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(device)
 
@@ -32,7 +32,8 @@ class Predictor(object):
             by the pre-trained model
         """
         src_id_seq = torch.tensor([self.src_vocab.stoi[tok]
-                                   for tok in src_seq], dtype=torch.long, device=device).view(1, -1)
+                                   for tok in src_seq], dtype=torch.long,
+                                  device=self.device).view(1, -1)
 
         softmax_list, _, other = self.model(src_id_seq, [len(src_seq)])
         length = other['length'][0]
