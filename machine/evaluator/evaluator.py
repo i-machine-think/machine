@@ -50,7 +50,7 @@ class Evaluator(object):
 
         Args:
             decoder_outputs (torch.Tensor): decoder outputs of a batch
-            decoder_hidden (torch.Tensor): decoder hidden states for a batch
+            decoder_hidden (torch.Tensor): (batch first) decoder hidden states for a batch
             other (dict): maps extra outputs to torch.Tensors
             target_variable (dict): map of keys to different targets
 
@@ -76,7 +76,7 @@ class Evaluator(object):
         Args:
             losses (list): a list with machine.loss.Loss objects
             decoder_outputs (torch.Tensor): decoder outputs of a batch
-            decoder_hidden (torch.Tensor): decoder hidden states for a batch
+            decoder_hidden (torch.Tensor): (batch first) decoder hidden states for a batch
             other (dict): maps extra outputs to torch.Tensors
             target_variable (dict): map of keys to different targets
 
