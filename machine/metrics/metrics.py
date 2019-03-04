@@ -182,7 +182,7 @@ class SequenceAccuracy(Metric):
         self.seq_match = 0
         self.seq_total = 0
 
-        if device = None:
+        if device is None:
             self.device = torch.device(
                 "cuda" if torch.cuda.is_available() else "cpu")
 

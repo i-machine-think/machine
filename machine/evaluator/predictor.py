@@ -12,7 +12,7 @@ class Predictor(object):
             src_vocab (machine.dataset.vocabulary.Vocabulary): source sequence vocabulary
             tgt_vocab (machine.dataset.vocabulary.Vocabulary): target sequence vocabulary
         """
-        if device = None:
+        if device is None:
             device = torch.device(
                 "cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(device)
