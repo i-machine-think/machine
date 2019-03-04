@@ -67,6 +67,8 @@ class EncoderRNN(BaseRNN):
         embedded = self.embedding(input_var)
         embedded = self.input_dropout(embedded)
 
+        self.rnn.flatten_parameters()
+
         if self.variable_lengths:
             total_length = embedded.size(1)  # get the max sequence length
             embedded = nn.utils.rnn.pack_padded_sequence(

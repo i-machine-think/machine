@@ -203,6 +203,8 @@ class DecoderRNN(BaseRNN):
         else:
             unrolling = False
 
+        self.rnn.flatten_parameters()
+
         if unrolling:
             symbols = None
             for di in range(max_length):

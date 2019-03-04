@@ -6,8 +6,6 @@ import math
 import numpy as np
 import torch
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class Metric(object):
     """ Base class for encapsulation of the metrics functions.
@@ -179,10 +177,14 @@ class SequenceAccuracy(Metric):
     _SHORTNAME = "seq_acc"
     _INPUT = "seqlist"
 
-    def __init__(self, ignore_index=None):
+    def __init__(self, ignore_index=None, device=None):
         self.ignore_index = ignore_index
         self.seq_match = 0
         self.seq_total = 0
+
+        if device = None:
+            self.device = torch.device(
+                "cuda" if torch.cuda.is_available() else "cpu")
 
         super(SequenceAccuracy, self).__init__(
             self._NAME, self._SHORTNAME, self._INPUT)
@@ -205,9 +207,9 @@ class SequenceAccuracy(Metric):
 
         # compute sequence accuracy over batch
         match_per_seq = torch.zeros(
-            batch_size, dtype=torch.float, device=device)
+            batch_size, dtype=torch.float, device=self.device)
         total_per_seq = torch.zeros(
-            batch_size, dtype=torch.float, device=device)
+            batch_size, dtype=torch.float, device=self.device)
 
         for step, step_output in enumerate(outputs):
             target = targets[:, step + 1]

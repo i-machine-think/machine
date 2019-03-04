@@ -1,11 +1,9 @@
 import torch
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class Predictor(object):
 
-    def __init__(self, model, src_vocab, tgt_vocab):
+    def __init__(self, model, src_vocab, tgt_vocab, device=None):
         """
         Predictor class to evaluate for a given model.
         Args:
@@ -14,6 +12,9 @@ class Predictor(object):
             src_vocab (machine.dataset.vocabulary.Vocabulary): source sequence vocabulary
             tgt_vocab (machine.dataset.vocabulary.Vocabulary): target sequence vocabulary
         """
+        if device = None:
+            device = torch.device(
+                "cuda" if torch.cuda.is_available() else "cpu")
         self.model = model.to(device)
 
         self.model.eval()

@@ -18,8 +18,6 @@ from machine.util.checkpoint import Checkpoint
 from machine.util.callbacks import CallbackContainer, Logger, ModelCheckpoint, History
 from machine.util.log import Log
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class SupervisedTrainer(object):
     """ The SupervisedTrainer class helps in setting up a training framework in a
