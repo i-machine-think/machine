@@ -22,14 +22,14 @@ ERR=0
 
 # Start training
 echo "Test training"
-python3 train_model.py --train $TRAIN_PATH --dev $DEV_PATH --monitor $DEV_PATH $TRAIN_PATH --output_dir $EXPT_DIR --print_every 30 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY --batch_size 6 --write-logs 'log_test'
+python3 train_model.py --train $TRAIN_PATH --dev $DEV_PATH --monitor $DEV_PATH $TRAIN_PATH --output_dir $EXPT_DIR --print_every 30 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --save_every $CP_EVERY --batch_size 12 --write-logs 'log_test'
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 rm $EXPT_DIR/log_test
 
 # Resume training
 echo "\n\nTest resume training"
-python3 train_model.py --train $TRAIN_PATH --dev $DEV_PATH --resume-training --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --load_checkpoint $(ls -t $EXPT_DIR | head -1) --save_every $CP_EVERY --optim rmsprop --batch_size 6
+python3 train_model.py --train $TRAIN_PATH --dev $DEV_PATH --resume-training --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --epoch $EPOCH --load_checkpoint $(ls -t $EXPT_DIR | head -1) --save_every $CP_EVERY --optim rmsprop --batch_size 12
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 echo "\n\nTest train from checkpoint"
@@ -39,7 +39,7 @@ ERR=$((ERR+$?)); EX=$((EX+1))
 
 # # evaluate.py
 echo "\n\nTest evaluator"
-python3 evaluate.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) --test_data $DEV_PATH --batch_size 15
+python3 evaluate.py --checkpoint_path $EXPT_DIR/$(ls -t $EXPT_DIR/ | head -1) --test_data $DEV_PATH --batch_size 12
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 #test training without dev set
@@ -62,7 +62,7 @@ ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test full focus
 echo "\n\nTest training with full focus"
-python3 train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --batch_size=7 --full_focus --ignore_output_eos
+python3 train_model.py --train $LOOKUP --dev $LOOKUP --output_dir $EXPT_DIR --print_every 50 --embedding_size $EMB_SIZE --hidden_size $H_SIZE --rnn_cell $CELL --attention 'pre-rnn' --attention_method 'mlp' --epoch $EPOCH --save_every $CP_EVERY --teacher_forcing_ratio 0.5 --batch_size 12 --full_focus --ignore_output_eos
 ERR=$((ERR+$?)); EX=$((EX+1))
 
 # test bidirectional
