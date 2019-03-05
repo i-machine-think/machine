@@ -5,6 +5,7 @@ import shutil
 import logging
 
 import torch
+from torch.nn import DataParallel
 import dill
 
 
@@ -76,7 +77,7 @@ class Checkpoint(object):
                     },
                    os.path.join(path, self.TRAINER_STATE_NAME))
 
-        if isinstance(self.model, torch.nn.DataParallel):
+        if isinstance(self.model, DataParallel):
             torch.save(self.model.module, os.path.join(path, self.MODEL_NAME))
         else:
             torch.save(self.model, os.path.join(path, self.MODEL_NAME))
