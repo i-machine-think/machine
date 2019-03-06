@@ -1,4 +1,5 @@
 from machine.util.callbacks import Callback
+import numpy as np
 
 
 class EarlyStoppingCallback(Callback):
@@ -6,10 +7,12 @@ class EarlyStoppingCallback(Callback):
     Original callback taken from https://github.com/ncullen93/torchsample
     Early Stopping to terminate training early under certain conditions
     """
+    accepted_losses = ['eval_losses', 'train_losses']
+    accepted_metrics = ['eval_metrics', 'train_metrics']
 
     def __init__(self,
                  monitor='eval_losses',
-                 lm_name=None,
+                 objective_name=None,
                  min_delta=0,
                  patience=5,
                  minimize=True):
@@ -18,9 +21,10 @@ class EarlyStoppingCallback(Callback):
         validation loss or metric does not improve by a certain amount
         for a certain number of epochs
         Args:
-            monitor : string in {'eval_losses', 'eval_metrics', 'train_losses', 'train_metrics'}
+            monitor : string in {'eval_losses',
+                'eval_metrics', 'train_losses', 'train_metrics'}
                 whether to monitor train or val loss
-            lm_name: loss or metric name eg. 'Avg NLLoss' or 'Word Accuracy'
+            objective_name: loss or metric name eg. 'Avg NLLoss' or 'Word Accuracy'
                     If not specified then the first element
                     in the monitor array is used
                     (default None)
@@ -32,9 +36,9 @@ class EarlyStoppingCallback(Callback):
                 the counter be reset after each improvment
             minimize: minimize quantity, if false then early stopping will maximize
         """
-        if 'loss' in monitor:
+        if monitor in self.accepted_losses:
             self.loss = True
-        elif 'metric' in monitor:
+        elif monitor in self.accepted_metrics:
             self.loss = False
         else:
             raise ValueError(
@@ -42,53 +46,52 @@ class EarlyStoppingCallback(Callback):
                 'eval_metrics', 'train_losses', 'train_metrics'}")
 
         self.monitor = monitor
-        self.lm_name = lm_name
-        self.minimize = minimize
+        self.objective_name = objective_name
+        self.minimize = 1 if minimize else -1
 
         self.min_delta = min_delta
         self.patience = patience
-        self.wait = 0
-        self.best_lm = 1e-15
         super(EarlyStoppingCallback, self).__init__()
 
     def on_train_begin(self, info=None):
         self.wait = 0
-        if self.minimize:
-            self.best_lm = 1e15
-        else:
-            self.best_lm = -1e15
+        self.best = self.minimize * np.Inf
 
     def on_epoch_end(self, info=None):
         """
         Function called at the end of every epoch
         This allows specifing what eval or train loss to use
         """
-
-        # If specific loss/metric name is specified
-        if self.lm_name is not None:
-            for lm in info[self.monitor]:
-                if lm.name == self.lm_name:
-                    current_loss = self.get_loss_metric(lm)
-                    break
-        else:  # just use the first metric/loss in the array
-            current_loss = self.get_loss_metric(info[self.monitor][0])
-
+        current = self._get_current(info)
         # Compare current loss to previous best
-        if self.minimize:
-            update_best = (current_loss - self.best_lm) < -self.min_delta
-        else:
-            update_best = (self.best_lm - current_loss) < -self.min_delta
+        update_best = self.minimize * \
+            (current - self.best) < -self.min_delta
 
         if update_best:
-            self.best_lm = current_loss
+            self.best = current
             self.wait = 1
         else:
             if self.wait >= self.patience:
                 self.trainer._stop_training = True
             self.wait += 1
 
-    def get_loss_metric(self, lm):
-        if self.loss:
-            return lm.get_loss()
-        else:
-            return lm.get_val()
+    def _get_current(self, info):
+        """
+        Helper function that returns current loss/metric in info
+        Uses the objective name stored to find matching metric or loss
+        """
+
+        # If specific loss/metric name is specified
+        if self.objective_name is not None:
+            for objective in info[self.monitor]:
+                if objective.name == self.objective_name:
+                    return self._get_loss_metric(objective)
+        else:  # just use the first metric/loss in the array
+            return self._get_loss_metric(info[self.monitor][0])
+
+        raise ValueError('Early Stopping objective_name {} must be present in {}\
+                         '.format(self.objective_name,
+                                  self.monitor))
+
+    def _get_loss_metric(self, objective):
+        return objective.get_loss() if self.loss else objective.get_val()
