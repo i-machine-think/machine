@@ -91,8 +91,11 @@ class Attention(nn.Module):
             method = MLP(dim)
         elif method == 'concat':
             method = Concat(dim)
+        elif method == 'general':
+            method = General(dim)
         elif method == 'dot':
             method = Dot()
+
         else:
             raise ValueError("Unknown attention method")
 
@@ -192,5 +195,30 @@ class MLP(nn.Module):
         mlp_output = self.activation(mlp_output)
         out = self.out(mlp_output)
         attn = out.view(batch_size, dec_seqlen, enc_seqlen)
+
+        return attn
+
+
+class General(nn.Module):
+    """
+     Taken from the OpenNMT implementation of Luong's general Attention:
+       general: :math:`\text{score}(H_j, q) = H_j^T W_a q`
+    """
+
+    def __init__(self, dim):
+        super(General, self).__init__()
+        self.linear_in = nn.Linear(dim, dim, bias=False)
+
+    def forward(self, decoder_states, encoder_states):
+
+        # decoder_states (FloatTensor): sequence of queries ``(batch, tgt_len, dim)``
+        # encoder_states (FloatTensor): sequence of sources ``(batch, src_len, dim``
+        tgt_batch, tgt_len, tgt_dim = decoder_states.size()
+
+        decoder_states = decoder_states.view(tgt_batch * tgt_len, tgt_dim)
+        decoder_states = self.linear_in(decoder_states)
+        decoder_states = decoder_states.view(tgt_batch, tgt_len, tgt_dim)
+        encoder_states = encoder_states.transpose(1, 2)
+        attn = torch.bmm(decoder_states, encoder_states)
 
         return attn
