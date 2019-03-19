@@ -253,6 +253,12 @@ def initialize_model(opt, src, tgt, train):
                          rnn_cell=opt.rnn_cell,
                          eos_id=tgt.eos_id, sos_id=tgt.sos_id)
     seq2seq = Seq2seq(encoder, decoder)
+
+    # This enables using all GPUs available
+    if torch.cuda.device_count() > 1:
+        logging.info("Using {} GPUs".format(torch.cuda.device_count()))
+        seq2seq = torch.nn.DataParallel(seq2seq)
+
     seq2seq.to(device)
 
     return seq2seq, input_vocab, output_vocab

@@ -1,8 +1,6 @@
 import torch
 import torchtext
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 def get_standard_iter(data, batch_size=64, device=None):
     """

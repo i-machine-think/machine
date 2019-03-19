@@ -18,8 +18,6 @@ from machine.util.checkpoint import Checkpoint
 from machine.util.callbacks import CallbackContainer, Logger, ModelCheckpoint, History
 from machine.util.log import Log
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class SupervisedTrainer(object):
     """ The SupervisedTrainer class helps in setting up a training framework in a
@@ -123,7 +121,7 @@ class SupervisedTrainer(object):
                     batch)
 
                 self.batch_losses = self._train_batch(input_variables,
-                                                      input_lengths.tolist(),
+                                                      input_lengths,
                                                       target_variables,
                                                       teacher_forcing_ratio)
                 callbacks.on_batch_end(batch)
@@ -131,7 +129,7 @@ class SupervisedTrainer(object):
             callbacks.on_epoch_end(epoch)
 
             # Stop training early if flag _stop_training is True
-            if self._stop_training: 
+            if self._stop_training:
                 break
 
         logs = callbacks.on_train_end()

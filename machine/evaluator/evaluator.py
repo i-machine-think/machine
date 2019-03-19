@@ -7,8 +7,6 @@ import torchtext
 from machine.loss import NLLLoss
 from machine.metrics import WordAccuracy, SequenceAccuracy
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class Evaluator(object):
     """ Class to evaluate models with given datasets.
@@ -52,7 +50,7 @@ class Evaluator(object):
 
         Args:
             decoder_outputs (torch.Tensor): decoder outputs of a batch
-            decoder_hidden (torch.Tensor): decoder hidden states for a batch
+            decoder_hidden (torch.Tensor): (batch first) decoder hidden states for a batch
             other (dict): maps extra outputs to torch.Tensors
             target_variable (dict): map of keys to different targets
 
@@ -78,7 +76,7 @@ class Evaluator(object):
         Args:
             losses (list): a list with machine.loss.Loss objects
             decoder_outputs (torch.Tensor): decoder outputs of a batch
-            decoder_hidden (torch.Tensor): decoder hidden states for a batch
+            decoder_hidden (torch.Tensor): (batch first) decoder hidden states for a batch
             other (dict): maps extra outputs to torch.Tensors
             target_variable (dict): map of keys to different targets
 
@@ -132,7 +130,7 @@ class Evaluator(object):
                     batch)
 
                 decoder_outputs, decoder_hidden, other = model(
-                    input_variable, input_lengths.tolist(), target_variable)
+                    input_variable, input_lengths, target_variable)
 
                 # Compute metric(s) over one batch
                 metrics = self.update_batch_metrics(
