@@ -245,7 +245,7 @@ class DecoderRNN(BaseRNN):
         ret_dict[DecoderRNN.KEY_SEQUENCE] = sequence_symbols
         ret_dict[DecoderRNN.KEY_LENGTH] = torch.tensor(lengths, device=device)
 
-        # Transpose decoder hiddens in order to make parallel GPU work
+        # Transpose decoder hiddens to make parallel GPU work
         if self.rnn_cell is nn.LSTM:
             for h in decoder_hidden:
                 h.transpose_(0, 1)
