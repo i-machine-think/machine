@@ -203,6 +203,8 @@ class DecoderRNN(BaseRNN):
         else:
             unrolling = False
 
+        self.rnn.flatten_parameters()
+
         if unrolling:
             symbols = None
             for di in range(max_length):
@@ -241,7 +243,14 @@ class DecoderRNN(BaseRNN):
                 decode(di, step_output, step_attn)
 
         ret_dict[DecoderRNN.KEY_SEQUENCE] = sequence_symbols
-        ret_dict[DecoderRNN.KEY_LENGTH] = lengths.tolist()
+        ret_dict[DecoderRNN.KEY_LENGTH] = torch.tensor(lengths, device=device)
+
+        # Transpose decoder hiddens in order to make parallel GPU work
+        if self.rnn_cell is nn.LSTM:
+            for h in decoder_hidden:
+                h.transpose_(0, 1)
+        elif self.rnn_cell is nn.GRU:
+            decoder_hidden.transpose_(0, 1)
 
         return decoder_outputs, decoder_hidden, ret_dict
 
